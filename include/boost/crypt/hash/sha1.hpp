@@ -316,10 +316,6 @@ constexpr auto sha1_hasher::sha1_update(ForwardIter data, boost::crypt::size_t s
     {
         return state::success;
     }
-    if (data == nullptr)
-    {
-        return state::null;
-    }
     if (computed)
     {
         corrupted = true;
@@ -450,6 +446,251 @@ constexpr auto sha1_hasher::get_digest() noexcept -> sha1_hasher::return_type
     return digest;
 }
 
+namespace detail {
+
+template <typename T>
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(T begin, T end) noexcept -> sha1_hasher::return_type
+{
+    if (end < begin)
+    {
+        return sha1_hasher::return_type {};
+    }
+    else if (end == begin)
+    {
+        return sha1_hasher::return_type {
+            0xda, 0x39, 0xa3, 0xee, 0x5e, 0x6b, 0x4b, 0x0d, 0x32, 0x55,
+            0xbf, 0xef, 0x95, 0x60, 0x18, 0x90, 0xaf, 0xd8, 0x07, 0x09
+        };
+    }
+
+    sha1_hasher hasher;
+    hasher.process_bytes(begin, static_cast<boost::crypt::size_t>(end - begin));
+    auto result {hasher.get_digest()};
+
+    return result;
+}
+
+} // namespace detail
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char* str) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    const auto message_len {utility::strlen(str)};
+    return detail::sha1(str, str + message_len);
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    return detail::sha1(str, str + len);
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const boost::crypt::uint8_t* str) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    const auto message_len {utility::strlen(str)};
+    return detail::sha1(str, str + message_len);
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const boost::crypt::uint8_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    return detail::sha1(str, str + len);
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char16_t* str) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    const auto message_len {utility::strlen(str)};
+    return detail::sha1(str, str + message_len);
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char16_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    return detail::sha1(str, str + len);
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char32_t* str) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    const auto message_len {utility::strlen(str)};
+    return detail::sha1(str, str + message_len);
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char32_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    return detail::sha1(str, str + len);
+}
+
+// On some platforms wchar_t is 16 bits and others it's 32
+// Since we check sizeof() the underlying with SFINAE in the actual implementation this is handled transparently
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const wchar_t* str) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    const auto message_len {utility::strlen(str)};
+    return detail::sha1(str, str + message_len);
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const wchar_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+{
+    if (str == nullptr)
+    {
+        return sha1_hasher::return_type{}; // LCOV_EXCL_LINE
+    }
+
+    return detail::sha1(str, str + len);
+}
+
+// ----- String and String view aren't in the libcu++ STL so they so not have device markers -----
+
+#ifndef BOOST_CRYPT_HAS_CUDA
+
+inline auto sha1(const std::string& str) noexcept -> sha1_hasher::return_type
+{
+    return detail::sha1(str.begin(), str.end());
+}
+
+inline auto sha1(const std::u16string& str) noexcept -> sha1_hasher::return_type
+{
+    return detail::sha1(str.begin(), str.end());
+}
+
+inline auto sha1(const std::u32string& str) noexcept -> sha1_hasher::return_type
+{
+    return detail::sha1(str.begin(), str.end());
+}
+
+inline auto sha1(const std::wstring& str) noexcept -> sha1_hasher::return_type
+{
+    return detail::sha1(str.begin(), str.end());
+}
+
+#ifdef BOOST_CRYPT_HAS_STRING_VIEW
+
+inline auto sha1(std::string_view str) -> sha1_hasher::return_type
+{
+    return detail::sha1(str.begin(), str.end());
+}
+
+inline auto sha1(std::u16string_view str) -> sha1_hasher::return_type
+{
+    return detail::sha1(str.begin(), str.end());
+}
+
+inline auto sha1(std::u32string_view str) -> sha1_hasher::return_type
+{
+    return detail::sha1(str.begin(), str.end());
+}
+
+inline auto sha1(std::wstring_view str) -> sha1_hasher::return_type
+{
+    return detail::sha1(str.begin(), str.end());
+}
+
+#endif // BOOST_CRYPT_HAS_STRING_VIEW
+
+// ---- CUDA also does not have the ability to consume files -----
+
+namespace detail {
+
+template <boost::crypt::size_t block_size = 64U>
+auto sha1_file_impl(utility::file_reader<block_size>& reader) noexcept -> sha1_hasher::return_type
+{
+    sha1_hasher hasher;
+    while (!reader.eof())
+    {
+        const auto buffer_iter {reader.read_next_block()};
+        const auto len {reader.get_bytes_read()};
+        hasher.process_bytes(buffer_iter, len);
+    }
+
+    return hasher.get_digest();
+}
+
+} // namespace detail
+
+inline auto sha1_file(const std::string& filepath) noexcept -> sha1_hasher::return_type
+{
+    try
+    {
+        utility::file_reader<64U> reader(filepath);
+        return detail::sha1_file_impl(reader);
+    }
+    catch (const std::runtime_error&)
+    {
+        return sha1_hasher::return_type{};
+    }
+}
+
+inline auto sha1_file(const char* filepath) noexcept -> sha1_hasher::return_type
+{
+    try
+    {
+        utility::file_reader<64U> reader(filepath);
+        return detail::sha1_file_impl(reader);
+    }
+    catch (const std::runtime_error&)
+    {
+        return sha1_hasher::return_type{};
+    }
+}
+
+#ifdef BOOST_CRYPT_HAS_STRING_VIEW
+
+inline auto sha1_file(std::string_view filepath) noexcept -> sha1_hasher::return_type
+{
+    try
+    {
+        utility::file_reader<64U> reader(filepath);
+        return detail::sha1_file_impl(reader);
+    }
+    catch (const std::runtime_error&)
+    {
+        return sha1_hasher::return_type{};
+    }
+}
+
+#endif // BOOST_CRYPT_HAS_STRING_VIEW
+
+#endif // BOOST_CRYPT_HAS_CUDA
 
 } // namespace crypt
 } // namepsace boost
