@@ -31,11 +31,19 @@ namespace crypt {
 class sha1_hasher
 {
 private:
-    boost::crypt::array<boost::crypt::uint32_t, 5> intermediate_hash_ { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0};
-    boost::crypt::array<boost::crypt::uint8_t, 64> message_block_ {};
 
-    boost::crypt::size_t message_block_index_ {};
+    enum class state : boost::crypt::uint8_t
+    {
+        success,            // no issues
+        null,               // nullptr as parameter
+        input_too_long,     // input data too long (exceeded size_t)
+        state_error         // added more input after get_digest without re-init
+    };
 
+    boost::crypt::array<boost::crypt::uint32_t, 5> intermediate_hash_ {0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0};
+    boost::crypt::array<boost::crypt::uint8_t, 64> buffer_ {};
+
+    boost::crypt::size_t buffer_index_ {};
     boost::crypt::size_t low_ {};
     boost::crypt::size_t high_ {};
 
@@ -44,23 +52,32 @@ private:
 
     constexpr auto sha1_process_message_block() -> void;
 
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> state;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto pad_message() noexcept -> void;
+
 public:
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init() -> void
-    {
-        intermediate_hash_[0] = 0x67452301;
-        intermediate_hash_[1] = 0xEFCDAB89;
-        intermediate_hash_[2] = 0x98BADCFE;
-        intermediate_hash_[3] = 0x10325476;
-        intermediate_hash_[4] = 0xC3D2E1F0;
+    using return_type = boost::crypt::array<boost::crypt::uint8_t, 20>;
 
-        message_block_.fill(0);
-        message_block_index_ = 0UL;
-        low_ = 0UL;
-        high_ = 0UL;
-        computed = false;
-        corrupted = false;
-    }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init() -> void;
+
+    template <typename ByteType>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept
+        BOOST_CRYPT_REQUIRES_CONVERSION(ByteType, boost::crypt::uint8_t);
+
+    template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool> = true>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept;
+
+    template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool> = true>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept;
+
+    template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool> = true>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept;
+
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type ;
 };
 
 namespace detail {
@@ -127,6 +144,7 @@ constexpr auto round4(boost::crypt::uint32_t& A,
 
 } // Namespace detail
 
+// See definitions from the RFC on the rounds
 constexpr auto sha1_hasher::sha1_process_message_block() -> void
 {
     boost::crypt::array<boost::crypt::uint32_t, 80> W {};
@@ -134,10 +152,10 @@ constexpr auto sha1_hasher::sha1_process_message_block() -> void
     // Init the first 16 words of W
     for (boost::crypt::size_t i {}; i < 16UL; ++i)
     {
-        W[i] = (static_cast<boost::crypt::uint32_t>(message_block_[i * 4U]) << 24U) |
-               (static_cast<boost::crypt::uint32_t>(message_block_[i * 4U + 1U]) << 16U) |
-               (static_cast<boost::crypt::uint32_t>(message_block_[i * 4U + 2U]) << 8U) |
-               (static_cast<boost::crypt::uint32_t>(message_block_[i * 4U + 3U]));
+        W[i] = (static_cast<boost::crypt::uint32_t>(buffer_[i * 4U]) << 24U) |
+               (static_cast<boost::crypt::uint32_t>(buffer_[i * 4U + 1U]) << 16U) |
+               (static_cast<boost::crypt::uint32_t>(buffer_[i * 4U + 2U]) << 8U) |
+               (static_cast<boost::crypt::uint32_t>(buffer_[i * 4U + 3U]));
 
     }
 
@@ -242,8 +260,196 @@ constexpr auto sha1_hasher::sha1_process_message_block() -> void
     intermediate_hash_[3] += D;
     intermediate_hash_[4] += E;
 
-    message_block_index_ = 0U;
+    buffer_index_ = 0U;
 }
+
+// Like MD5, the message must be padded to an even 512 bits.
+// The first bit of padding must be a 1
+// The last 64-bits should be the length of the message
+// All bits in between should be 0s
+constexpr auto sha1_hasher::pad_message() noexcept -> void
+{
+    constexpr boost::crypt::size_t message_length_start_index {56U};
+
+    // We don't have enough space for everything we need
+    if (buffer_index_ >= message_length_start_index)
+    {
+        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x80);
+        while (buffer_index_ < buffer_.size())
+        {
+            buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x00);
+        }
+
+        sha1_process_message_block();
+
+        while (buffer_index_ < message_length_start_index)
+        {
+            buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x00);
+        }
+    }
+    else
+    {
+        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x80);
+        while (buffer_index_ < message_length_start_index)
+        {
+            buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x00);
+        }
+    }
+
+    // Add the message length to the end of the buffer
+    BOOST_CRYPT_ASSERT(buffer_index_ == message_length_start_index);
+
+    buffer_[56U] = static_cast<boost::crypt::uint8_t>(high_ >> 24U);
+    buffer_[57U] = static_cast<boost::crypt::uint8_t>(high_ >> 16U);
+    buffer_[58U] = static_cast<boost::crypt::uint8_t>(high_ >>  8U);
+    buffer_[59U] = static_cast<boost::crypt::uint8_t>(high_);
+    buffer_[60U] = static_cast<boost::crypt::uint8_t>(low_ >> 24U);
+    buffer_[61U] = static_cast<boost::crypt::uint8_t>(low_ >> 16U);
+    buffer_[62U] = static_cast<boost::crypt::uint8_t>(low_ >>  8U);
+    buffer_[63U] = static_cast<boost::crypt::uint8_t>(low_);
+}
+
+template <typename ForwardIter>
+constexpr auto sha1_hasher::sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> state
+{
+    if (size == 0)
+    {
+        return state::success;
+    }
+    if (data == nullptr)
+    {
+        return state::null;
+    }
+    if (computed)
+    {
+        corrupted = true;
+    }
+    if (corrupted)
+    {
+        return state::state_error;
+    }
+
+    while (size-- && !corrupted)
+    {
+        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(*data & 0xFF);
+        low_ += 8U;
+
+        if (BOOST_CRYPT_UNLIKELY(low_ == 0))
+        {
+            // Would indicate size_t rollover which should not happen on a single data stream
+            // LCOV_EXCL_START
+            ++high_;
+            if (high_ == 0)
+            {
+                corrupted = true;
+                return state::input_too_long;
+            }
+            // LCOV_EXCL_STOP
+        }
+
+        if (buffer_index_ == buffer_.size())
+        {
+            sha1_process_message_block();
+        }
+
+        ++data;
+    }
+
+    return state::success;
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::init() -> void
+{
+    intermediate_hash_[0] = 0x67452301;
+    intermediate_hash_[1] = 0xEFCDAB89;
+    intermediate_hash_[2] = 0x98BADCFE;
+    intermediate_hash_[3] = 0x10325476;
+    intermediate_hash_[4] = 0xC3D2E1F0;
+
+    buffer_.fill(0);
+    buffer_index_ = 0UL;
+    low_ = 0UL;
+    high_ = 0UL;
+    computed = false;
+    corrupted = false;
+}
+
+template <typename ByteType>
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_byte(ByteType byte) noexcept
+    BOOST_CRYPT_REQUIRES_CONVERSION(ByteType, boost::crypt::uint8_t)
+{
+    const auto value {static_cast<boost::crypt::uint8_t>(byte)};
+    sha1_update(&value, 1UL);
+}
+
+template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool>>
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept
+{
+    sha1_update(buffer, byte_count);
+}
+
+template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool>>
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept
+{
+    #ifndef BOOST_CRYPT_HAS_CUDA
+
+    const auto* char_ptr {reinterpret_cast<const char*>(std::addressof(*buffer))};
+    const auto* data {reinterpret_cast<const unsigned char*>(char_ptr)};
+    sha1_update(data, byte_count * 2U);
+
+    #else
+
+    const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
+    sha1_update(data, byte_count * 2U);
+
+    #endif
+}
+
+template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool>>
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept
+{
+    #ifndef BOOST_CRYPT_HAS_CUDA
+
+    const auto* char_ptr {reinterpret_cast<const char*>(std::addressof(*buffer))};
+    const auto* data {reinterpret_cast<const unsigned char*>(char_ptr)};
+    sha1_update(data, byte_count * 4U);
+
+    #else
+
+    const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
+    sha1_update(data, byte_count * 4U);
+
+    #endif
+}
+
+constexpr auto sha1_hasher::get_digest() noexcept -> sha1_hasher::return_type
+{
+    boost::crypt::array<boost::crypt::uint8_t, 20> digest{};
+
+    if (corrupted)
+    {
+        // Return empty message on corruption
+        return digest;
+    }
+    if (!computed)
+    {
+        pad_message();
+
+        // Overwrite whatever is in the buffer in case it is sensitive
+        buffer_.fill(0);
+        low_ = 0U;
+        high_ = 0U;
+        computed = true;
+    }
+
+    for (boost::crypt::size_t i {}; i < digest.size(); ++i)
+    {
+        digest[i] = static_cast<boost::crypt::uint8_t>(intermediate_hash_[i >> 2U] >> 8 * (3 - (i & 0x03)));
+    }
+
+    return digest;
+}
+
 
 } // namespace crypt
 } // namepsace boost
