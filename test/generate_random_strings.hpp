@@ -10,6 +10,8 @@
 #include <ctime>
 #include <cstring>
 
+static std::mt19937_64 rng(42);
+
 namespace boost {
 namespace crypt {
 
@@ -22,7 +24,6 @@ inline void generate_random_string(char* str, std::size_t length)
 
     const std::size_t charset_size = sizeof(charset) - 1;
 
-    std::mt19937_64 rng(42);
     std::uniform_int_distribution<std::size_t> dist(0, charset_size);
 
     for (std::size_t i = 0; i < length - 1; ++i)
