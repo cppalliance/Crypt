@@ -391,7 +391,7 @@ local windows_pipeline(name, image, environment, arch = "amd64") =
         "cppalliance/droneubuntu2404:1",
         { TOOLSET: 'clang', COMPILER: 'clang++-18', CXXSTD: '03,11,14,17,20,2b' },
         "clang-18",
-        ["deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main"],
+        ["deb http://apt.llvm.org/noble/ llvm-toolchain-noble-18 main"],
     ),
 
     linux_pipeline(
@@ -399,7 +399,7 @@ local windows_pipeline(name, image, environment, arch = "amd64") =
         "cppalliance/droneubuntu2404:1",
         { TOOLSET: 'clang', COMPILER: 'clang++-19', CXXSTD: '03,11,14,17,20,2b' },
         "clang-19",
-        ["deb http://apt.llvm.org/jammy/ llvm-toolchain-noble-19 main"],
+        ["deb http://apt.llvm.org/noble/ llvm-toolchain-noble-19 main"],
     ),
 
     macos_pipeline(
