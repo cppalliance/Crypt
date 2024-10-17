@@ -307,6 +307,8 @@ constexpr auto sha1_hasher::pad_message() noexcept -> void
     buffer_[61U] = static_cast<boost::crypt::uint8_t>(low_ >> 16U);
     buffer_[62U] = static_cast<boost::crypt::uint8_t>(low_ >>  8U);
     buffer_[63U] = static_cast<boost::crypt::uint8_t>(low_);
+
+    sha1_process_message_block();
 }
 
 template <typename ForwardIter>
