@@ -411,6 +411,25 @@ void files_test()
     test_file(filename_2, res_2);
 }
 
+void test_invalid_state()
+{
+    boost::crypt::sha1_hasher hasher;
+    const auto current_state = hasher.process_bytes("test", 4);
+    BOOST_TEST(current_state == boost::crypt::hasher_state::success);
+
+    hasher.get_digest();
+
+    const auto bad_state = hasher.process_bytes("test", 4);
+    BOOST_TEST(bad_state == boost::crypt::hasher_state::state_error);
+
+    const auto digest = hasher.get_digest();
+
+    for (const auto& val : digest)
+    {
+        BOOST_TEST_EQ(val, static_cast<std::uint8_t>(0));
+    }
+}
+
 int main()
 {
     basic_tests();
@@ -435,6 +454,8 @@ int main()
     #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
     files_test();
     #endif
+
+    test_invalid_state();
 
     return boost::report_errors();
 }
