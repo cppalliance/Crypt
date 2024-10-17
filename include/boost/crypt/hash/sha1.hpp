@@ -698,6 +698,11 @@ inline auto sha1_file(const char* filepath) noexcept -> sha1_hasher::return_type
 {
     try
     {
+        if (filepath == nullptr)
+        {
+            return sha1_hasher::return_type{};
+        }
+
         utility::file_reader<64U> reader(filepath);
         return detail::sha1_file_impl(reader);
     }
