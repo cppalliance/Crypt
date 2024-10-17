@@ -291,6 +291,125 @@ void test_random_piecewise_values()
     delete[] str_2;
 }
 
+template <typename T>
+void test_file(T filename, const std::array<std::uint16_t, 20>& res)
+{
+    const auto crypt_res {boost::crypt::sha1_file(filename)};
+
+    for (std::size_t j {}; j < crypt_res.size(); ++j)
+    {
+        if (!BOOST_TEST_EQ(res[j], crypt_res[j]))
+        {
+            // LCOV_EXCL_START
+            std::cerr << "Failure with file: " << filename << std::endl;
+            break;
+            // LCOV_EXCL_STOP
+        }
+    }
+}
+
+template <typename T>
+void test_invalid_file(T filename)
+{
+    constexpr std::array<std::uint16_t, 20> res{};
+
+    const auto crypt_res {boost::crypt::sha1_file(filename)};
+
+    for (std::size_t j {}; j < crypt_res.size(); ++j)
+    {
+        if (!BOOST_TEST_EQ(res[j], crypt_res[j]))
+        {
+            // LCOV_EXCL_START
+            std::cerr << "Failure with file: " << filename << std::endl;
+            break;
+            // LCOV_EXCL_STOP
+        }
+    }
+}
+
+void files_test()
+{
+    // Based off where we are testing from (test vs boost_root) we need to adjust our filepath
+    const char* filename;
+    const char* filename_2;
+
+    // Boost-root
+    std::ifstream fd("libs/crypt/test/test_file_1.txt", std::ios::binary | std::ios::in);
+    filename = "libs/crypt/test/test_file_1.txt";
+    filename_2 = "libs/crypt/test/test_file_2.txt";
+
+    // LCOV_EXCL_START
+    if (!fd.is_open())
+    {
+        // Local test directory or IDE
+        std::ifstream fd2("test_file_1.txt", std::ios::binary | std::ios::in);
+        filename = "test_file_1.txt";
+        filename_2 = "test_file_2.txt";
+
+        if (!fd2.is_open())
+        {
+            // test/cover
+            std::ifstream fd3("../test_file_1.txt", std::ios::binary | std::ios::in);
+            filename = "../test_file_1.txt";
+            filename_2 = "../test_file_2.txt";
+
+            if (!fd3.is_open())
+            {
+                std::cerr << "Test not run due to file system issues" << std::endl;
+                return;
+            }
+            else
+            {
+                fd3.close();
+            }
+        }
+        else
+        {
+            fd2.close();
+        }
+    }
+    else
+    {
+        fd.close();
+    }
+    // LCOV_EXCL_STOP
+
+    // On macOS 15
+    // sha1 test_file_1.txt
+    // SHA1 (test_file_1.txt) = 9c04cd6372077e9b11f70ca111c9807dc7137e4b
+    constexpr std::array<std::uint16_t, 20> res{0x9c, 0x04, 0xcd, 0x63, 0x72, 0x07, 0x7e, 0x9b, 0x11, 0xf7,
+                                                0x0c, 0xa1, 0x11, 0xc9, 0x80, 0x7d, 0xc7, 0x13, 0x7e, 0x4b};
+
+    test_file(filename, res);
+
+    const std::string str_filename {filename};
+    test_file(str_filename, res);
+
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    const std::string_view str_view_filename {str_filename};
+    test_file(str_view_filename, res);
+    #endif
+
+    const auto invalid_filename = "broken.bin";
+    test_invalid_file(invalid_filename);
+
+    const std::string str_invalid_filename {invalid_filename};
+    test_invalid_file(str_invalid_filename);
+
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    const std::string_view str_view_invalid_filename {str_invalid_filename};
+    test_invalid_file(str_view_invalid_filename);
+    #endif
+
+    // On macOS 15
+    // sha1 test_file_2.txt
+    // SHA1 (test_file_2.txt) = 5d987ba69fde8b2500594799b47bd9255ac9cb65
+    constexpr std::array<std::uint16_t, 20> res_2{0x5d, 0x98, 0x7b, 0xa6, 0x9f, 0xde, 0x8b, 0x25, 0x00, 0x59,
+                                                  0x47, 0x99, 0xb4, 0x7b, 0xd9, 0x25, 0x5a, 0xc9, 0xcb, 0x65};
+
+    test_file(filename_2, res_2);
+}
+
 int main()
 {
     basic_tests();
@@ -310,6 +429,11 @@ int main()
 
     test_random_values<wchar_t>();
     test_random_piecewise_values<wchar_t>();
+
+    // The Windows file system returns a different result than on UNIX platforms
+    #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
+    files_test();
+    #endif
 
     return boost::report_errors();
 }
