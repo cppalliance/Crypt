@@ -89,10 +89,10 @@ constexpr auto round1(boost::crypt::uint32_t& A,
                       boost::crypt::uint32_t& E,
                       boost::crypt::uint32_t  W)
 {
-    const auto temp {detail::rotl(5U, A) + ((B & C) | ((~B) & D)) + E + W + 0x5A827999U};
+    const auto temp {detail::rotl(A, 5U) + ((B & C) | ((~B) & D)) + E + W + 0x5A827999U};
     E = D;
     D = C;
-    C = detail::rotl(30U, B);
+    C = detail::rotl(B, 30U);
     B = A;
     A = temp;
 }
@@ -104,10 +104,10 @@ constexpr auto round2(boost::crypt::uint32_t& A,
                       boost::crypt::uint32_t& E,
                       boost::crypt::uint32_t  W)
 {
-    const auto temp {detail::rotl(5U, A) + (B ^ C ^ D) + E + W + 0x6ED9EBA1U};
+    const auto temp {detail::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0x6ED9EBA1U};
     E = D;
     D = C;
-    C = detail::rotl(30U, B);
+    C = detail::rotl(B, 30U);
     B = A;
     A = temp;
 }
@@ -119,10 +119,10 @@ constexpr auto round3(boost::crypt::uint32_t& A,
                       boost::crypt::uint32_t& E,
                       boost::crypt::uint32_t  W)
 {
-    const auto temp {detail::rotl(5U, A) + ((B & C) | (B & D) | (C & D)) + E + W + 0x8F1BBCDCU};
+    const auto temp {detail::rotl(A, 5U) + ((B & C) | (B & D) | (C & D)) + E + W + 0x8F1BBCDCU};
     E = D;
     D = C;
-    C = detail::rotl(30U, B);
+    C = detail::rotl(B, 30U);
     B = A;
     A = temp;
 }
@@ -134,10 +134,10 @@ constexpr auto round4(boost::crypt::uint32_t& A,
                       boost::crypt::uint32_t& E,
                       boost::crypt::uint32_t  W)
 {
-    const auto temp {detail::rotl(5U, A) + (B ^ C ^ D) + E + W + 0xCA62C1D6U};
+    const auto temp {detail::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0xCA62C1D6U};
     E = D;
     D = C;
-    C = detail::rotl(30U, B);
+    C = detail::rotl(B, 30U);
     B = A;
     A = temp;
 }
