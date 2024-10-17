@@ -414,7 +414,7 @@ void files_test()
 void test_invalid_state()
 {
     boost::crypt::sha1_hasher hasher;
-    const auto current_state = hasher.process_bytes("test", 4);
+    auto current_state = hasher.process_bytes("test", 4);
     BOOST_TEST(current_state == boost::crypt::hasher_state::success);
 
     hasher.get_digest();
@@ -428,6 +428,14 @@ void test_invalid_state()
     {
         BOOST_TEST_EQ(val, static_cast<std::uint8_t>(0));
     }
+
+    hasher.init();
+
+    current_state = hasher.process_bytes("test", 4);
+    BOOST_TEST(current_state == boost::crypt::hasher_state::success);
+    const char* ptr = nullptr;
+    current_state = hasher.process_bytes(ptr, 4);
+    BOOST_TEST(current_state == boost::crypt::hasher_state::null);
 }
 
 int main()
