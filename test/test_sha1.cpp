@@ -409,6 +409,9 @@ void files_test()
                                                   0x47, 0x99, 0xb4, 0x7b, 0xd9, 0x25, 0x5a, 0xc9, 0xcb, 0x65};
 
     test_file(filename_2, res_2);
+
+    const char* test_null_file = nullptr;
+    test_invalid_file(test_null_file);
 }
 
 void test_invalid_state()
@@ -435,6 +438,18 @@ void test_invalid_state()
     BOOST_TEST(current_state == boost::crypt::hasher_state::success);
     const char* ptr = nullptr;
     current_state = hasher.process_bytes(ptr, 4);
+    BOOST_TEST(current_state == boost::crypt::hasher_state::null);
+
+    const char16_t* ptr16 = nullptr;
+    current_state = hasher.process_bytes(ptr16, 4);
+    BOOST_TEST(current_state == boost::crypt::hasher_state::null);
+
+    const char32_t* ptr32 = nullptr;
+    current_state = hasher.process_bytes(ptr32, 4);
+    BOOST_TEST(current_state == boost::crypt::hasher_state::null);
+
+    const wchar_t* wptr = nullptr;
+    current_state = hasher.process_bytes(wptr, 4);
     BOOST_TEST(current_state == boost::crypt::hasher_state::null);
 }
 
