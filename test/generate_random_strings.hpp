@@ -10,7 +10,7 @@
 #include <ctime>
 #include <cstring>
 
-static std::mt19937_64 rng(42);
+static std::mt19937_64 string_rng(42);
 
 namespace boost {
 namespace crypt {
@@ -28,7 +28,7 @@ inline void generate_random_string(char* str, std::size_t length)
 
     for (std::size_t i = 0; i < length - 1; ++i)
     {
-        const auto index = dist(rng);
+        const auto index = dist(string_rng);
         str[i] = charset[index];
     }
 
@@ -47,7 +47,7 @@ inline void generate_random_string(char16_t* str, std::size_t length)
 
     for (std::size_t i = 0; i < length - 1; ++i)
     {
-        const auto index = dist(rng);
+        const auto index = dist(string_rng);
         str[i] = charset[index];
     }
 
@@ -66,7 +66,7 @@ inline void generate_random_string(char32_t* str, std::size_t length)
 
     for (std::size_t i = 0; i < length - 1; ++i)
     {
-        const auto index = dist(rng);
+        const auto index = dist(string_rng);
         str[i] = charset[index];
     }
 
@@ -85,7 +85,7 @@ inline void generate_random_string(wchar_t* str, std::size_t length)
 
     for (std::size_t i = 0; i < length - 1; ++i)
     {
-        const auto index = dist(rng);
+        const auto index = dist(string_rng);
         str[i] = charset[index];
     }
 
