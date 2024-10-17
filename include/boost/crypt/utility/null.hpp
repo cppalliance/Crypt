@@ -12,6 +12,7 @@
 
 namespace boost {
 namespace crypt {
+namespace utility {
 
 template <typename ForwardIter, boost::crypt::enable_if_t<boost::crypt::is_pointer_v<ForwardIter>, bool> = true>
 BOOST_CRYPT_GPU_ENABLED constexpr auto is_null(ForwardIter iter) noexcept -> bool
@@ -25,6 +26,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto is_null(ForwardIter) noexcept -> bool
     return false;
 }
 
+} // namespace utility
 } // namespace crypt
 } // namespace boost
 

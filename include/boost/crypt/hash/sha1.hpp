@@ -7,6 +7,7 @@
 #ifndef BOOST_CRYPT_HASH_SHA1_HPP
 #define BOOST_CRYPT_HASH_SHA1_HPP
 
+#include <boost/crypt/hash/hasher_state.hpp>
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/bit.hpp>
 #include <boost/crypt/utility/byte.hpp>
@@ -17,6 +18,7 @@
 #include <boost/crypt/utility/cstddef.hpp>
 #include <boost/crypt/utility/iterator.hpp>
 #include <boost/crypt/utility/file.hpp>
+#include <boost/crypt/utility/null.hpp>
 
 #ifndef BOOST_CRYPT_BUILD_MODULE
 #include <memory>
@@ -32,14 +34,6 @@ class sha1_hasher
 {
 private:
 
-    enum class state : boost::crypt::uint8_t
-    {
-        success,            // no issues
-        null,               // nullptr as parameter
-        input_too_long,     // input data too long (exceeded size_t)
-        state_error         // added more input after get_digest without re-init
-    };
-
     boost::crypt::array<boost::crypt::uint32_t, 5> intermediate_hash_ {0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0};
     boost::crypt::array<boost::crypt::uint8_t, 64> buffer_ {};
 
@@ -53,7 +47,7 @@ private:
     constexpr auto sha1_process_message_block() -> void;
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto pad_message() noexcept -> void;
 
@@ -64,17 +58,16 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr auto init() -> void;
 
     template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept
-        BOOST_CRYPT_REQUIRES_CONVERSION(ByteType, boost::crypt::uint8_t);
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type ;
@@ -316,11 +309,11 @@ constexpr auto sha1_hasher::pad_message() noexcept -> void
 }
 
 template <typename ForwardIter>
-constexpr auto sha1_hasher::sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> state
+constexpr auto sha1_hasher::sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state
 {
-    if (size == 0)
+    if (size == 0U)
     {
-        return state::success;
+        return hasher_state::success;
     }
     if (computed)
     {
@@ -328,7 +321,7 @@ constexpr auto sha1_hasher::sha1_update(ForwardIter data, boost::crypt::size_t s
     }
     if (corrupted)
     {
-        return state::state_error;
+        return hasher_state::state_error;
     }
 
     while (size-- && !corrupted)
@@ -344,7 +337,7 @@ constexpr auto sha1_hasher::sha1_update(ForwardIter data, boost::crypt::size_t s
             if (high_ == 0)
             {
                 corrupted = true;
-                return state::input_too_long;
+                return hasher_state::input_too_long;
             }
             // LCOV_EXCL_STOP
         }
@@ -357,7 +350,7 @@ constexpr auto sha1_hasher::sha1_update(ForwardIter data, boost::crypt::size_t s
         ++data;
     }
 
-    return state::success;
+    return hasher_state::success;
 }
 
 BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::init() -> void
@@ -377,49 +370,84 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::init() -> void
 }
 
 template <typename ByteType>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_byte(ByteType byte) noexcept
-    BOOST_CRYPT_REQUIRES_CONVERSION(ByteType, boost::crypt::uint8_t)
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_byte(ByteType byte) noexcept -> hasher_state
 {
+    static_assert(boost::crypt::is_convertible_v<ByteType, boost::crypt::uint8_t>, "Byte must be convertible to uint8_t");
     const auto value {static_cast<boost::crypt::uint8_t>(byte)};
-    sha1_update(&value, 1UL);
+    return sha1_update(&value, 1UL);
 }
 
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
-    sha1_update(buffer, byte_count);
+    if (!utility::is_null(buffer))
+    {
+        return sha1_update(buffer, byte_count);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 }
 
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     #ifndef BOOST_CRYPT_HAS_CUDA
 
-    const auto* char_ptr {reinterpret_cast<const char*>(std::addressof(*buffer))};
-    const auto* data {reinterpret_cast<const unsigned char*>(char_ptr)};
-    sha1_update(data, byte_count * 2U);
+    if (!utility::is_null(buffer))
+    {
+        const auto* char_ptr {reinterpret_cast<const char *>(std::addressof(*buffer))};
+        const auto* data {reinterpret_cast<const unsigned char *>(char_ptr)};
+        return sha1_update(data, byte_count * 2U);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 
     #else
 
-    const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
-    sha1_update(data, byte_count * 2U);
+    if (!utility::is_null(buffer))
+    {
+        const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
+        return sha1_update(data, byte_count * 2U);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 
     #endif
 }
 
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     #ifndef BOOST_CRYPT_HAS_CUDA
 
-    const auto* char_ptr {reinterpret_cast<const char*>(std::addressof(*buffer))};
-    const auto* data {reinterpret_cast<const unsigned char*>(char_ptr)};
-    sha1_update(data, byte_count * 4U);
+    if (!utility::is_null(buffer))
+    {
+        const auto* char_ptr {reinterpret_cast<const char *>(std::addressof(*buffer))};
+        const auto* data {reinterpret_cast<const unsigned char *>(char_ptr)};
+        return sha1_update(data, byte_count * 4U);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 
     #else
 
-    const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
-    sha1_update(data, byte_count * 4U);
+    if (!utility::is_null(buffer))
+    {
+        const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
+        return sha1_update(data, byte_count * 4U);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 
     #endif
 }
