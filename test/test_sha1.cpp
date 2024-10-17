@@ -187,6 +187,95 @@ void test_class()
     }
 }
 
+template <typename T>
+void test_random_values()
+{
+    constexpr std::size_t max_str_len {65535U};
+    std::mt19937_64 rng(42);
+    std::uniform_int_distribution<std::size_t> str_len(1, max_str_len - 1);
+
+    char* str {new char[max_str_len]};
+
+    for (std::size_t i {}; i < 1024; ++i)
+    {
+        std::memset(str, '\0', max_str_len);
+        const std::size_t current_str_len {str_len(rng)};
+        boost::crypt::generate_random_string(str, current_str_len);
+        const auto uuid_res {get_boost_uuid_result(str, current_str_len)};
+
+        // boost::crypt::array is implicitly convertible to std::array
+        const std::array<std::uint8_t, 20> crypt_res = boost::crypt::sha1(str, current_str_len);
+
+        for (std::size_t j {}; j < crypt_res.size(); ++j)
+        {
+            if (!BOOST_TEST_EQ(uuid_res[j], crypt_res[j]))
+            {
+                // LCOV_EXCL_START
+                std::cerr << "Failure with string: " << str << std::endl;
+                break;
+                // LCOV_EXCL_STOP
+            }
+        }
+    }
+
+    delete[] str;
+}
+
+template <typename T>
+void test_random_piecewise_values()
+{
+    constexpr std::size_t max_str_len {65535U};
+    std::mt19937_64 rng(42);
+    std::uniform_int_distribution<std::size_t> str_len(1, max_str_len - 1);
+
+    char* str {new char[max_str_len]};
+    char* str_2 {new char[max_str_len]};
+
+    for (std::size_t i {}; i < 1024; ++i)
+    {
+        boost::uuids::detail::sha1 boost_hasher;
+        boost::crypt::sha1_hasher sha1_hasher;
+
+        std::memset(str, '\0', max_str_len);
+        std::memset(str_2, '\0', max_str_len);
+
+        const std::size_t current_str_len {str_len(rng)};
+        boost::crypt::generate_random_string(str, current_str_len);
+        boost::crypt::generate_random_string(str_2, current_str_len);
+
+        boost_hasher.process_bytes(str, current_str_len);
+        boost_hasher.process_bytes(str_2, current_str_len);
+        boost_hasher.process_byte(52); // "4"
+        unsigned char digest[20];
+        boost_hasher.get_digest(digest);
+
+        std::array<unsigned char, 20> uuid_res {};
+        for (std::size_t j {}; j < 20U; ++j)
+        {
+            uuid_res[j] = digest[j];
+        }
+
+        sha1_hasher.process_bytes(str, current_str_len);
+        sha1_hasher.process_bytes(str_2, current_str_len);
+        sha1_hasher.process_byte(52); // "4"
+        const auto crypt_res {sha1_hasher.get_digest()};
+
+        for (std::size_t j {}; j < crypt_res.size(); ++j)
+        {
+            if (!BOOST_TEST_EQ(uuid_res[j], crypt_res[j]))
+            {
+                // LCOV_EXCL_START
+                std::cerr << "Failure with string: " << str << std::endl;
+                break;
+                // LCOV_EXCL_STOP
+            }
+        }
+    }
+
+    delete[] str;
+    delete[] str_2;
+}
+
 int main()
 {
     basic_tests();
@@ -194,6 +283,18 @@ int main()
     string_view_test();
     bad_input();
     test_class();
+
+    test_random_values<char>();
+    test_random_piecewise_values<char>();
+
+    test_random_values<char16_t>();
+    test_random_piecewise_values<char16_t>();
+
+    test_random_values<char32_t>();
+    test_random_piecewise_values<char32_t>();
+
+    test_random_values<wchar_t>();
+    test_random_piecewise_values<wchar_t>();
 
     return boost::report_errors();
 }
