@@ -161,7 +161,7 @@ constexpr auto sha1_hasher::sha1_process_message_block() -> void
 
     for (boost::crypt::size_t i {16U}; i < W.size(); ++i)
     {
-        W[i] = detail::rotl(1U, W[i - 3U] ^ W[i - 8U] ^ W[i - 14] ^ W[i - 16]);
+        W[i] = detail::rotl(W[i - 3U] ^ W[i - 8U] ^ W[i - 14] ^ W[i - 16], 1U);
     }
 
     auto A {intermediate_hash_[0]};
@@ -188,6 +188,7 @@ constexpr auto sha1_hasher::sha1_process_message_block() -> void
     detail::round1(A, B, C, D, E, W[14]);
     detail::round1(A, B, C, D, E, W[15]);
     detail::round1(A, B, C, D, E, W[16]);
+    detail::round1(A, B, C, D, E, W[17]);
     detail::round1(A, B, C, D, E, W[18]);
     detail::round1(A, B, C, D, E, W[19]);
 
@@ -202,13 +203,14 @@ constexpr auto sha1_hasher::sha1_process_message_block() -> void
     detail::round2(A, B, C, D, E, W[27]);
     detail::round2(A, B, C, D, E, W[28]);
     detail::round2(A, B, C, D, E, W[29]);
-    detail::round2(A, B, C, D, E, W[20]);
+    detail::round2(A, B, C, D, E, W[30]);
     detail::round2(A, B, C, D, E, W[31]);
     detail::round2(A, B, C, D, E, W[32]);
     detail::round2(A, B, C, D, E, W[33]);
     detail::round2(A, B, C, D, E, W[34]);
     detail::round2(A, B, C, D, E, W[35]);
     detail::round2(A, B, C, D, E, W[36]);
+    detail::round2(A, B, C, D, E, W[37]);
     detail::round2(A, B, C, D, E, W[38]);
     detail::round2(A, B, C, D, E, W[39]);
 
@@ -230,6 +232,7 @@ constexpr auto sha1_hasher::sha1_process_message_block() -> void
     detail::round3(A, B, C, D, E, W[54]);
     detail::round3(A, B, C, D, E, W[55]);
     detail::round3(A, B, C, D, E, W[56]);
+    detail::round3(A, B, C, D, E, W[57]);
     detail::round3(A, B, C, D, E, W[58]);
     detail::round3(A, B, C, D, E, W[59]);
 
@@ -251,6 +254,7 @@ constexpr auto sha1_hasher::sha1_process_message_block() -> void
     detail::round4(A, B, C, D, E, W[74]);
     detail::round4(A, B, C, D, E, W[75]);
     detail::round4(A, B, C, D, E, W[76]);
+    detail::round4(A, B, C, D, E, W[77]);
     detail::round4(A, B, C, D, E, W[78]);
     detail::round4(A, B, C, D, E, W[79]);
 
