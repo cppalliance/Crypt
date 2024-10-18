@@ -35,7 +35,9 @@ int main()
         cudaError_t err = cudaSuccess;
 
         // Print the vector length to be used, and compute its size
-        int numElements = 50000;
+        constexpr int numElements = 50000;
+        constexpr std::size_t elementSize = 64;
+
         std::cout << "[Vector operation on " << numElements << " elements]" << std::endl;
 
         // Allocate the managed input vector A
@@ -46,8 +48,12 @@ int main()
 
         for (int i = 0; i < numElements; ++i)
         {
-            input_vector1[i] = new char[1024];
-            boost::crypt::generate_random_string(input_vector1[i], 1024);
+            input_vector1[i] = new char[elementSize];
+            if (input_vector1[i] == nullptr)
+            {
+                throw std::runtime_error("Failed to allocate memory for input_vector1");
+            }
+            boost::crypt::generate_random_string(input_vector1[i], elementSize);
         }
 
         // Launch the Vector Add CUDA Kernel
