@@ -41,14 +41,15 @@ int main()
         std::cout << "[Vector operation on " << numElements << " elements]" << std::endl;
 
         // Allocate the managed input vector A
-        char** input_vector1 = new char*[numElements];
+        char** input_vector1;
+        cudaMallocManaged(&input_vector1, numElements * sizeof(char*));
 
         // Allocate the managed output vector C
         cuda_managed_ptr<digest_type> output_vector(numElements);
 
         for (int i = 0; i < numElements; ++i)
         {
-            input_vector1[i] = new char[elementSize];
+            cudaMallocManaged(&input_vector1[i], elementSize * sizeof(char));
             if (input_vector1[i] == nullptr)
             {
                 throw std::runtime_error("Failed to allocate memory for input_vector1");
@@ -99,9 +100,9 @@ int main()
         // Cleanup all the memory we allocated
         for (int i = 0; i < numElements; ++i)
         {
-            delete[] input_vector1[i];
+            cudaFree(input_vector1[i]);
         }
-        delete[] input_vector1;
+        cudaFree(input_vector1);
     }
     catch (const std::exception& e)
     {
