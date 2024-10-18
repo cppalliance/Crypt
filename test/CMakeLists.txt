@@ -7,6 +7,19 @@ include(BoostTestJamfile OPTIONAL RESULT_VARIABLE HAVE_BOOST_TEST)
 
 if(HAVE_BOOST_TEST)
 
-    boost_test_jamfile(FILE Jamfile LINK_LIBRARIES Boost::crypt Boost::core Boost::uuid)
+    if (BOOST_CRYPT_ENABLE_CUDA)
+
+        message(STATUS "Building boost.crypt with CUDA")
+        find_package(CUDA REQUIRED)
+        enable_language(CUDA)
+        set(CMAKE_CUDA_EXTENSIONS OFF)
+
+        boost_test_jamfile(FILE nvcc_jamfile LINK_LIBRARIES Boost::crypt ${CUDA_LIBRARIES} INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS} )
+
+    else ()
+
+        boost_test_jamfile(FILE Jamfile LINK_LIBRARIES Boost::crypt Boost::core Boost::uuid)
+
+    endif ()
 
 endif()

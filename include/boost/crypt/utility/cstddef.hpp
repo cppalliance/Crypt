@@ -16,8 +16,7 @@ namespace crypt {
 using size_t = unsigned long;
 using ptrdiff_t = long;
 using nullptr_t = void;
-using std::max_align_t = double;
-
+using max_align_t = double;
 
 } // namespace crypt
 } // namespace boost

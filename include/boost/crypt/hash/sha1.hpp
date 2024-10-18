@@ -44,7 +44,7 @@ private:
     bool computed {};
     bool corrupted {};
 
-    constexpr auto sha1_process_message_block() -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_process_message_block() -> void;
 
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
@@ -75,6 +75,7 @@ public:
 
 namespace detail {
 
+BOOST_CRYPT_GPU_ENABLED
 constexpr auto round1(boost::crypt::uint32_t& A,
                       boost::crypt::uint32_t& B,
                       boost::crypt::uint32_t& C,
@@ -90,6 +91,7 @@ constexpr auto round1(boost::crypt::uint32_t& A,
     A = temp;
 }
 
+BOOST_CRYPT_GPU_ENABLED
 constexpr auto round2(boost::crypt::uint32_t& A,
                       boost::crypt::uint32_t& B,
                       boost::crypt::uint32_t& C,
@@ -105,6 +107,7 @@ constexpr auto round2(boost::crypt::uint32_t& A,
     A = temp;
 }
 
+BOOST_CRYPT_GPU_ENABLED
 constexpr auto round3(boost::crypt::uint32_t& A,
                       boost::crypt::uint32_t& B,
                       boost::crypt::uint32_t& C,
@@ -120,6 +123,7 @@ constexpr auto round3(boost::crypt::uint32_t& A,
     A = temp;
 }
 
+BOOST_CRYPT_GPU_ENABLED
 constexpr auto round4(boost::crypt::uint32_t& A,
                       boost::crypt::uint32_t& B,
                       boost::crypt::uint32_t& C,
