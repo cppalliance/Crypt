@@ -13,6 +13,7 @@
 
 namespace boost {
 namespace crypt {
+namespace utility {
 
 template <typename Iter>
 struct iterator_traits : public cuda::std::iterator_traits<Iter> {};
@@ -20,6 +21,7 @@ struct iterator_traits : public cuda::std::iterator_traits<Iter> {};
 template <typename T>
 struct iterator_traits<T*> : public cuda::std::iterator_traits<T*> {};
 
+} // namespace utility
 } // namespace crypt
 } // namespace boost
 
