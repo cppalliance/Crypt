@@ -11,6 +11,7 @@
 #pragma once
 #endif
 
+#include <iostream>
 #include <cuda_runtime.h>
 
 class managed_holder_base
