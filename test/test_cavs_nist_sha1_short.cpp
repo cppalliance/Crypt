@@ -117,8 +117,8 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
       }
       else
       {
-        // Try to open the file from the absolute path.
-        test_vectors_filename_relative = test_vectors_filename;
+        // CMake builds
+        test_vectors_filename_relative = "../../../../libs/crypt/test/nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
 
         std::ifstream in_04(test_vectors_filename_relative.c_str());
 
@@ -130,7 +130,21 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
         }
         else
         {
-          test_vectors_filename_relative = "";
+          // Try to open the file from the absolute path.
+          test_vectors_filename_relative = test_vectors_filename;
+
+          std::ifstream in_05(test_vectors_filename_relative.c_str());
+
+          const bool file_05_is_open { in_05.is_open() };
+
+          if(file_05_is_open)
+          {
+            in_05.close();
+          }
+          else
+          {
+            test_vectors_filename_relative = "";
+          }
         }
       }
     }
