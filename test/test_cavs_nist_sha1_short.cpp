@@ -81,6 +81,7 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
 
   const bool file_01_is_open { in_01.is_open() };
 
+  // LCOV_EXCL_START
   if(file_01_is_open)
   {
     in_01.close();
@@ -100,8 +101,8 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
     }
     else
     {
-      // Try to open the file from the absolute-path.
-      test_vectors_filename_relative = test_vectors_filename;
+      // Try to open the file from the cover-path.
+      test_vectors_filename_relative = "../../../../" + test_vectors_filename;
 
       std::ifstream in_03(test_vectors_filename_relative.c_str());
 
@@ -113,10 +114,25 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
       }
       else
       {
-        test_vectors_filename_relative = "";
+        // Try to open the file from the absolute-path.
+        test_vectors_filename_relative = test_vectors_filename;
+
+        std::ifstream in_04(test_vectors_filename_relative.c_str());
+
+        const bool file_04_is_open { in_04.is_open() };
+
+        if(file_04_is_open)
+        {
+          in_04.close();
+        }
+        else
+        {
+          test_vectors_filename_relative = "";
+        }
       }
     }
   }
+  // LCOV_EXCL_STOP
 
   return test_vectors_filename_relative;
 }
