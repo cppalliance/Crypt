@@ -72,117 +72,132 @@ public:
 
 using test_vector_container_type = std::deque<test_object_hash>;
 
-auto where_file(const std::string& test_vectors_filename) -> int
+auto where_file(const std::string& test_vectors_filename) -> std::string
 {
-  int result { -1 };
-
   // Try to open the file in the relative-path.
-  std::ifstream in_01(("./" + test_vectors_filename).c_str());
+  std::string test_vectors_filename_relative = "../" + test_vectors_filename;
+
+  std::ifstream in_01(test_vectors_filename_relative.c_str());
 
   const bool file_01_is_open { in_01.is_open() };
 
   if(file_01_is_open)
   {
     in_01.close();
-
-    result = 1;
   }
   else
   {
     // Try to open the file from the cover-path.
-    std::ifstream in_02(("../" + test_vectors_filename).c_str());
+    test_vectors_filename_relative = "../../../" + test_vectors_filename;
+
+    std::ifstream in_02(test_vectors_filename_relative.c_str());
 
     const bool file_02_is_open { in_02.is_open() };
 
     if(file_02_is_open)
     {
       in_02.close();
+    }
+    else
+    {
+      // Try to open the file from the absolute-path.
+      test_vectors_filename_relative = test_vectors_filename;
 
-      result = 2;
+      std::ifstream in_03(test_vectors_filename_relative.c_str());
+
+      const bool file_03_is_open { in_03.is_open() };
+
+      if(file_03_is_open)
+      {
+        in_03.close();
+      }
+      else
+      {
+        test_vectors_filename_relative = "";
+      }
     }
   }
 
-  return result;
+  return test_vectors_filename_relative;
 }
 
 auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_container_type& test_vectors_to_get) -> bool
 {
-  std::string str_message { };
-  std::string str_result  { };
-
-  const int where_file_result { where_file(test_vectors_filename) };
-
-  const std::string
-    test_vectors_filename_relative
-    {
-      where_file_result ==  1 ? "./"    + test_vectors_filename :
-      where_file_result ==  2 ? "./../" + test_vectors_filename :
-      test_vectors_filename
-    };
-
-  // Read the file for creating the test cases.
-  std::ifstream in(test_vectors_filename_relative.c_str());
-
-  const bool file_is_open = in.is_open();
-
-  BOOST_TEST_EQ(file_is_open, true);
-
   bool result_parse_is_ok { false };
 
-  if(file_is_open)
+  const std::string test_vectors_filename_relative { where_file(test_vectors_filename) };
+
+  const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
+
+  BOOST_TEST_EQ(result_filename_plausible_is_ok, true);
+
+  if(result_filename_plausible_is_ok)
   {
-    result_parse_is_ok = true;
+    std::string str_message { };
+    std::string str_result  { };
 
-    std::string line    { };
-    std::size_t length  { };
-    std::string message { };
-    std::string result  { };
+    // Read the file for creating the test cases.
+    std::ifstream in(test_vectors_filename_relative.c_str());
 
-    while(getline(in, line))
+    const bool file_is_open = in.is_open();
+
+    BOOST_TEST_EQ(file_is_open, true);
+
+    if(file_is_open)
     {
-      const std::string::size_type pos_len = line.find("Len =", 0U);
-      const std::string::size_type pos_msg = line.find("Msg =", 0U);
-      const std::string::size_type pos_md  = line.find("MD =",  0U);
+      result_parse_is_ok = true;
 
-      const bool line_is_representation_is_len = (pos_len != std::string::npos);
-      const bool line_is_representation_is_msg = (pos_msg != std::string::npos);
-      const bool line_is_representation_is_md  = (pos_md  != std::string::npos);
+      std::string line    { };
+      std::size_t length  { };
+      std::string message { };
+      std::string result  { };
 
-      // Get the next length.
-      if(line_is_representation_is_len)
+      while(getline(in, line))
       {
-        const std::string str_len = line.substr(6U, line.length() - 6U);
+        const std::string::size_type pos_len = line.find("Len =", 0U);
+        const std::string::size_type pos_msg = line.find("Msg =", 0U);
+        const std::string::size_type pos_md  = line.find("MD =",  0U);
 
-        const unsigned long length_from_file = std::strtoul(str_len.c_str(), nullptr, 10U);
+        const bool line_is_representation_is_len = (pos_len != std::string::npos);
+        const bool line_is_representation_is_msg = (pos_msg != std::string::npos);
+        const bool line_is_representation_is_md  = (pos_md  != std::string::npos);
 
-        length = static_cast<std::size_t>(length_from_file / 8U);
-      }
-
-      // Get the next message.
-      if(line_is_representation_is_msg)
-      {
-        message = line.substr(6U, line.length() - 6U);
-      }
-
-      // Get the next (expected) result.
-      if(line_is_representation_is_md)
-      {
-        result = line.substr(5U, line.length() - 5U);
-
-        // Use special handling for message = "00" with length = 0.
-        if((message == "00") && (length == 0U))
+        // Get the next length.
+        if(line_is_representation_is_len)
         {
-          message = "";
+          const std::string str_len = line.substr(6U, line.length() - 6U);
+
+          const unsigned long length_from_file = std::strtoul(str_len.c_str(), nullptr, 10U);
+
+          length = static_cast<std::size_t>(length_from_file / 8U);
         }
 
-        // Add the new test object to v.
-        const test_object_hash test_obj(message, result);
+        // Get the next message.
+        if(line_is_representation_is_msg)
+        {
+          message = line.substr(6U, line.length() - 6U);
+        }
 
-        test_vectors_to_get.push_back(test_obj);
+        // Get the next (expected) result.
+        if(line_is_representation_is_md)
+        {
+          result = line.substr(5U, line.length() - 5U);
+
+          // Use special handling for message = "00" with length = 0.
+          if((message == "00") && (length == 0U))
+          {
+            message = "";
+          }
+
+          // Add the new test object to v.
+          const test_object_hash test_obj(message, result);
+
+          test_vectors_to_get.push_back(test_obj);
+        }
       }
-    }
 
-    in.close();
+      in.close();
+    }
   }
 
   return (result_parse_is_ok && (!test_vectors_to_get.empty()));
@@ -253,7 +268,7 @@ auto main(int argc, char** argv) -> int
   local::test_vector_container_type test_vectors { };
 
   //static_cast<void>(local::detail::parse_file_vectors("C:/ChrisGitRepos/cppalliance/crypt/test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
-  static_cast<void>(local::detail::parse_file_vectors("../crypt/test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
+  static_cast<void>(local::detail::parse_file_vectors("crypt/test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
 
   const bool result_is_ok { local::test_vectors_oneshot<boost::crypt::sha1_hasher>(test_vectors) };
 
