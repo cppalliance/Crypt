@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <deque>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -241,8 +242,12 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 
 } // namespace local
 
-auto main() -> int
+auto main(int argc, char** argv) -> int
 {
+  const std::string str_where { argv[static_cast<std::size_t>(0U)] };
+
+  std::cout << "str_where: " << str_where << std::endl
+
   local::test_vector_container_type test_vectors { };
 
   //static_cast<void>(local::detail::parse_file_vectors("C:/ChrisGitRepos/cppalliance/crypt/test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
