@@ -253,7 +253,7 @@ auto main(int argc, char** argv) -> int
   local::test_vector_container_type test_vectors { };
 
   //static_cast<void>(local::detail::parse_file_vectors("C:/ChrisGitRepos/cppalliance/crypt/test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
-  static_cast<void>(local::detail::parse_file_vectors("test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
+  static_cast<void>(local::detail::parse_file_vectors("../crypt/test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
 
   const bool result_is_ok { local::test_vectors_oneshot<boost::crypt::sha1_hasher>(test_vectors) };
 
