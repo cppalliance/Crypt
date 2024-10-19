@@ -74,8 +74,11 @@ using test_vector_container_type = std::deque<test_object_hash>;
 
 auto where_file(const std::string& test_vectors_filename) -> std::string
 {
-  // Try to open the file in the relative path.
-  std::string test_vectors_filename_relative = "../" + test_vectors_filename;
+  // Try to open the file in each of the known relative paths
+  // in order to find out where it is located.
+
+  // Boost-root
+  std::string test_vectors_filename_relative = "libs/crypt/test/nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
 
   std::ifstream in_01(test_vectors_filename_relative.c_str());
 
@@ -88,8 +91,8 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
   }
   else
   {
-    // Try to open the file from the cover path.
-    test_vectors_filename_relative = "../../../" + test_vectors_filename;
+    // Local test directory or IDE
+    test_vectors_filename_relative = "nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
 
     std::ifstream in_02(test_vectors_filename_relative.c_str());
 
@@ -101,8 +104,8 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
     }
     else
     {
-      // Try to open the file from the CMake working path.
-      test_vectors_filename_relative = "../../../../libs/" + test_vectors_filename;
+      // test/cover
+      test_vectors_filename_relative = "../nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
 
       std::ifstream in_03(test_vectors_filename_relative.c_str());
 
@@ -283,8 +286,7 @@ auto main(int argc, char** argv) -> int
 
   local::test_vector_container_type test_vectors { };
 
-  //static_cast<void>(local::detail::parse_file_vectors("C:/ChrisGitRepos/cppalliance/crypt/test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
-  static_cast<void>(local::detail::parse_file_vectors("crypt/test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
+  static_cast<void>(local::detail::parse_file_vectors("SHA1ShortMsg.rsp", test_vectors));
 
   const bool result_is_ok { local::test_vectors_oneshot<boost::crypt::sha1_hasher>(test_vectors) };
 
