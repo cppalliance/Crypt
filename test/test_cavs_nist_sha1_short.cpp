@@ -102,7 +102,7 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
     else
     {
       // Try to open the file from the CMake working path.
-      test_vectors_filename_relative = "../../../libs/" + test_vectors_filename;
+      test_vectors_filename_relative = "../../../../libs/" + test_vectors_filename;
 
       std::ifstream in_03(test_vectors_filename_relative.c_str());
 
