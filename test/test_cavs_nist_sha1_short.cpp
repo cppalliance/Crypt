@@ -71,15 +71,60 @@ public:
 
 using test_vector_container_type = std::deque<test_object_hash>;
 
+auto where_file(const std::string& test_vectors_filename) -> int
+{
+  int result { -1 };
+
+  // Try to open the file in the relative-path.
+  std::ifstream in_01(("./" + test_vectors_filename).c_str());
+
+  const bool file_01_is_open { in_01.is_open() };
+
+  if(file_01_is_open)
+  {
+    in_01.close();
+
+    result = 1;
+  }
+  else
+  {
+    // Try to open the file from the cover-path.
+    std::ifstream in_02(("../" + test_vectors_filename).c_str());
+
+    const bool file_02_is_open { in_02.is_open() };
+
+    if(file_02_is_open)
+    {
+      in_02.close();
+
+      result = 2;
+    }
+  }
+
+  return result;
+}
+
 auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_container_type& test_vectors_to_get) -> bool
 {
   std::string str_message { };
   std::string str_result  { };
 
+  const int where_file_result { where_file(test_vectors_filename) };
+
+  const std::string
+    test_vectors_filename_relative
+    {
+      where_file_result ==  1 ? "./"    + test_vectors_filename :
+      where_file_result ==  2 ? "./../" + test_vectors_filename :
+      test_vectors_filename
+    };
+
   // Read the file for creating the test cases.
-  std::ifstream in(test_vectors_filename.c_str());
+  std::ifstream in(test_vectors_filename_relative.c_str());
 
   const bool file_is_open = in.is_open();
+
+  BOOST_TEST_EQ(file_is_open, true);
 
   bool result_parse_is_ok { false };
 
@@ -147,17 +192,17 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
 using detail::test_vector_container_type;
 using detail::parse_file_vectors;
 
-template<typename HashType>
+template<typename HasherType>
 auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> bool
 {
-  using local_hash_type = HashType;
-  using local_result_type = typename local_hash_type::return_type;
+  using local_hasher_type = HasherType;
+  using local_result_type = typename local_hasher_type::return_type;
 
   bool result_is_ok { true };
 
   for(const auto& test_vector : test_vectors)
   {
-    local_hash_type this_hash { };
+    local_hasher_type this_hash { };
 
     // Make pass 1 through the messages.
     // Use the triple-combination of init/process/get-result functions.
@@ -200,7 +245,8 @@ auto main() -> int
 {
   local::test_vector_container_type test_vectors { };
 
-  static_cast<void>(local::detail::parse_file_vectors("./test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
+  //static_cast<void>(local::detail::parse_file_vectors("C:/ChrisGitRepos/cppalliance/crypt/test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
+  static_cast<void>(local::detail::parse_file_vectors("test/nist_cavs/vectors/shabytesvectors/SHA1ShortMsg.rsp", test_vectors));
 
   const bool result_is_ok { local::test_vectors_oneshot<boost::crypt::sha1_hasher>(test_vectors) };
 
