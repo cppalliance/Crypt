@@ -3,18 +3,19 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
+#ifndef BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP
+#define BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP
+
 #include <boost/core/lightweight_test.hpp>
-#include <boost/crypt/hash/sha1.hpp>
 
 #include <cstddef>
 #include <cstdint>
 #include <deque>
 #include <fstream>
-#include <iostream>
 #include <string>
 #include <vector>
 
-namespace local {
+namespace nist { namespace cavs {
 
 namespace detail {
 
@@ -162,7 +163,7 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
 
   const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
-  BOOST_TEST_EQ(result_filename_plausible_is_ok, true);
+  BOOST_TEST(result_filename_plausible_is_ok);
 
   if(result_filename_plausible_is_ok)
   {
@@ -173,8 +174,6 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
     std::ifstream in(test_vectors_filename_relative.c_str());
 
     const bool file_is_open = in.is_open();
-
-    BOOST_TEST_EQ(file_is_open, true);
 
     if(file_is_open)
     {
@@ -230,10 +229,14 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
       }
 
       in.close();
+
+      result_parse_is_ok = ((!test_vectors_to_get.empty()) && result_parse_is_ok);
     }
   }
 
-  return (result_parse_is_ok && (!test_vectors_to_get.empty()));
+  BOOST_TEST(result_parse_is_ok);
+
+  return result_parse_is_ok;
 }
 
 } // namespace detail
@@ -246,6 +249,8 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 {
   using local_hasher_type = HasherType;
   using local_result_type = typename local_hasher_type::return_type;
+
+  BOOST_TEST(!test_vectors.empty());
 
   bool result_is_ok { true };
 
@@ -288,23 +293,7 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
   return result_is_ok;
 }
 
-} // namespace local
+} // namespace cavs
+} // namespace nist
 
-auto main(int argc, char** argv) -> int
-{
-  static_cast<void>(argc);
-
-  const std::string str_where { argv[static_cast<std::size_t>(0U)] };
-
-  std::cout << "str_where: " << str_where << std::endl;
-
-  local::test_vector_container_type test_vectors { };
-
-  static_cast<void>(local::detail::parse_file_vectors("SHA1ShortMsg.rsp", test_vectors));
-
-  const bool result_is_ok { local::test_vectors_oneshot<boost::crypt::sha1_hasher>(test_vectors) };
-
-  static_cast<void>(result_is_ok);
-
-  return boost::report_errors();
-}
+#endif // BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP
