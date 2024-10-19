@@ -246,7 +246,7 @@ auto main(int argc, char** argv) -> int
 {
   const std::string str_where { argv[static_cast<std::size_t>(0U)] };
 
-  std::cout << "str_where: " << str_where << std::endl
+  std::cout << "str_where: " << str_where << std::endl;
 
   local::test_vector_container_type test_vectors { };
 
