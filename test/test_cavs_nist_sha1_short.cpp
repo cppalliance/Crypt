@@ -74,7 +74,7 @@ using test_vector_container_type = std::deque<test_object_hash>;
 
 auto where_file(const std::string& test_vectors_filename) -> std::string
 {
-  // Try to open the file in the relative-path.
+  // Try to open the file in the relative path.
   std::string test_vectors_filename_relative = "../" + test_vectors_filename;
 
   std::ifstream in_01(test_vectors_filename_relative.c_str());
@@ -88,7 +88,7 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
   }
   else
   {
-    // Try to open the file from the cover-path.
+    // Try to open the file from the cover path.
     test_vectors_filename_relative = "../../../" + test_vectors_filename;
 
     std::ifstream in_02(test_vectors_filename_relative.c_str());
@@ -101,8 +101,8 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
     }
     else
     {
-      // Try to open the file from the cover-path.
-      test_vectors_filename_relative = "../../../../" + test_vectors_filename;
+      // Try to open the file from the CMake working path.
+      test_vectors_filename_relative = "../../../libs/" + test_vectors_filename;
 
       std::ifstream in_03(test_vectors_filename_relative.c_str());
 
@@ -114,7 +114,7 @@ auto where_file(const std::string& test_vectors_filename) -> std::string
       }
       else
       {
-        // Try to open the file from the absolute-path.
+        // Try to open the file from the absolute path.
         test_vectors_filename_relative = test_vectors_filename;
 
         std::ifstream in_04(test_vectors_filename_relative.c_str());
