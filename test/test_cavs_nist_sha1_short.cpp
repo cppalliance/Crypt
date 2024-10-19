@@ -107,9 +107,9 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
       {
         const std::string str_len = line.substr(6U, line.length() - 6U);
 
-        const std::uint32_t length_from_file = std::strtoul(str_len.c_str(), nullptr, 10U);
+        const unsigned long length_from_file = std::strtoul(str_len.c_str(), nullptr, 10U);
 
-        length = length_from_file / 8U;
+        length = static_cast<std::size_t>(length_from_file / 8U);
       }
 
       // Get the next message.
