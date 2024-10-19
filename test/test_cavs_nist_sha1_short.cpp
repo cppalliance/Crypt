@@ -244,6 +244,8 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 
 auto main(int argc, char** argv) -> int
 {
+  static_cast<void>(argc);
+
   const std::string str_where { argv[static_cast<std::size_t>(0U)] };
 
   std::cout << "str_where: " << str_where << std::endl;
