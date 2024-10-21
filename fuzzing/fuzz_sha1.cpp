@@ -27,6 +27,14 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
         std::span data_span {c_data, size};
         boost::crypt::sha1(data_span);
         #endif
+
+        // Fuzz the hasher object
+        boost::crypt::sha1_hasher hasher;
+        hasher.process_bytes(data, size);
+        hasher.process_bytes(data, size);
+        hasher.process_bytes(data, size);
+        hasher.get_digest();
+        hasher.process_bytes(data, size); // State is invalid but should not crash
     }
     catch(...)
     {
