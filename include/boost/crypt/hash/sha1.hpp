@@ -55,7 +55,7 @@ public:
 
 private:
 
-    boost::crypt::array<boost::crypt::uint32_t, 5> intermediate_hash_ { UINT32_C(0x67452301), UINT32_C(0xEFCDAB89), UINT32_C(0x98BADCFE), UINT32_C(0x10325476), UINT32_C(0xC3D2E1F0) };
+    boost::crypt::array<boost::crypt::uint32_t, 5> intermediate_hash_ { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 };
     boost::crypt::array<boost::crypt::uint8_t, 64> buffer_ {};
 
     boost::crypt::size_t buffer_index_ {};

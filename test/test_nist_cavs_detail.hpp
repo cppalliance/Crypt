@@ -390,12 +390,12 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
   local_array_type Seed { };
 
   const std::size_t
-    max_copy
+    copy_len
     {
       (std::min)(static_cast<std::size_t>(Seed.size()), static_cast<std::size_t>(seed_init.size()))
     };
 
-  std::copy(seed_init.cbegin(), seed_init.cend(), Seed.begin());
+  std::copy(seed_init.cbegin(), seed_init.cbegin() + copy_len, Seed.begin());
 
   bool result_is_ok { (!test_vectors_monte.empty()) };
 
