@@ -19,6 +19,8 @@ include::crypt/overview.adoc[]
 
 include::crypt/api_reference.adoc[]
 
+include::crypt/hasher_state.adoc[]
+
 include::crypt/md5.adoc[]
 
 include::crypt/sha1.adoc[]
