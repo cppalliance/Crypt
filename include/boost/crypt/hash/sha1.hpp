@@ -330,7 +330,8 @@ constexpr auto sha1_hasher::sha1_update(ForwardIter data, boost::crypt::size_t s
 
     while (size-- && !corrupted)
     {
-        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(*data & 0xFF);
+        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(static_cast<boost::crypt::uint8_t>(*data) &
+                                                                      static_cast<boost::crypt::uint8_t>(0xFF));
         low_ += 8U;
 
         if (BOOST_CRYPT_UNLIKELY(low_ == 0))
