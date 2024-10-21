@@ -9,4 +9,5 @@ project : requirements
     [ requires cxx14_decltype_auto cxx14_generic_lambdas cxx14_return_type_deduction cxx14_variable_templates cxx14_constexpr ]
     ;
 
+run test_md5_nvrtc.cpp ;
 run test_sha1_nvrtc.cpp ;
