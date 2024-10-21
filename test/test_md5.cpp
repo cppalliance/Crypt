@@ -459,6 +459,24 @@ void test_invalid_state()
     BOOST_TEST(current_state == boost::crypt::hasher_state::null);
 }
 
+void test_span()
+{
+    #ifdef BOOST_CRYPT_HAS_SPAN
+
+    // "abc" in hex
+    const std::byte vals[] = {std::byte{0x61}, std::byte{0x62}, std::byte{0x63}};
+    std::span<const std::byte> byte_span {vals};
+    const auto expected_res = std::array<std::uint16_t, 16>{0x90, 0x01, 0x50, 0x98, 0x3c, 0xd2, 0x4f, 0xb0, 0xd6, 0x96, 0x3f, 0x7d, 0x28, 0xe1, 0x7f, 0x72};
+    const auto res = boost::crypt::md5(byte_span);
+
+    for (std::size_t i {}; i < res.size(); ++i)
+    {
+        BOOST_TEST_EQ(res[i], expected_res[i]);
+    }
+
+    #endif // BOOST_CRYPT_HAS_SPAN
+}
+
 int main()
 {
     basic_tests();
@@ -488,6 +506,8 @@ int main()
     #endif
 
     test_invalid_state();
+
+    test_span();
 
     return boost::report_errors();
 }
