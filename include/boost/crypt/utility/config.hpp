@@ -71,10 +71,21 @@
 #      include <string_view>
 #      if defined(__cpp_lib_string_view) && __cpp_lib_string_view >= 201606L
 #        define BOOST_CRYPT_HAS_STRING_VIEW
+#      endif // <string_view> macro check
+#    endif // Has <string_view>
+#  endif // C++17
+#endif // BOOST_CRYPT_HAS_CUDA
+
+// C++20
+#ifndef BOOST_CRYPT_HAS_CUDA
+#  if __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
+#    if __has_include(<span>)
+#      if defined(__cpp_lib_span) && __cpp_lib_span >= 202002L
+#        define BOOST_CRYPT_HAS_SPAN
 #      endif
-#    endif
-#  endif
-#endif
+#    endif // Has <span>
+#  endif // C++20
+#endif // BOOST_CRYPT_HAS_CUDA
 
 #if defined(__has_builtin)
 #define BOOST_CRYPT_HAS_BUILTIN(x) __has_builtin(x)
