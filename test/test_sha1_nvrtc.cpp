@@ -184,6 +184,15 @@ int main()
             cudaFree(input_vector1[i]);
         }
         cudaFree(input_vector1);
+        cudaFree(output_vector);
+
+        nvrtcDestroyProgram(&prog);
+        delete[] ptx;
+
+        cuCtxDestroy(context);
+
+        std::cout << "Kernel executed successfully." << std::endl;
+        return 0;
     }
     catch(const std::exception& e)
     {
