@@ -88,7 +88,7 @@ int main()
 
         nvrtcAddNameExpression(prog, "test_sha1_kernel");
 
-        #ifdef BOOST_MATH_NVRTC_CI_RUN
+        #ifdef BOOST_CRYPT_NVRTC_CI_RUN
         const char* opts[] = {"--std=c++14", "--gpu-architecture=compute_75", "--include-path=/home/runner/work/crypt/boost-root/libs/crypt/include/", "-I/usr/local/cuda/include"};
         #else
         const char* opts[] = {"--std=c++14", "--include-path=/home/mborland/Documents/boost/libs/crypt/include/", "-I/usr/local/cuda/include"};
