@@ -36,7 +36,8 @@ as well as emulated PPC64LE and STM32 using QEMU with the following compilers:
 * GCC 7 and later
 * Clang 6 and later
 * Visual Studio 2017 and later
-* Intel OneAPI DPC++
+* Intel OneAPI DPC++ 2024.2 and later
+* CUDA Toolkit 12.5 and later (Both NVCC and NVRTC)
 
 Tested on https://github.com/cppalliance/decimal/actions[Github Actions] and https://drone.cpp.al/cppalliance/decimal[Drone].
 Coverage can be found on https://app.codecov.io/gh/cppalliance/decimal[Codecov].

@@ -18,52 +18,52 @@ private:
     boost::crypt::uint8_t bits_;
 
 public:
-    constexpr byte() noexcept : bits_ {} {}
-    explicit constexpr byte(boost::crypt::uint8_t bits) noexcept : bits_ {bits} {}
+    BOOST_CRYPT_GPU_ENABLED constexpr byte() noexcept : bits_ {} {}
+    BOOST_CRYPT_GPU_ENABLED explicit constexpr byte(boost::crypt::uint8_t bits) noexcept : bits_ {bits} {}
 
     template <typename IntegerType>
-    constexpr auto to_integer() noexcept
+    BOOST_CRYPT_GPU_ENABLED constexpr auto to_integer() noexcept
         BOOST_CRYPT_REQUIRES(boost::crypt::is_integral_v, IntegerType)
     {
         return static_cast<IntegerType>(bits_);
     }
 
     template <typename IntegerType>
-    constexpr auto operator<<(IntegerType shift) noexcept
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator<<(IntegerType shift) noexcept
         BOOST_CRYPT_REQUIRES_RETURN(boost::crypt::is_integral_v, IntegerType, byte)
     {
         return byte{bits_ << shift};
     }
 
     template <typename IntegerType>
-    constexpr auto operator>>(IntegerType shift) noexcept
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator>>(IntegerType shift) noexcept
         BOOST_CRYPT_REQUIRES_RETURN(boost::crypt::is_integral_v, IntegerType, byte)
     {
         return byte{bits_ >> shift};
     }
 
-    constexpr auto operator|(byte rhs) const noexcept -> byte
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator|(byte rhs) const noexcept -> byte
     {
         return byte{static_cast<boost::crypt::uint8_t>(bits_ | rhs.bits_)};
     }
 
-    constexpr auto operator&(byte rhs) const noexcept -> byte
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator&(byte rhs) const noexcept -> byte
     {
         return byte{static_cast<boost::crypt::uint8_t>(bits_ & rhs.bits_)};
     }
 
-    constexpr auto operator^(byte rhs) const noexcept -> byte
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator^(byte rhs) const noexcept -> byte
     {
         return byte{static_cast<boost::crypt::uint8_t>(bits_ ^ rhs.bits_)};
     }
 
-    constexpr auto operator~() const noexcept -> byte
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator~() const noexcept -> byte
     {
         return byte{static_cast<boost::crypt::uint8_t>(~bits_)};
     }
 
     template <typename IntegerType>
-    constexpr auto operator<<=(IntegerType shift) noexcept
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator<<=(IntegerType shift) noexcept
         BOOST_CRYPT_REQUIRES_RETURN(boost::crypt::is_integral_v, IntegerType, byte&)
     {
         bits_ <<= shift;
@@ -71,32 +71,32 @@ public:
     }
 
     template <typename IntegerType>
-    constexpr auto operator >>=(IntegerType shift) noexcept
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator >>=(IntegerType shift) noexcept
         BOOST_CRYPT_REQUIRES_RETURN(boost::crypt::is_integral_v, IntegerType, byte&)
     {
         bits_ >>= shift;
         return *this;
     }
 
-    constexpr auto operator|(byte rhs) noexcept -> byte&
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator|(byte rhs) noexcept -> byte&
     {
         bits_ = static_cast<boost::crypt::uint8_t>(bits_ | rhs.bits_);
         return *this;
     }
 
-    constexpr auto operator&(byte rhs) noexcept -> byte&
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator&(byte rhs) noexcept -> byte&
     {
         bits_ = static_cast<boost::crypt::uint8_t>(bits_ & rhs.bits_);
         return *this;
     }
 
-    constexpr auto operator^(byte rhs) noexcept -> byte&
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator^(byte rhs) noexcept -> byte&
     {
         bits_ = static_cast<boost::crypt::uint8_t>(bits_ ^ rhs.bits_);
         return *this;
     }
 
-    constexpr auto operator~() noexcept -> byte&
+    BOOST_CRYPT_GPU_ENABLED constexpr auto operator~() noexcept -> byte&
     {
         bits_ = static_cast<boost::crypt::uint8_t>(~bits_);
         return *this;
