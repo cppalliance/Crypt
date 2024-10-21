@@ -453,6 +453,8 @@ void test_invalid_state()
     BOOST_TEST(current_state == boost::crypt::hasher_state::null);
 }
 
+// This ends up being completely calculated in a constexpr fashion so Codecov complains
+// LCOV_EXCL_START
 void test_span()
 {
     #ifdef BOOST_CRYPT_HAS_SPAN
@@ -471,6 +473,7 @@ void test_span()
 
     #endif // BOOST_CRYPT_HAS_SPAN
 }
+// LCOV_EXCL_STOP
 
 int main()
 {
