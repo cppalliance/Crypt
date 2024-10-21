@@ -53,18 +53,25 @@
 // ---- Constexpr arrays -----
 
 // ----- Assertions -----
-#include <cassert>
-#define BOOST_CRYPT_ASSERT(x) assert(x)
-#define BOOST_CRYPT_ASSERT_MSG(expr, msg) assert((expr)&&(msg))
+#ifndef BOOST_CRYPT_HAS_CUDA
+#  include <cassert>
+#  define BOOST_CRYPT_ASSERT(x) assert(x)
+#  define BOOST_CRYPT_ASSERT_MSG(expr, msg) assert((expr)&&(msg))
+#else
+#  define BOOST_CRYPT_ASSERT(x)
+#  define BOOST_CRYPT_ASSERT_MSG(expr, msg)
+#endif
 // ----- Assertions -----
 
 // ----- Has something -----
 // C++17
-#if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
-#  if __has_include(<string_view>)
-#    include <string_view>
-#    if defined(__cpp_lib_string_view) && __cpp_lib_string_view >= 201606L
-#      define BOOST_CRYPT_HAS_STRING_VIEW
+#ifndef BOOST_CRYPT_HAS_CUDA
+#  if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
+#    if __has_include(<string_view>)
+#      include <string_view>
+#      if defined(__cpp_lib_string_view) && __cpp_lib_string_view >= 201606L
+#        define BOOST_CRYPT_HAS_STRING_VIEW
+#      endif
 #    endif
 #  endif
 #endif
