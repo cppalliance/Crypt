@@ -73,7 +73,7 @@ public:
 
 using test_vector_container_type = std::deque<test_object_hash>;
 
-auto where_file(const std::string& test_vectors_filename) -> std::string
+auto where_file_shabytesvectors(const std::string& test_vectors_filename) -> std::string
 {
   // Try to open the file in each of the known relative paths
   // in order to find out where it is located.
@@ -159,7 +159,7 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
 {
   bool result_parse_is_ok { false };
 
-  const std::string test_vectors_filename_relative { where_file(test_vectors_filename) };
+  const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_vectors_filename) };
 
   const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
