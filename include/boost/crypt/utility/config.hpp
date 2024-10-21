@@ -80,6 +80,7 @@
 #ifndef BOOST_CRYPT_HAS_CUDA
 #  if __cplusplus >= 202002L || (defined(_MSVC_LANG) && _MSVC_LANG >= 202002L)
 #    if __has_include(<span>)
+#      include <span>
 #      if defined(__cpp_lib_span) && __cpp_lib_span >= 202002L
 #        define BOOST_CRYPT_HAS_SPAN
 #      endif
