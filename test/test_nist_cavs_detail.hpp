@@ -46,9 +46,12 @@ public:
 
   test_object_hash() = delete;
 
-  // Construct hash test object with result only (no message and no length).
+  // Construct this hash test object by setting the result only.
+  // There is no message and there is no length available for
+  // this hash test object.
+
   explicit test_object_hash(const std::string& str_result)
-      : my_result
+      : my_result // LCOV_EXCL_LINE
         {
           [&str_result]()
           {
@@ -58,7 +61,8 @@ public:
         }
   { }
 
-  // Construct hash test object with all of message, length and result.
+  // Construct this hash test object with all of message, length and result.
+
   explicit test_object_hash(const std::string& str_data, const std::string& str_result)
       : my_length { str_data.size() / static_cast<size_type>(UINT8_C(2)) },
         my_msg
