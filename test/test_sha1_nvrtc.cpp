@@ -83,10 +83,10 @@ int main()
         nvrtcProgram prog;
         nvrtcResult res;
 
-        res = nvrtcCreateProgram(&prog, cuda_kernel, "test_cauchy_kernel.cu", 0, nullptr, nullptr);
+        res = nvrtcCreateProgram(&prog, cuda_kernel, "test_sha1_kernel.cu", 0, nullptr, nullptr);
         checkNVRTCError(res, "Failed to create NVRTC program");
 
-        nvrtcAddNameExpression(prog, "test_cauchy_kernel");
+        nvrtcAddNameExpression(prog, "test_sha1_kernel");
 
         #ifdef BOOST_MATH_NVRTC_CI_RUN
         const char* opts[] = {"--std=c++14", "--gpu-architecture=compute_75", "--include-path=/home/runner/work/crypt/boost-root/libs/crypt/include/", "-I/usr/local/cuda/include"};
@@ -117,7 +117,7 @@ int main()
         CUmodule module;
         CUfunction kernel;
         checkCUError(cuModuleLoadDataEx(&module, ptx, 0, 0, 0), "Failed to load module");
-        checkCUError(cuModuleGetFunction(&kernel, module, "test_cauchy_kernel"), "Failed to get kernel function");
+        checkCUError(cuModuleGetFunction(&kernel, module, "test_sha1_kernel"), "Failed to get kernel function");
 
         // Allocate memory
         int numElements = 50000;
@@ -136,7 +136,8 @@ int main()
             boost::crypt::generate_random_string(input_vector1[i], elementSize);
         }
 
-        cuda_managed_ptr<digest_type> output_vector(numElements);
+        digest_type* output_vector;
+        cudaMallocManaged(&output_vector, numElements * sizeof(digest_type));
 
         int blockSize = 256;
         int numBlocks = (numElements + blockSize - 1) / blockSize;
@@ -144,18 +145,34 @@ int main()
 
         watch w;
         checkCUError(cuLaunchKernel(kernel, numBlocks, 1, 1, blockSize, 1, 1, 0, 0, args, 0), "Kernel launch failed");
+        checkCUDAError(cudaDeviceSynchronize(), "Kernel execution failed");
 
         double t = w.elapsed();
         // Verify the result
+        int fail_counter = 0;
         for (int i = 0; i < numElements; ++i)
         {
             auto res = boost::crypt::sha1(input_vector1[i]);
 
-            if (res[0] != output_vector[i][0])
+            for (int j = 0; j < res.size(); ++j)
             {
-                std::cerr << "Result verification failed at element " << i << "!" << std::endl;
-                return EXIT_FAILURE;
+                if (res[j] != output_vector[i][j])
+                {
+                    std::cerr << std::hex << "Result verification failed at element " << i << "!\n"
+                              << "Got: " << static_cast<std::uint32_t>(output_vector[i][j]) << "\n"
+                              << "Expected: " << static_cast<std::uint32_t>(res[j]) << std::endl;
+                    ++fail_counter;
+                    if (fail_counter == 100)
+                    {
+                        break;
+                    }
+                }
             }
+        }
+
+        if (fail_counter == 100)
+        {
+            return EXIT_FAILURE;
         }
 
         std::cout << "Test PASSED with calculation time: " << t << "s" << std::endl;
