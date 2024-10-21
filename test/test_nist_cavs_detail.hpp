@@ -426,7 +426,7 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
         const local_wide_array_type Mi =
           [&MD, &dummy_array]()
           {
-            std::vector<std::uint8_t> result_vector { };
+            std::vector<std::uint8_t> result_vector;
 
             result_vector.reserve(dummy_array.size() * 3U);
 
@@ -434,7 +434,7 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
             result_vector.insert(result_vector.end(), MD[1U].cbegin(), MD[1U].cend());
             result_vector.insert(result_vector.end(), MD[2U].cbegin(), MD[2U].cend());
 
-            local_wide_array_type result { };
+            local_wide_array_type result = {{ static_cast<std::uint8_t>(0U) }};
 
             std::copy(result_vector.cbegin(), result_vector.cend(), result.begin());
 
