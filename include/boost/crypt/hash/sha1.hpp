@@ -20,7 +20,7 @@
 #include <boost/crypt/utility/file.hpp>
 #include <boost/crypt/utility/null.hpp>
 
-#ifndef BOOST_CRYPT_BUILD_MODULE
+#if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
 #include <memory>
 #include <string>
 #include <cstdint>

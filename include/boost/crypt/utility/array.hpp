@@ -10,7 +10,7 @@
 #include <boost/crypt/utility/cstdint.hpp>
 #include <boost/crypt/utility/cstddef.hpp>
 
-#ifndef BOOST_CRYPT_BUILD_MODULE
+#if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
 #include <array>
 #endif
 
@@ -102,6 +102,7 @@ public:
         *this = temp;
     }
 
+    #ifndef BOOST_CRYPT_HAS_CUDA
     constexpr operator std::array<T, N>() noexcept
     {
         std::array<T, N> new_array{};
@@ -112,6 +113,7 @@ public:
 
         return new_array;
     }
+    #endif
 };
 
 template <typename ForwardIter, typename T>

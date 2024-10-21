@@ -6,6 +6,10 @@
 #define BOOST_CRYPT_UTILITY_FILE_HPP
 
 #include <boost/crypt/utility/config.hpp>
+
+// Can't use file streaming on a CUDA device anyway
+#ifndef BOOST_CRYPT_HAS_CUDA
+
 #include <boost/crypt/utility/cstdint.hpp>
 
 #ifndef BOOST_CRYPT_BUILD_MODULE
@@ -82,5 +86,7 @@ public:
 } // namespace utility
 } // namespace crypt
 } // namespace boost
+
+#endif // BOOST_CRYPT_HAS_CUDA
 
 #endif //BOOST_CRYPT_UTILITY_FILE_HPP
