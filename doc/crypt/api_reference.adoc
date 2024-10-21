@@ -19,7 +19,7 @@ https://www.boost.org/LICENSE_1_0.txt
 
 == Enums
 
-- None
+- <<hasher_state, `hasher_state`>>
 
 == Constants
 
