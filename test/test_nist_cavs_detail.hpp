@@ -379,35 +379,35 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 }
 
 template<typename HasherType>
-auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vectors_monte) -> bool
+auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vectors_monte, const std::vector<std::uint8_t>& seed_init) -> bool
 {
   using local_hasher_type = HasherType;
   using local_result_type = typename local_hasher_type::return_type;
 
   using local_array_type = local_result_type;
 
-  // TODO: ckormanyos this is for sha1 only. Use generic programming for the Seed.
-  local_array_type
-    Seed
-    (
-      {
-        0xDDU, 0x4DU, 0xF6U, 0x44U, 0xEAU, 0xF3U, 0xD8U, 0x5BU,
-        0xACU, 0xE2U, 0xB2U, 0x1AU, 0xCCU, 0xAAU, 0x22U, 0xB2U,
-        0x88U, 0x21U, 0xF5U, 0xCDU
-      }
-    );
+  // Obtain the test-specific initial seed.
+  local_array_type Seed { };
 
-  constexpr local_array_type dummy_array { };
+  const std::size_t
+    max_copy
+    {
+      (std::min)(static_cast<std::size_t>(Seed.size()), static_cast<std::size_t>(seed_init.size()))
+    };
 
-  local_array_type MD[3U] { { }, { }, { } };
-
-  local_array_type MDi { };
-  local_array_type MDj { };
+  std::copy(seed_init.cbegin(), seed_init.cend(), Seed.begin());
 
   bool result_is_ok { (!test_vectors_monte.empty()) };
 
   if(result_is_ok)
   {
+    local_array_type MD[3U] { { }, { }, { } };
+
+    local_array_type MDi { };
+    local_array_type MDj { };
+
+    constexpr local_array_type dummy_array { };
+
     // See pseudocode on page 9 of "The Secure Hash Algorithm Validation System (SHAVS)".
 
     for(std::size_t j { }; j < 100U; ++j)
@@ -419,7 +419,7 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
         using local_wide_array_type = boost::crypt::array<std::uint8_t, dummy_array.size() * 3U>;
 
         const local_wide_array_type Mi =
-          [&MD]()
+          [&MD, &dummy_array]()
           {
             std::vector<std::uint8_t> result_vector { };
 
