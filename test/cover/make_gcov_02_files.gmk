@@ -8,7 +8,10 @@
 
 FILES_PRJ     := $(basename $(wildcard $(PATH_SRC)/*.cpp))
 
-FILES_EXCLUDE :=
+FILES_EXCLUDE :=  $(PATH_SRC)/test_md5_nvcc.cu          \
+                  $(PATH_SRC)/test_md5_nvrtc.cpp        \
+                  $(PATH_SRC)/test_sha1_nvcc.cu         \
+                  $(PATH_SRC)/test_sha1_nvrtc.cpp
 
 FILES_EXCLUDE := $(basename $(FILES_EXCLUDE))
 
