@@ -7,6 +7,7 @@
 #ifndef BOOST_CRYPT_HASH_MD5_HPP
 #define BOOST_CRYPT_HASH_MD5_HPP
 
+#include <boost/crypt/hash/hasher_state.hpp>
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/bit.hpp>
 #include <boost/crypt/utility/byte.hpp>
@@ -17,6 +18,7 @@
 #include <boost/crypt/utility/cstddef.hpp>
 #include <boost/crypt/utility/iterator.hpp>
 #include <boost/crypt/utility/file.hpp>
+#include <boost/crypt/utility/null.hpp>
 
 #if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
 #include <memory>
@@ -42,8 +44,11 @@ private:
     boost::crypt::array<boost::crypt::uint8_t, 64> buffer_ {};
     boost::crypt::array<boost::crypt::uint32_t, 16> blocks_ {};
 
+    bool computed {};
+    bool corrupted {};
+
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto md5_update(ForwardIter data, boost::crypt::size_t size) noexcept;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto md5_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto md5_convert_buffer_to_blocks() noexcept;
 
@@ -59,17 +64,16 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr auto init() noexcept -> void;
 
     template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept
-        BOOST_CRYPT_REQUIRES_CONVERSION(ByteType, boost::crypt::uint8_t);
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
 };
@@ -86,6 +90,9 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::init() noexcept -> void
 
     buffer_.fill(static_cast<boost::crypt::uint8_t>(0));
     blocks_.fill(0U);
+
+    computed = false;
+    corrupted = false;
 }
 
 BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_convert_buffer_to_blocks() noexcept
@@ -115,15 +122,35 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_copy_data(ForwardIter dat
 }
 
 template <typename ForwardIter>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_update(ForwardIter data, boost::crypt::size_t size) noexcept
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state
 {
+    if (size == 0U)
+    {
+        return hasher_state::success;
+    }
+    if (computed)
+    {
+        corrupted = true;
+    }
+    if (corrupted)
+    {
+        return hasher_state::state_error;
+    }
+
     const auto input_bits {size << 3U}; // Convert size to bits
     const auto old_low {low_};
     low_ += input_bits;
     if (low_ < old_low)
     {
         // This should never happen as it indicates size_t roll over
-        ++high_; // LCOV_EXCL_LINE
+        // LCOV_EXCL_START
+        ++high_;
+        if (high_ == 0U)
+        {
+            corrupted = true;
+            return hasher_state::input_too_long;
+        }
+        // LCOV_EXCL_STOP
     }
     high_ += size >> 29U;
 
@@ -135,7 +162,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_update(ForwardIter data, 
         if (size < available)
         {
             md5_copy_data(data, used, size);
-            return;
+            return hasher_state::success;
         }
 
         md5_copy_data(data, used, available);
@@ -158,11 +185,18 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_update(ForwardIter data, 
     {
         md5_copy_data(data, 0U, size);
     }
+
+    return hasher_state::success;
 }
 
 BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::get_digest() noexcept -> return_type
 {
     return_type digest {};
+    if (corrupted)
+    {
+        return digest;
+    }
+
     auto used {(low_ >> 3U) & 0x3F}; // Number of bytes used in buffer
     buffer_[used++] = 0x80;
     auto available {buffer_.size() - used};
@@ -194,6 +228,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::get_digest() noexcept -> retu
 
     md5_convert_buffer_to_blocks();
     md5_body();
+    computed = true;
 
     for (boost::crypt::size_t i = 0; i < 4; ++i)
     {
@@ -208,49 +243,84 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::get_digest() noexcept -> retu
 }
 
 template <typename ByteType>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_byte(ByteType byte) noexcept
-    BOOST_CRYPT_REQUIRES_CONVERSION(ByteType, boost::crypt::uint8_t)
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_byte(ByteType byte) noexcept -> hasher_state
 {
+    static_assert(boost::crypt::is_convertible_v<ByteType, boost::crypt::uint8_t>, "Byte must be convertible to uint8_t");
     const auto value {static_cast<boost::crypt::uint8_t>(byte)};
-    md5_update(&value, 1UL);
+    return md5_update(&value, 1UL);
 }
 
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
-    md5_update(buffer, byte_count);
+    if (!utility::is_null(buffer))
+    {
+        return md5_update(buffer, byte_count);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 }
 
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     #ifndef BOOST_CRYPT_HAS_CUDA
 
-    const auto* char_ptr {reinterpret_cast<const char*>(std::addressof(*buffer))};
-    const auto* data {reinterpret_cast<const unsigned char*>(char_ptr)};
-    md5_update(data, byte_count * 2U);
+    if (!utility::is_null(buffer))
+    {
+        const auto* char_ptr {reinterpret_cast<const char*>(std::addressof(*buffer))};
+        const auto* data {reinterpret_cast<const unsigned char*>(char_ptr)};
+        return md5_update(data, byte_count * 2U);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 
     #else
 
-    const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
-    md5_update(data, byte_count * 2U);
+    if (!utility::is_null(buffer))
+    {
+        const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
+        return md5_update(data, byte_count * 2U);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 
     #endif
 }
 
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     #ifndef BOOST_CRYPT_HAS_CUDA
 
-    const auto* char_ptr {reinterpret_cast<const char*>(std::addressof(*buffer))};
-    const auto* data {reinterpret_cast<const unsigned char*>(char_ptr)};
-    md5_update(data, byte_count * 4U);
+    if (!utility::is_null(buffer))
+    {
+        const auto* char_ptr {reinterpret_cast<const char*>(std::addressof(*buffer))};
+        const auto* data {reinterpret_cast<const unsigned char*>(char_ptr)};
+        return md5_update(data, byte_count * 4U);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 
     #else
 
-    const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
-    md5_update(data, byte_count * 4U);
+    if (!utility::is_null(buffer))
+    {
+        const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
+        return md5_update(data, byte_count * 4U);
+    }
+    else
+    {
+        return hasher_state::null;
+    }
 
     #endif
 }
