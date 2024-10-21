@@ -32,25 +32,6 @@ namespace crypt {
 
 class sha1_hasher
 {
-private:
-
-    boost::crypt::array<boost::crypt::uint32_t, 5> intermediate_hash_ {0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0};
-    boost::crypt::array<boost::crypt::uint8_t, 64> buffer_ {};
-
-    boost::crypt::size_t buffer_index_ {};
-    boost::crypt::size_t low_ {};
-    boost::crypt::size_t high_ {};
-
-    bool computed {};
-    bool corrupted {};
-
-    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_process_message_block() -> void;
-
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
-
-    BOOST_CRYPT_GPU_ENABLED constexpr auto pad_message() noexcept -> void;
-
 public:
 
     using return_type = boost::crypt::array<boost::crypt::uint8_t, 20>;
@@ -71,6 +52,25 @@ public:
 
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type ;
+
+private:
+
+    boost::crypt::array<boost::crypt::uint32_t, 5> intermediate_hash_ { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 };
+    boost::crypt::array<boost::crypt::uint8_t, 64> buffer_ {};
+
+    boost::crypt::size_t buffer_index_ {};
+    boost::crypt::size_t low_ {};
+    boost::crypt::size_t high_ {};
+
+    bool computed {};
+    bool corrupted {};
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_process_message_block() -> void;
+
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto pad_message() noexcept -> void;
 };
 
 namespace detail {

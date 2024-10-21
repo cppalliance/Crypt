@@ -45,5 +45,6 @@ project : requirements
 
 run quick.cpp ;
 run test_md5.cpp ;
-run test_nist_cavs_sha1_short.cpp ;
+run test_nist_cavs_sha1_monte.cpp ;
+run test_nist_cavs_sha1_short_long.cpp ;
 run test_sha1.cpp ;

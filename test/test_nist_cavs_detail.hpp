@@ -46,6 +46,23 @@ public:
 
   test_object_hash() = delete;
 
+  // Construct this hash test object by setting the result only.
+  // There is no message and there is no length available for
+  // this hash test object.
+
+  explicit test_object_hash(const std::string& str_result)
+      : my_result // LCOV_EXCL_LINE
+        {
+          [&str_result]()
+          {
+            const auto byte_data { detail::convert_hex_string_to_byte_container(str_result) };
+            return message_type(byte_data.cbegin(), byte_data.cend());
+          }()
+        }
+  { }
+
+  // Construct this hash test object with all of message, length and result.
+
   explicit test_object_hash(const std::string& str_data, const std::string& str_result)
       : my_length { str_data.size() / static_cast<size_type>(UINT8_C(2)) },
         my_msg
@@ -61,7 +78,7 @@ public:
           [&str_result]()
           {
             const auto byte_data { detail::convert_hex_string_to_byte_container(str_result) };
-            return message_type(byte_data.cbegin(),   byte_data.cend());
+            return message_type(byte_data.cbegin(), byte_data.cend());
           }()
         }
   { }
@@ -73,7 +90,7 @@ public:
 
 using test_vector_container_type = std::deque<test_object_hash>;
 
-auto where_file(const std::string& test_vectors_filename) -> std::string
+auto where_file_shabytesvectors(const std::string& test_vectors_filename) -> std::string
 {
   // Try to open the file in each of the known relative paths
   // in order to find out where it is located.
@@ -159,9 +176,11 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
 {
   bool result_parse_is_ok { false };
 
-  const std::string test_vectors_filename_relative { where_file(test_vectors_filename) };
+  const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_vectors_filename) };
 
   const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
+
+  BOOST_TEST(result_filename_plausible_is_ok);
 
   if(result_filename_plausible_is_ok)
   {
@@ -232,6 +251,77 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
     }
   }
 
+  BOOST_TEST(result_parse_is_ok);
+
+  return result_parse_is_ok;
+}
+
+auto parse_file_monte(const std::string& test_monte_filename, test_vector_container_type& test_vectors_to_get) -> bool
+{
+  bool result_parse_is_ok { false };
+
+  const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_monte_filename) };
+
+  const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
+
+  BOOST_TEST(result_filename_plausible_is_ok);
+
+  if(result_filename_plausible_is_ok)
+  {
+    std::string str_result  { };
+
+    // Read the file for creating the test cases.
+    std::ifstream in(test_vectors_filename_relative.c_str());
+
+    const bool file_is_open = in.is_open();
+
+    unsigned count { };
+
+    if(file_is_open)
+    {
+      result_parse_is_ok = true;
+
+      std::string line    { };
+      std::string result  { };
+
+      while(getline(in, line))
+      {
+        const std::string::size_type pos_cnt = line.find("COUNT =", 0U);
+        const std::string::size_type pos_md  = line.find("MD =",  0U);
+
+        const bool line_is_representation_is_cnt = (pos_cnt != std::string::npos);
+        const bool line_is_representation_is_md  = (pos_md  != std::string::npos);
+
+        // Get the next count.
+        if(line_is_representation_is_cnt)
+        {
+          const std::string str_cnt = line.substr(8U, line.length() - 8U);
+
+          const unsigned long count_from_file = std::strtoul(str_cnt.c_str(), nullptr, 10U);
+
+          count = static_cast<unsigned>(count_from_file);
+        }
+
+        // Get the next (expected) result.
+        if(line_is_representation_is_md)
+        {
+          result = line.substr(5U, line.length() - 5U);
+
+          // Add the new test object to v.
+          const test_object_hash test_obj(result);
+
+          test_vectors_to_get.push_back(test_obj);
+        }
+      }
+
+      in.close();
+
+      result_parse_is_ok = ((!test_vectors_to_get.empty()) && (count == 99U) && result_parse_is_ok);
+    }
+  }
+
+  BOOST_TEST(result_parse_is_ok);
+
   return result_parse_is_ok;
 }
 
@@ -245,6 +335,8 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 {
   using local_hasher_type = HasherType;
   using local_result_type = typename local_hasher_type::return_type;
+
+  BOOST_TEST((!test_vectors.empty()));
 
   bool result_is_ok { true };
 
@@ -267,6 +359,9 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 
     // Make pass 2 through the messages.
     // Use the triple-combination of init/process/get-result functions.
+    // Even though this is not required in CAVS testing, it is
+    // done in order to ensure that the init() function properly
+    // puts the hasher-object into its initialized state.
 
     this_hash.init();
 
@@ -282,6 +377,95 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
     const bool result_hash_is_ok = (result_hash_01_is_ok && result_hash_02_is_ok);
 
     result_is_ok = (result_hash_is_ok && result_is_ok);
+  }
+
+  return result_is_ok;
+}
+
+template<typename HasherType>
+auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vectors_monte, const std::vector<std::uint8_t>& seed_init) -> bool
+{
+  using local_hasher_type = HasherType;
+  using local_result_type = typename local_hasher_type::return_type;
+
+  using local_array_type = local_result_type;
+
+  // Obtain the test-specific initial seed.
+  local_array_type Seed { };
+
+  const std::size_t
+    copy_len
+    {
+      (std::min)(static_cast<std::size_t>(Seed.size()), static_cast<std::size_t>(seed_init.size()))
+    };
+
+  std::copy
+  (
+    seed_init.cbegin(),
+    seed_init.cbegin() + static_cast<typename std::vector<std::uint8_t>::difference_type>(copy_len),
+    Seed.begin()
+  );
+
+  bool result_is_ok { (!test_vectors_monte.empty()) };
+
+  if(result_is_ok)
+  {
+    local_array_type MD[3U] { { }, { }, { } };
+
+    local_array_type MDi { };
+    local_array_type MDj { };
+
+    constexpr local_array_type dummy_array { };
+
+    // See pseudocode on page 9 of "The Secure Hash Algorithm Validation System (SHAVS)".
+
+    for(std::size_t j { }; j < 100U; ++j)
+    {
+      MD[0U] = MD[1U] = MD[2U] = Seed;
+
+      for(std::size_t i { 3U } ; i < 1003U; ++i)
+      {
+        using local_wide_array_type = boost::crypt::array<std::uint8_t, dummy_array.size() * 3U>;
+
+        std::vector<std::uint8_t> result_vector;
+
+        result_vector.reserve(dummy_array.size() * 3U);
+
+        result_vector.insert(result_vector.end(), MD[0U].cbegin(), MD[0U].cend());
+        result_vector.insert(result_vector.end(), MD[1U].cbegin(), MD[1U].cend());
+        result_vector.insert(result_vector.end(), MD[2U].cbegin(), MD[2U].cend());
+
+        local_wide_array_type Mi { };
+
+        std::copy(result_vector.cbegin(), result_vector.cend(), Mi.begin());
+
+        local_hasher_type this_hash { };
+
+        this_hash.init();
+
+        this_hash.process_bytes(Mi.data(), Mi.size());
+
+        MDi = this_hash.get_digest();
+
+        MD[0U] = MD[1U];
+        MD[1U] = MD[2U];
+        MD[2U] = MDi;
+      }
+
+      MDj = Seed = MDi;
+
+      const bool result_this_monte_step_is_ok =
+        std::equal
+        (
+          MDj.cbegin(),
+          MDj.cend(),
+          test_vectors_monte[j].my_result.cbegin()
+        );
+
+      result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
+
+      BOOST_TEST(result_this_monte_step_is_ok);
+    }
   }
 
   return result_is_ok;
