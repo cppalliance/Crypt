@@ -751,7 +751,7 @@ constexpr auto sha1(std::span<T, extent> data) noexcept -> sha1_hasher::return_t
 #ifdef BOOST_CRYPT_HAS_CUDA
 
 template <typename T, boost::crypt::size_t extent>
-constexpr auto sha1(cuda::std::span<T, extent> data) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(cuda::std::span<T, extent> data) noexcept -> sha1_hasher::return_type
 {
     return detail::sha1(data.begin(), data.end());
 }

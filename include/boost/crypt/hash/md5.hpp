@@ -731,7 +731,7 @@ constexpr auto md5(std::span<T, extent> data) noexcept -> md5_hasher::return_typ
 #ifdef BOOST_CRYPT_HAS_CUDA
 
 template <typename T, boost::crypt::size_t extent>
-constexpr auto md5(cuda::std::span<T, extent> data) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5(cuda::std::span<T, extent> data) noexcept -> md5_hasher::return_type
 {
     return detail::md5(data.begin(), data.end());
 }
