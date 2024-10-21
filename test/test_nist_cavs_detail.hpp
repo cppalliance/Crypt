@@ -423,35 +423,25 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
       {
         using local_wide_array_type = boost::crypt::array<std::uint8_t, dummy_array.size() * 3U>;
 
-        const local_wide_array_type Mi =
-          [&MD, &dummy_array]()
-          {
-            std::vector<std::uint8_t> result_vector;
+        std::vector<std::uint8_t> result_vector;
 
-            result_vector.reserve(dummy_array.size() * 3U);
+        result_vector.reserve(dummy_array.size() * 3U);
 
-            result_vector.insert(result_vector.end(), MD[0U].cbegin(), MD[0U].cend());
-            result_vector.insert(result_vector.end(), MD[1U].cbegin(), MD[1U].cend());
-            result_vector.insert(result_vector.end(), MD[2U].cbegin(), MD[2U].cend());
+        result_vector.insert(result_vector.end(), MD[0U].cbegin(), MD[0U].cend());
+        result_vector.insert(result_vector.end(), MD[1U].cbegin(), MD[1U].cend());
+        result_vector.insert(result_vector.end(), MD[2U].cbegin(), MD[2U].cend());
 
-            local_wide_array_type result = {{ static_cast<std::uint8_t>(0U) }};
+        local_wide_array_type Mi { };
 
-            std::copy(result_vector.cbegin(), result_vector.cend(), result.begin());
+        std::copy(result_vector.cbegin(), result_vector.cend(), Mi.begin());
 
-            return result;
-          }();
+        local_hasher_type this_hash { };
 
-        MDi =
-          [&Mi]()
-          {
-            local_hasher_type this_hash { };
+        this_hash.init();
 
-            this_hash.init();
+        this_hash.process_bytes(Mi.data(), Mi.size());
 
-            this_hash.process_bytes(Mi.data(), Mi.size());
-
-            return this_hash.get_digest();
-          }();
+        MDi = this_hash.get_digest();
 
         MD[0U] = MD[1U];
         MD[1U] = MD[2U];
