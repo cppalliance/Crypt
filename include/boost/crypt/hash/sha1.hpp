@@ -735,6 +735,28 @@ inline auto sha1_file(std::string_view filepath) noexcept -> sha1_hasher::return
 
 #endif // BOOST_CRYPT_HAS_CUDA
 
+// ---- The CUDA versions that we support all offer <cuda/std/span> ----
+
+#ifdef BOOST_CRYPT_HAS_SPAN
+
+template <typename T, std::size_t extent>
+constexpr auto sha1(std::span<T, extent> data) noexcept -> sha1_hasher::return_type
+{
+    return detail::sha1(data.begin(), data.end());
+}
+
+#endif // BOOST_CRYPT_HAS_SPAN
+
+#ifdef BOOST_CRYPT_HAS_CUDA
+
+template <typename T, boost::crypt::size_t extent>
+constexpr auto sha1(cuda::std::span<T, extent> data) noexcept -> sha1_hasher::return_type
+{
+    return detail::sha1(data.begin(), data.end());
+}
+
+#endif // BOOST_CRYPT_HAS_CUDA
+
 } // namespace crypt
 } // namepsace boost
 

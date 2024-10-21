@@ -736,7 +736,7 @@ constexpr auto md5(cuda::std::span<T, extent> data) noexcept -> md5_hasher::retu
     return detail::md5(data.begin(), data.end());
 }
 
-#endif
+#endif // BOOST_CRYPT_HAS_CUDA
 
 } // namespace crypt
 } // namespace boost
