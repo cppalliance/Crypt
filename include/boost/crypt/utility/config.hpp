@@ -36,6 +36,11 @@
 #  define BOOST_CRYPT_GPU_DEVICE_ENABLED
 #endif
 
+// Additional headers needed for CUDA
+#ifdef BOOST_CRYPT_HAS_CUDA
+#  include <cuda/std/span>
+#endif
+
 // ---- Constexpr arrays -----
 #if defined(__cpp_inline_variables) && __cpp_inline_variables >= 201606L
 #  define BOOST_CRYPT_CONSTEXPR_ARRAY inline constexpr
