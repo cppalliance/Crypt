@@ -415,6 +415,9 @@ void files_test()
                                                   0xae, 0xe8, 0xec, 0xa9, 0x91, 0x6a, 0x81, 0x4c};
 
     test_file(filename_2, res_2);
+
+    const char* test_null_file = nullptr;
+    test_invalid_file(test_null_file);
 }
 
 int main()

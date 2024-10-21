@@ -613,6 +613,11 @@ inline auto md5_file(const char* filepath) noexcept -> md5_hasher::return_type
 {
     try
     {
+        if (filepath == nullptr)
+        {
+            return md5_hasher::return_type {};
+        }
+
         utility::file_reader<64U> reader(filepath);
         return detail::md5_file_impl(reader);
     }
