@@ -716,6 +716,28 @@ inline auto md5_file(std::string_view filepath) noexcept -> md5_hasher::return_t
 
 #endif // BOOST_CRYPT_HAS_CUDA
 
+// ---- The CUDA versions that we support all offer <cuda/std/span> ----
+
+#ifdef BOOST_CRYPT_HAS_SPAN
+
+template <typename T, std::size_t extent>
+constexpr auto md5(std::span<T, extent> data) noexcept -> md5_hasher::return_type
+{
+    return detail::md5(data.begin(), data.end());
+}
+
+#endif // BOOST_CRYPT_HAS_SPAN
+
+#ifdef BOOST_CRYPT_HAS_CUDA
+
+template <typename T, boost::crypt::size_t extent>
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5(cuda::std::span<T, extent> data) noexcept -> md5_hasher::return_type
+{
+    return detail::md5(data.begin(), data.end());
+}
+
+#endif // BOOST_CRYPT_HAS_CUDA
+
 } // namespace crypt
 } // namespace boost
 

@@ -453,6 +453,28 @@ void test_invalid_state()
     BOOST_TEST(current_state == boost::crypt::hasher_state::null);
 }
 
+// This ends up being completely calculated in a constexpr fashion so Codecov complains
+// LCOV_EXCL_START
+void test_span()
+{
+    #ifdef BOOST_CRYPT_HAS_SPAN
+
+    // "abc" in hex
+    const std::byte vals[] = {std::byte{0x61}, std::byte{0x62}, std::byte{0x63}};
+    std::span<const std::byte> byte_span {vals};
+    const auto expected_res = std::array<std::uint16_t, 20>{0xA9, 0x99, 0x3E, 0x36, 0x47, 0x06, 0x81, 0x6A, 0xBA, 0x3E,
+                                                            0x25, 0x71, 0x78, 0x50, 0xC2, 0x6C, 0x9C, 0xD0, 0xD8, 0x9D};
+    const auto res = boost::crypt::sha1(byte_span);
+
+    for (std::size_t i {}; i < res.size(); ++i)
+    {
+        BOOST_TEST_EQ(res[i], expected_res[i]);
+    }
+
+    #endif // BOOST_CRYPT_HAS_SPAN
+}
+// LCOV_EXCL_STOP
+
 int main()
 {
     basic_tests();
@@ -479,6 +501,8 @@ int main()
     #endif
 
     test_invalid_state();
+
+    test_span();
 
     return boost::report_errors();
 }

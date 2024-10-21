@@ -22,6 +22,11 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
         std::string_view view {c_data_str};
         boost::crypt::md5(view);
         #endif
+
+        #ifdef BOOST_CRYPT_HAS_SPAN
+        std::span data_span {c_data, size};
+        boost::crypt::md5(data_span);
+        #endif
     }
     catch(...)
     {
