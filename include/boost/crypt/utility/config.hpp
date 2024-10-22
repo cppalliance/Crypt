@@ -46,7 +46,7 @@
 #  define BOOST_CRYPT_CONSTEXPR_ARRAY inline constexpr
 #  define BOOST_CRYPT_DEVICE_ARRAY inline constexpr
 #  define BOOST_CRYPT_INLINE_CONSTEXPR inline constexpr
-#elif defined(BOOST_CRYPT_ENABLE_CUDA)
+#elif defined(BOOST_CRYPT_HAS_CUDA)
 #  define BOOST_CYPRT_CONSTEXPR_ARRAY static constexpr
 #  define BOOST_CRYPT_DEVICE_ARRAY __constant__
 #  define BOOST_CRYPT_INLINE_CONSTEXPR static constexpr
