@@ -79,7 +79,7 @@ namespace sha256_detail {
 #ifndef BOOST_CRYPT_HAS_CUDA
 BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::array<boost::crypt::uint32_t, 64> sha256_k = {
 #else
-BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::uint32_t sha256_k[64] = {
+__constant__ boost::crypt::uint32_t sha256_k[64] = {
 #endif
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
     0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01,
