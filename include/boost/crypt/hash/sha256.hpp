@@ -2,7 +2,7 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 //
-// See: https://datatracker.ietf.org/doc/html/rfc3174
+// See: https://datatracker.ietf.org/doc/html/rfc4634
 
 #ifndef BOOST_CRYPT_HASH_SHA256_HPP
 #define BOOST_CRYPT_HASH_SHA256_HPP
@@ -34,7 +34,7 @@ BOOST_CRYPT_EXPORT class sha256_hasher
 {
 public:
 
-    using return_type = boost::crypt::array<boost::crypt::uint8_t, 20>;
+    using return_type = boost::crypt::array<boost::crypt::uint8_t, 32>;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto init() -> void;
 
@@ -55,7 +55,8 @@ public:
 
 private:
 
-    boost::crypt::array<boost::crypt::uint32_t, 5> intermediate_hash_ { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 };
+    boost::crypt::array<boost::crypt::uint32_t, 8> intermediate_hash_ { 0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
+                                                                        0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19 };
     boost::crypt::array<boost::crypt::uint8_t, 64> buffer_ {};
 
     boost::crypt::size_t buffer_index_ {};
@@ -73,78 +74,64 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto pad_message() noexcept -> void;
 };
 
-namespace detail {
+namespace sha256_detail {
 
-BOOST_CRYPT_GPU_ENABLED
-constexpr auto round1(boost::crypt::uint32_t& A,
-                      boost::crypt::uint32_t& B,
-                      boost::crypt::uint32_t& C,
-                      boost::crypt::uint32_t& D,
-                      boost::crypt::uint32_t& E,
-                      boost::crypt::uint32_t  W)
+BOOST_CRYPT_CONSTEXPR_ARRAY boost::crypt::array<boost::crypt::uint32_t, 64> sha256_k = {
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
+    0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01,
+    0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7,
+    0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152,
+    0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,
+    0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc,
+    0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819,
+    0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08,
+    0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f,
+    0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+};
+
+
+// https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+// See section 4.1.2
+BOOST_CRYPT_GPU_ENABLED constexpr auto big_sigma0(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
 {
-    const auto temp {detail::rotl(A, 5U) + ((B & C) | ((~B) & D)) + E + W + 0x5A827999U};
-    E = D;
-    D = C;
-    C = detail::rotl(B, 30U);
-    B = A;
-    A = temp;
+    return detail::rotr(value, 2U) ^ detail::rotr(value, 13U) ^ detail::rotr(value, 22U);
 }
 
-BOOST_CRYPT_GPU_ENABLED
-constexpr auto round2(boost::crypt::uint32_t& A,
-                      boost::crypt::uint32_t& B,
-                      boost::crypt::uint32_t& C,
-                      boost::crypt::uint32_t& D,
-                      boost::crypt::uint32_t& E,
-                      boost::crypt::uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED constexpr auto big_sigma1(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
 {
-    const auto temp {detail::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0x6ED9EBA1U};
-    E = D;
-    D = C;
-    C = detail::rotl(B, 30U);
-    B = A;
-    A = temp;
+    return detail::rotr(value, 6U) ^ detail::rotr(value, 11U) ^ detail::rotr(value, 25U);
 }
 
-BOOST_CRYPT_GPU_ENABLED
-constexpr auto round3(boost::crypt::uint32_t& A,
-                      boost::crypt::uint32_t& B,
-                      boost::crypt::uint32_t& C,
-                      boost::crypt::uint32_t& D,
-                      boost::crypt::uint32_t& E,
-                      boost::crypt::uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED constexpr auto little_sigma0(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
 {
-    const auto temp {detail::rotl(A, 5U) + ((B & C) | (B & D) | (C & D)) + E + W + 0x8F1BBCDCU};
-    E = D;
-    D = C;
-    C = detail::rotl(B, 30U);
-    B = A;
-    A = temp;
+    return detail::rotr(value, 7U) ^ detail::rotr(value, 18U) ^ (value >> 3U);
 }
 
-BOOST_CRYPT_GPU_ENABLED
-constexpr auto round4(boost::crypt::uint32_t& A,
-                      boost::crypt::uint32_t& B,
-                      boost::crypt::uint32_t& C,
-                      boost::crypt::uint32_t& D,
-                      boost::crypt::uint32_t& E,
-                      boost::crypt::uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED constexpr auto little_sigma1(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
 {
-    const auto temp {detail::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0xCA62C1D6U};
-    E = D;
-    D = C;
-    C = detail::rotl(B, 30U);
-    B = A;
-    A = temp;
+    return detail::rotr(value, 17U) ^ detail::rotr(value, 19U) ^ (value >> 10U);
 }
 
-} // Namespace detail
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha_ch(const boost::crypt::uint32_t x, const boost::crypt::uint32_t y, const boost::crypt::uint32_t z) noexcept -> boost::crypt::uint32_t
+{
+    return (x & y) ^ ((~x) & z);
+}
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha_maj(const boost::crypt::uint32_t x, const boost::crypt::uint32_t y, const boost::crypt::uint32_t z) noexcept -> boost::crypt::uint32_t
+{
+    return (x & y) ^ (x & z) ^ (y & z);
+}
+
+} // Namespace sha256_detail
 
 // See definitions from the RFC on the rounds
 constexpr auto sha256_hasher::sha256_process_message_block() -> void
 {
-    boost::crypt::array<boost::crypt::uint32_t, 80> W {};
+    using namespace sha256_detail;
+    boost::crypt::array<boost::crypt::uint32_t, 64> W {};
 
     // Init the first 16 words of W
     for (boost::crypt::size_t i {}; i < 16UL; ++i)
@@ -158,7 +145,8 @@ constexpr auto sha256_hasher::sha256_process_message_block() -> void
 
     for (boost::crypt::size_t i {16U}; i < W.size(); ++i)
     {
-        W[i] = detail::rotl(W[i - 3U] ^ W[i - 8U] ^ W[i - 14] ^ W[i - 16], 1U);
+        W[i] = sha256_detail::little_sigma0(W[i - 2U])  + W[i - 7U] +
+               sha256_detail::little_sigma1(W[i - 15U]) + W[i - 16U];
     }
 
     auto A {intermediate_hash_[0]};
@@ -166,100 +154,33 @@ constexpr auto sha256_hasher::sha256_process_message_block() -> void
     auto C {intermediate_hash_[2]};
     auto D {intermediate_hash_[3]};
     auto E {intermediate_hash_[4]};
+    auto F {intermediate_hash_[5]};
+    auto G {intermediate_hash_[6]};
+    auto H {intermediate_hash_[7]};
 
-    // Round 1
-    detail::round1(A, B, C, D, E, W[0]);
-    detail::round1(A, B, C, D, E, W[1]);
-    detail::round1(A, B, C, D, E, W[2]);
-    detail::round1(A, B, C, D, E, W[3]);
-    detail::round1(A, B, C, D, E, W[4]);
-    detail::round1(A, B, C, D, E, W[5]);
-    detail::round1(A, B, C, D, E, W[6]);
-    detail::round1(A, B, C, D, E, W[7]);
-    detail::round1(A, B, C, D, E, W[8]);
-    detail::round1(A, B, C, D, E, W[9]);
-    detail::round1(A, B, C, D, E, W[10]);
-    detail::round1(A, B, C, D, E, W[11]);
-    detail::round1(A, B, C, D, E, W[12]);
-    detail::round1(A, B, C, D, E, W[13]);
-    detail::round1(A, B, C, D, E, W[14]);
-    detail::round1(A, B, C, D, E, W[15]);
-    detail::round1(A, B, C, D, E, W[16]);
-    detail::round1(A, B, C, D, E, W[17]);
-    detail::round1(A, B, C, D, E, W[18]);
-    detail::round1(A, B, C, D, E, W[19]);
+    for (boost::crypt::size_t i {}; i < W.size(); ++i)
+    {
+        const auto temp1 {H + big_sigma1(E) + sha_ch(E, F, G) + sha256_k[i] + W[i]};
+        const auto temp2 {big_sigma0(A) + sha_maj(A, B, C)};
 
-    // Round 2
-    detail::round2(A, B, C, D, E, W[20]);
-    detail::round2(A, B, C, D, E, W[21]);
-    detail::round2(A, B, C, D, E, W[22]);
-    detail::round2(A, B, C, D, E, W[23]);
-    detail::round2(A, B, C, D, E, W[24]);
-    detail::round2(A, B, C, D, E, W[25]);
-    detail::round2(A, B, C, D, E, W[26]);
-    detail::round2(A, B, C, D, E, W[27]);
-    detail::round2(A, B, C, D, E, W[28]);
-    detail::round2(A, B, C, D, E, W[29]);
-    detail::round2(A, B, C, D, E, W[30]);
-    detail::round2(A, B, C, D, E, W[31]);
-    detail::round2(A, B, C, D, E, W[32]);
-    detail::round2(A, B, C, D, E, W[33]);
-    detail::round2(A, B, C, D, E, W[34]);
-    detail::round2(A, B, C, D, E, W[35]);
-    detail::round2(A, B, C, D, E, W[36]);
-    detail::round2(A, B, C, D, E, W[37]);
-    detail::round2(A, B, C, D, E, W[38]);
-    detail::round2(A, B, C, D, E, W[39]);
-
-    // Round 3
-    detail::round3(A, B, C, D, E, W[40]);
-    detail::round3(A, B, C, D, E, W[41]);
-    detail::round3(A, B, C, D, E, W[42]);
-    detail::round3(A, B, C, D, E, W[43]);
-    detail::round3(A, B, C, D, E, W[44]);
-    detail::round3(A, B, C, D, E, W[45]);
-    detail::round3(A, B, C, D, E, W[46]);
-    detail::round3(A, B, C, D, E, W[47]);
-    detail::round3(A, B, C, D, E, W[48]);
-    detail::round3(A, B, C, D, E, W[49]);
-    detail::round3(A, B, C, D, E, W[50]);
-    detail::round3(A, B, C, D, E, W[51]);
-    detail::round3(A, B, C, D, E, W[52]);
-    detail::round3(A, B, C, D, E, W[53]);
-    detail::round3(A, B, C, D, E, W[54]);
-    detail::round3(A, B, C, D, E, W[55]);
-    detail::round3(A, B, C, D, E, W[56]);
-    detail::round3(A, B, C, D, E, W[57]);
-    detail::round3(A, B, C, D, E, W[58]);
-    detail::round3(A, B, C, D, E, W[59]);
-
-    // Round 4
-    detail::round4(A, B, C, D, E, W[60]);
-    detail::round4(A, B, C, D, E, W[61]);
-    detail::round4(A, B, C, D, E, W[62]);
-    detail::round4(A, B, C, D, E, W[63]);
-    detail::round4(A, B, C, D, E, W[64]);
-    detail::round4(A, B, C, D, E, W[65]);
-    detail::round4(A, B, C, D, E, W[66]);
-    detail::round4(A, B, C, D, E, W[67]);
-    detail::round4(A, B, C, D, E, W[68]);
-    detail::round4(A, B, C, D, E, W[69]);
-    detail::round4(A, B, C, D, E, W[70]);
-    detail::round4(A, B, C, D, E, W[71]);
-    detail::round4(A, B, C, D, E, W[72]);
-    detail::round4(A, B, C, D, E, W[73]);
-    detail::round4(A, B, C, D, E, W[74]);
-    detail::round4(A, B, C, D, E, W[75]);
-    detail::round4(A, B, C, D, E, W[76]);
-    detail::round4(A, B, C, D, E, W[77]);
-    detail::round4(A, B, C, D, E, W[78]);
-    detail::round4(A, B, C, D, E, W[79]);
+        H = G;
+        G = F;
+        F = E;
+        E = D + temp1;
+        D = C;
+        C = B;
+        B = A;
+        A = temp1 + temp2;
+    }
 
     intermediate_hash_[0] += A;
     intermediate_hash_[1] += B;
     intermediate_hash_[2] += C;
     intermediate_hash_[3] += D;
     intermediate_hash_[4] += E;
+    intermediate_hash_[5] += F;
+    intermediate_hash_[6] += G;
+    intermediate_hash_[7] += H;
 
     buffer_index_ = 0U;
 }
@@ -360,11 +281,15 @@ constexpr auto sha256_hasher::sha256_update(ForwardIter data, boost::crypt::size
 
 BOOST_CRYPT_GPU_ENABLED constexpr auto sha256_hasher::init() -> void
 {
-    intermediate_hash_[0] = 0x67452301;
-    intermediate_hash_[1] = 0xEFCDAB89;
-    intermediate_hash_[2] = 0x98BADCFE;
-    intermediate_hash_[3] = 0x10325476;
-    intermediate_hash_[4] = 0xC3D2E1F0;
+    // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+    intermediate_hash_[0] = 0x6A09E667;
+    intermediate_hash_[1] = 0xBB67AE85;
+    intermediate_hash_[2] = 0x3C6EF372;
+    intermediate_hash_[3] = 0xA54FF53A;
+    intermediate_hash_[4] = 0x510E527F;
+    intermediate_hash_[5] = 0x9B05688C;
+    intermediate_hash_[6] = 0x1F83D9AB;
+    intermediate_hash_[7] = 0x5BE0CD19;
 
     buffer_.fill(0);
     buffer_index_ = 0UL;
