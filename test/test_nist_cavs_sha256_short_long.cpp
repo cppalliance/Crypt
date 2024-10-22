@@ -32,5 +32,25 @@ auto main() -> int
         BOOST_TEST(result_is_ok);
     }
 
+    {
+        nist::cavs::test_vector_container_type test_vectors_short { };
+
+        static_cast<void>(nist::cavs::detail::parse_file_vectors("SHA256ShortMsg21.rsp", test_vectors_short));
+
+        result_is_ok = (nist::cavs::test_vectors_oneshot<boost::crypt::sha256_hasher>(test_vectors_short) && result_is_ok);
+
+        BOOST_TEST(result_is_ok);
+    }
+
+    {
+        nist::cavs::test_vector_container_type test_vectors_short { };
+
+        static_cast<void>(nist::cavs::detail::parse_file_vectors("SHA256LongMsg21.rsp", test_vectors_short));
+
+        result_is_ok = (nist::cavs::test_vectors_oneshot<boost::crypt::sha256_hasher>(test_vectors_short) && result_is_ok);
+
+        BOOST_TEST(result_is_ok);
+    }
+
     return boost::report_errors();
 }
