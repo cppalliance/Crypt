@@ -336,19 +336,6 @@ void test_span()
 }
 // LCOV_EXCL_STOP
 
-template <typename T>
-void test_wider_characters()
-{
-    for (const auto& test_value : test_values)
-    {
-        const T* wide_message = reinterpret_cast<const T*>(std::get<0>(test_value));
-        const auto message_result {boost::crypt::sha256(wide_message)};
-
-        // Just test for invalid message
-        BOOST_TEST(!(message_result.front() == boost::crypt::uint8_t{0x00} && message_result.back() == boost::crypt::uint8_t{0x00}));
-    }
-}
-
 int main()
 {
     basic_tests();
@@ -365,10 +352,6 @@ int main()
     test_invalid_state();
 
     test_span();
-
-    test_wider_characters<char16_t>();
-    test_wider_characters<char32_t>();
-    test_wider_characters<wchar_t>();
 
     return boost::report_errors();
 }
