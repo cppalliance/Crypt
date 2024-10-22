@@ -115,7 +115,7 @@ class md5_hasher
 {
     uisng return_type = boost::crypt::array<uint8_t, 16>;
 
-    init();
+    void init();
 
     template <typename ByteType>
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;

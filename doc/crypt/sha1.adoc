@@ -113,7 +113,9 @@ namespace crypt {
 
 class sha1_hasher
 {
-    init();
+    uisng return_type = boost::crypt::array<uint8_t, 20>;
+
+    void init();
 
     template <typename ByteType>
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;
