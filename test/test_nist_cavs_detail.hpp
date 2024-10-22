@@ -329,6 +329,7 @@ auto parse_file_monte(const std::string& test_monte_filename, test_vector_contai
 
 using detail::test_vector_container_type;
 using detail::parse_file_vectors;
+using detail::parse_file_monte;
 
 template<typename HasherType>
 auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> bool
@@ -385,51 +386,50 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 template<typename HasherType>
 auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vectors_monte, const std::vector<std::uint8_t>& seed_init) -> bool
 {
-  using local_hasher_type = HasherType;
-  using local_result_type = typename local_hasher_type::return_type;
-
-  using local_array_type = local_result_type;
-
-  // Obtain the test-specific initial seed.
-  local_array_type Seed { };
-
-  const std::size_t
-    copy_len
-    {
-      (std::min)(static_cast<std::size_t>(Seed.size()), static_cast<std::size_t>(seed_init.size()))
-    };
-
-  std::copy
-  (
-    seed_init.cbegin(),
-    seed_init.cbegin() + static_cast<typename std::vector<std::uint8_t>::difference_type>(copy_len),
-    Seed.begin()
-  );
-
   bool result_is_ok { (!test_vectors_monte.empty()) };
 
   if(result_is_ok)
   {
-    local_array_type MD[3U] { { }, { }, { } };
+    using local_hasher_type = HasherType;
+    using local_result_type = typename local_hasher_type::return_type;
+
+    using local_array_type = local_result_type;
+
+    // Obtain the test-specific initial seed.
 
     local_array_type MDi { };
-    local_array_type MDj { };
 
-    constexpr local_array_type dummy_array { };
+    const std::size_t
+      copy_len
+      {
+        (std::min)(static_cast<std::size_t>(MDi.size()), static_cast<std::size_t>(seed_init.size()))
+      };
+
+    static_cast<void>
+    (
+      std::copy
+      (
+        seed_init.cbegin(),
+        seed_init.cbegin() + static_cast<typename std::vector<std::uint8_t>::difference_type>(copy_len),
+        MDi.begin()
+      )
+    );
 
     // See pseudocode on page 9 of "The Secure Hash Algorithm Validation System (SHAVS)".
 
     for(std::size_t j { }; j < 100U; ++j)
     {
-      MD[0U] = MD[1U] = MD[2U] = Seed;
+      local_array_type MD[3U] { { }, { }, { } };
+
+      MD[0U] = MD[1U] = MD[2U] = MDi;
 
       for(std::size_t i { 3U } ; i < 1003U; ++i)
       {
-        using local_wide_array_type = boost::crypt::array<std::uint8_t, dummy_array.size() * 3U>;
+        using local_wide_array_type = boost::crypt::array<std::uint8_t, boost::crypt::tuple_size<local_array_type>::value * 3U>;
 
         std::vector<std::uint8_t> result_vector;
 
-        result_vector.reserve(dummy_array.size() * 3U);
+        result_vector.reserve(boost::crypt::tuple_size<local_wide_array_type>::value);
 
         result_vector.insert(result_vector.end(), MD[0U].cbegin(), MD[0U].cend());
         result_vector.insert(result_vector.end(), MD[1U].cbegin(), MD[1U].cend());
@@ -452,13 +452,13 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
         MD[2U] = MDi;
       }
 
-      MDj = Seed = MDi;
+      // The output at this point is MDi.
 
       const bool result_this_monte_step_is_ok =
         std::equal
         (
-          MDj.cbegin(),
-          MDj.cend(),
+          MDi.cbegin(),
+          MDi.cend(),
           test_vectors_monte[j].my_result.cbegin()
         );
 
@@ -467,6 +467,8 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
       BOOST_TEST(result_this_monte_step_is_ok);
     }
   }
+
+  BOOST_TEST(result_is_ok);
 
   return result_is_ok;
 }
