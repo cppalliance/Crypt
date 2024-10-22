@@ -9,6 +9,7 @@
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/cstdint.hpp>
 #include <boost/crypt/utility/cstddef.hpp>
+#include <boost/crypt/utility/type_traits.hpp>
 
 #if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
 #include <array>
@@ -124,6 +125,12 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto fill_array(ForwardIter first, ForwardIter
         *first++ = static_cast<decltype(*first)>(value);
     }
 }
+
+template<typename T>
+class tuple_size;
+
+template<typename T, typename boost::crypt::size_t N>
+class tuple_size<boost::crypt::array<T, N>> : public boost::crypt::integral_constant<boost::crypt::size_t, N> { };
 
 } // namespace crypt
 } // namespace boost

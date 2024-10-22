@@ -24,7 +24,7 @@ auto main() -> int
         }
       );
 
-    static_cast<void>(nist::cavs::detail::parse_file_monte("SHA1Monte.rsp", my_test_vectors_monte));
+    static_cast<void>(nist::cavs::parse_file_monte("SHA1Monte.rsp", my_test_vectors_monte));
 
     result_is_ok = (nist::cavs::test_vectors_monte<boost::crypt::sha1_hasher>(my_test_vectors_monte, seed_init) && result_is_ok);
 
