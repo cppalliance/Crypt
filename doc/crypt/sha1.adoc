@@ -61,6 +61,20 @@ inline auto sha1(std::wstring_view str) noexcept -> return_type;
 
 #endif // BOOST_CRYPT_HAS_STRING_VIEW
 
+#ifdef BOOST_CRYPT_HAS_SPAN
+
+template <typename T, std::size_t extent>
+constexpr auto md5(std::span<T, extent> data) noexcept -> return_type;
+
+#endif // BOOST_CRYPT_HAS_SPAN
+
+#ifdef BOOST_CRYPT_HAS_CUDA
+
+template <typename T, boost::crypt::size_t extent>
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5(cuda::std::span<T, extent> data) noexcept -> return_type;
+
+#endif // BOOST_CRYPT_HAS_CUDA
+
 } //namespace crypt
 } //namespace boost
 ----
@@ -99,13 +113,15 @@ namespace crypt {
 
 class sha1_hasher
 {
-    init();
+    uisng return_type = boost::crypt::array<uint8_t, 20>;
+
+    void init();
 
     template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, size_t byte_count) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, size_t byte_count) noexcept -> hasher_state;
 
     constexpr auto get_digest() noexcept -> boost::crypt::array<boost::crypt::uint8_t, 20>;
 };

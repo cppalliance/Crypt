@@ -15,3 +15,5 @@ There are two sets of SHA example files:
 The SHA Validation System document can be found at:
 
 http://csrc.nist.gov/groups/STM/cavp/documents/shs/SHAVS.pdf.
+
+Also see: https://github.com/usnistgov/ACVP-Server/tree/fb44dce5257aba23088256e63c9b950db6967610/gen-val/src/generation/LegacyCavsFiles

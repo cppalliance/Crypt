@@ -15,7 +15,8 @@ https://www.boost.org/LICENSE_1_0.txt
 == Structures and Classes
 
 - <<md5_hasher, `md5_hasher`>>
-- <<from_chars_result, `from_chars_result`>>
+- <<sha1_hasher, `sha1_hasher`>>
+- <<sha256_hasher, `sha256_hasher`>>
 
 == Enums
 

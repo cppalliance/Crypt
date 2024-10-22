@@ -43,8 +43,16 @@ project : requirements
   [ requires cxx14_decltype_auto cxx14_generic_lambdas cxx14_return_type_deduction cxx14_variable_templates cxx14_constexpr ]
   ;
 
+
+# Basic Testing
 run quick.cpp ;
 run test_md5.cpp ;
+run test_sha1.cpp ;
+run test_sha256.cpp ;
+
+# NIST standard testing
 run test_nist_cavs_sha1_monte.cpp ;
 run test_nist_cavs_sha1_short_long.cpp ;
-run test_sha1.cpp ;
+
+run test_nist_cavs_sha256_monte.cpp ;
+run test_nist_cavs_sha256_short_long.cpp ;

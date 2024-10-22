@@ -61,6 +61,20 @@ inline auto md5(std::wstring_view str) noexcept -> return_type;
 
 #endif // BOOST_CRYPT_HAS_STRING_VIEW
 
+#ifdef BOOST_CRYPT_HAS_SPAN
+
+template <typename T, std::size_t extent>
+constexpr auto md5(std::span<T, extent> data) noexcept -> return_type;
+
+#endif // BOOST_CRYPT_HAS_SPAN
+
+#ifdef BOOST_CRYPT_HAS_CUDA
+
+template <typename T, boost::crypt::size_t extent>
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5(cuda::std::span<T, extent> data) noexcept -> return_type;
+
+#endif // BOOST_CRYPT_HAS_CUDA
+
 } //namespace crypt
 } //namespace boost
 ----
@@ -101,7 +115,7 @@ class md5_hasher
 {
     uisng return_type = boost::crypt::array<uint8_t, 16>;
 
-    init();
+    void init();
 
     template <typename ByteType>
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;
