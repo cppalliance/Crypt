@@ -53,4 +53,6 @@ run test_sha256.cpp ;
 # NIST standard testing
 run test_nist_cavs_sha1_monte.cpp ;
 run test_nist_cavs_sha1_short_long.cpp ;
+
+run test_nist_cavs_sha256_monte.cpp ;
 run test_nist_cavs_sha256_short_long.cpp ;
