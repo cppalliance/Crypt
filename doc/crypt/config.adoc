@@ -17,3 +17,7 @@ The following configuration macros are available:
 == Automatic Configuration Macros
 
 - `BOOST_CRYPT_HAS_STRING_VIEW`: This is defined when compiling with at least C++17 and your standard library has a complete implementation of `<string_view>`.
+
+- `BOOST_CRYPT_HAS_SPAN`: This is defined when compiling with at least C++20 and your standard library has a complete implementation of `<span>`.
+
+- `BOOST_CRYPT_HAS_CUDA`: This is defined when compiling with either NVCC or NVRTC regardless of the host compiler.

@@ -61,6 +61,20 @@ inline auto md5(std::wstring_view str) noexcept -> return_type;
 
 #endif // BOOST_CRYPT_HAS_STRING_VIEW
 
+#ifdef BOOST_CRYPT_HAS_SPAN
+
+template <typename T, std::size_t extent>
+constexpr auto md5(std::span<T, extent> data) noexcept -> return_type;
+
+#endif // BOOST_CRYPT_HAS_SPAN
+
+#ifdef BOOST_CRYPT_HAS_CUDA
+
+template <typename T, boost::crypt::size_t extent>
+BOOST_CRYPT_GPU_ENABLED constexpr auto md5(cuda::std::span<T, extent> data) noexcept -> return_type;
+
+#endif // BOOST_CRYPT_HAS_CUDA
+
 } //namespace crypt
 } //namespace boost
 ----
