@@ -296,6 +296,8 @@ void test_invalid_state()
 
     current_state = hasher.process_bytes("test", 4);
     BOOST_TEST(current_state == boost::crypt::hasher_state::success);
+    current_state = hasher.process_byte(0x03);
+    BOOST_TEST(current_state == boost::crypt::hasher_state::success);
     const char* ptr = nullptr;
     current_state = hasher.process_bytes(ptr, 4);
     BOOST_TEST(current_state == boost::crypt::hasher_state::null);
