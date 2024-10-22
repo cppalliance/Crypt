@@ -145,8 +145,8 @@ constexpr auto sha256_hasher::sha256_process_message_block() -> void
 
     for (boost::crypt::size_t i {16U}; i < W.size(); ++i)
     {
-        W[i] = sha256_detail::little_sigma0(W[i - 2U])  + W[i - 7U] +
-               sha256_detail::little_sigma1(W[i - 15U]) + W[i - 16U];
+        W[i] = sha256_detail::little_sigma1(W[i - 2U])  + W[i - 7U] +
+               sha256_detail::little_sigma0(W[i - 15U]) + W[i - 16U];
     }
 
     auto A {intermediate_hash_[0]};
@@ -384,7 +384,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha256_hasher::process_bytes(ForwardIter 
 
 constexpr auto sha256_hasher::get_digest() noexcept -> sha256_hasher::return_type
 {
-    boost::crypt::array<boost::crypt::uint8_t, 20> digest{};
+    sha256_hasher::return_type digest{};
 
     if (corrupted)
     {
@@ -404,7 +404,7 @@ constexpr auto sha256_hasher::get_digest() noexcept -> sha256_hasher::return_typ
 
     for (boost::crypt::size_t i {}; i < digest.size(); ++i)
     {
-        digest[i] = static_cast<boost::crypt::uint8_t>(intermediate_hash_[i >> 2U] >> 8 * (3 - (i & 0x03)));
+        digest[i] = static_cast<boost::crypt::uint8_t>(intermediate_hash_[i >> 2U] >> 8U * (3U - (i & 0x03U)));
     }
 
     return digest;
