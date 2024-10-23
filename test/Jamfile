@@ -51,6 +51,7 @@ run link_1.cpp link_2.cpp link_3.cpp ;
 run quick.cpp ;
 run test_md5.cpp ;
 run test_sha1.cpp ;
+run test_sha224.cpp ;
 run test_sha256.cpp ;
 
 # NIST standard testing
