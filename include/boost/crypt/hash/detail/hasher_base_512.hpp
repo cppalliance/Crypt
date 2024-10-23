@@ -56,8 +56,10 @@ public:
 
 protected:
 
-    // This fucntion should be pure virtual but GCC < 9 won't accept that
+    // This function should be pure virtual but GCC < 9 won't accept that
+    // LCOV_EXCL_START
     virtual BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void {};
+    // LCOV_EXCL_STOP
 
     BOOST_CRYPT_GPU_ENABLED inline auto pad_message() noexcept -> void;
 
