@@ -59,7 +59,9 @@
 
 // ----- Assertions -----
 #ifndef BOOST_CRYPT_HAS_CUDA
-#  include <cassert>
+#  ifndef BOOST_CRYPT_BUILD_MODULE
+#    include <cassert>
+#  endif
 #  define BOOST_CRYPT_ASSERT(x) assert(x)
 #  define BOOST_CRYPT_ASSERT_MSG(expr, msg) assert((expr)&&(msg))
 #else
@@ -70,6 +72,9 @@
 
 // ----- Has something -----
 // C++17
+
+#ifndef BOOST_CRYPT_BUILD_MODULE
+
 #ifndef BOOST_CRYPT_HAS_CUDA
 #  if __cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)
 #    if __has_include(<string_view>)
@@ -92,6 +97,14 @@
 #    endif // Has <span>
 #  endif // C++20
 #endif // BOOST_CRYPT_HAS_CUDA
+
+#else // We are building a module
+
+// If someone is building the module successfully they defintiely have the above things
+#  define BOOST_CRYPT_HAS_STRING_VIEW
+#  define BOOST_CRYPT_HAS_SPAN
+
+#endif // BOOST_CRYPT_BUILD_MODULE
 
 #if defined(__has_builtin)
 #define BOOST_CRYPT_HAS_BUILTIN(x) __has_builtin(x)
