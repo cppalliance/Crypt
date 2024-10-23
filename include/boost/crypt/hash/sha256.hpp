@@ -35,7 +35,7 @@ BOOST_CRYPT_EXPORT class sha256_hasher : public hash_detail::hasher_base_512<32U
 {
 public:
 
-    BOOST_CRYPT_GPU_ENABLED sha256_hasher() { this->init(); }
+    BOOST_CRYPT_GPU_ENABLED sha256_hasher() noexcept { this->init(); }
 
     BOOST_CRYPT_GPU_ENABLED inline auto init() noexcept -> void;
 
