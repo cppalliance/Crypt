@@ -41,7 +41,7 @@ public:
 
 private:
 
-    BOOST_CRYPT_GPU_ENABLED auto process_message_block() noexcept -> void override;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void override;
 };
 
 BOOST_CRYPT_GPU_ENABLED inline auto sha256_hasher::init() noexcept -> void

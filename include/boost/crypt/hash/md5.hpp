@@ -39,11 +39,11 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED inline auto init() noexcept -> void;
 
-    BOOST_CRYPT_GPU_ENABLED auto get_digest() noexcept -> return_type override;
+    BOOST_CRYPT_GPU_ENABLED inline auto get_digest() noexcept -> return_type override;
 
 private:
 
-    BOOST_CRYPT_GPU_ENABLED auto process_message_block() noexcept -> void override;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void override;
 };
 
 BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::init() noexcept -> void
@@ -110,7 +110,7 @@ BOOST_CRYPT_GPU_ENABLED inline auto II(boost::crypt::uint32_t& a, boost::crypt::
 
 } // md5_body_detail
 
-BOOST_CRYPT_GPU_ENABLED auto md5_hasher::process_message_block() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::process_message_block() noexcept -> void
 {
     using namespace md5_body_detail;
 
