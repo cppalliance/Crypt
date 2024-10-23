@@ -48,37 +48,39 @@ private:
     bool corrupted {};
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto md5_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto md5_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto md5_convert_buffer_to_blocks() noexcept;
+    BOOST_CRYPT_GPU_ENABLED inline auto md5_convert_buffer_to_blocks() noexcept;
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto md5_copy_data(ForwardIter data, boost::crypt::size_t offset, boost::crypt::size_t size) noexcept;
+    BOOST_CRYPT_GPU_ENABLED inline auto md5_copy_data(ForwardIter data, boost::crypt::size_t offset, boost::crypt::size_t size) noexcept;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto md5_body() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED inline auto md5_body() noexcept -> void;
 
 public:
 
     using return_type = boost::crypt::array<boost::crypt::uint8_t, 16>;
-    
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init() noexcept -> void;
+
+    BOOST_CRYPT_GPU_ENABLED inline md5_hasher() noexcept { this-> init(); }
+
+    BOOST_CRYPT_GPU_ENABLED inline auto init() noexcept -> void;
 
     template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_byte(ByteType byte) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
+    BOOST_CRYPT_GPU_ENABLED inline auto get_digest() noexcept -> return_type;
 };
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::init() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::init() noexcept -> void
 {
     a0_ = 0x67452301U;
     b0_ = 0xefcdab89U;
@@ -95,7 +97,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::init() noexcept -> void
     corrupted = false;
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_convert_buffer_to_blocks() noexcept
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::md5_convert_buffer_to_blocks() noexcept
 {
     boost::crypt::size_t buffer_index {};
     for (auto& block : blocks_)
@@ -112,7 +114,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_convert_buffer_to_blocks(
 }
 
 template <typename ForwardIter>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_copy_data(ForwardIter data, boost::crypt::size_t offset, boost::crypt::size_t size) noexcept
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::md5_copy_data(ForwardIter data, boost::crypt::size_t offset, boost::crypt::size_t size) noexcept
 {
     for (boost::crypt::size_t i {}; i < size; ++i)
     {
@@ -122,7 +124,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_copy_data(ForwardIter dat
 }
 
 template <typename ForwardIter>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::md5_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state
 {
     if (size == 0U)
     {
@@ -189,7 +191,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_update(ForwardIter data, 
     return hasher_state::success;
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::get_digest() noexcept -> return_type
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::get_digest() noexcept -> return_type
 {
     return_type digest {};
     if (corrupted)
@@ -243,7 +245,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::get_digest() noexcept -> retu
 }
 
 template <typename ByteType>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_byte(ByteType byte) noexcept -> hasher_state
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::process_byte(ByteType byte) noexcept -> hasher_state
 {
     static_assert(boost::crypt::is_convertible_v<ByteType, boost::crypt::uint8_t>, "Byte must be convertible to uint8_t");
     const auto value {static_cast<boost::crypt::uint8_t>(byte)};
@@ -251,7 +253,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_byte(ByteType byte) n
 }
 
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     if (!utility::is_null(buffer))
     {
@@ -264,7 +266,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buf
 }
 
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     #ifndef BOOST_CRYPT_HAS_CUDA
 
@@ -295,7 +297,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buf
 }
 
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     #ifndef BOOST_CRYPT_HAS_CUDA
 
@@ -329,48 +331,48 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::process_bytes(ForwardIter buf
 // Section 18.5
 namespace md5_body_detail {
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto F(boost::crypt::uint32_t x, boost::crypt::uint32_t y, boost::crypt::uint32_t z) noexcept
+BOOST_CRYPT_GPU_ENABLED inline auto F(boost::crypt::uint32_t x, boost::crypt::uint32_t y, boost::crypt::uint32_t z) noexcept
 {
     return (x & y) | ((~x) & z);
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto G(boost::crypt::uint32_t x, boost::crypt::uint32_t y, boost::crypt::uint32_t z) noexcept
+BOOST_CRYPT_GPU_ENABLED inline auto G(boost::crypt::uint32_t x, boost::crypt::uint32_t y, boost::crypt::uint32_t z) noexcept
 {
     return (x & z) | (y & (~z));
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto H(boost::crypt::uint32_t x, boost::crypt::uint32_t y, boost::crypt::uint32_t z) noexcept
+BOOST_CRYPT_GPU_ENABLED inline auto H(boost::crypt::uint32_t x, boost::crypt::uint32_t y, boost::crypt::uint32_t z) noexcept
 {
     return x ^ y ^ z;
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto I(boost::crypt::uint32_t x, boost::crypt::uint32_t y, boost::crypt::uint32_t z) noexcept
+BOOST_CRYPT_GPU_ENABLED inline auto I(boost::crypt::uint32_t x, boost::crypt::uint32_t y, boost::crypt::uint32_t z) noexcept
 {
     return y ^ (x | (~z));
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto FF(boost::crypt::uint32_t& a, boost::crypt::uint32_t b,  boost::crypt::uint32_t c,
+BOOST_CRYPT_GPU_ENABLED inline auto FF(boost::crypt::uint32_t& a, boost::crypt::uint32_t b,  boost::crypt::uint32_t c,
                                           boost::crypt::uint32_t d,  boost::crypt::uint32_t Mj, boost::crypt::uint32_t si,
                                           boost::crypt::uint32_t ti) noexcept
 {
     a = b + detail::rotl((a + F(b, c, d) + Mj + ti), si);
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto GG(boost::crypt::uint32_t& a, boost::crypt::uint32_t b,  boost::crypt::uint32_t c,
+BOOST_CRYPT_GPU_ENABLED inline auto GG(boost::crypt::uint32_t& a, boost::crypt::uint32_t b,  boost::crypt::uint32_t c,
                                           boost::crypt::uint32_t d,  boost::crypt::uint32_t Mj, boost::crypt::uint32_t si,
                                           boost::crypt::uint32_t ti) noexcept
 {
     a = b + detail::rotl((a + G(b, c, d) + Mj + ti), si);
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto HH(boost::crypt::uint32_t& a, boost::crypt::uint32_t b,  boost::crypt::uint32_t c,
+BOOST_CRYPT_GPU_ENABLED inline auto HH(boost::crypt::uint32_t& a, boost::crypt::uint32_t b,  boost::crypt::uint32_t c,
                                           boost::crypt::uint32_t d,  boost::crypt::uint32_t Mj, boost::crypt::uint32_t si,
                                           boost::crypt::uint32_t ti) noexcept
 {
     a = b + detail::rotl((a + H(b, c, d) + Mj + ti), si);
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto II(boost::crypt::uint32_t& a, boost::crypt::uint32_t b,  boost::crypt::uint32_t c,
+BOOST_CRYPT_GPU_ENABLED inline auto II(boost::crypt::uint32_t& a, boost::crypt::uint32_t b,  boost::crypt::uint32_t c,
                                           boost::crypt::uint32_t d,  boost::crypt::uint32_t Mj, boost::crypt::uint32_t si,
                                           boost::crypt::uint32_t ti) noexcept
 {
@@ -379,7 +381,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto II(boost::crypt::uint32_t& a, boost::cryp
 
 } // md5_body_detail
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_body() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED inline auto md5_hasher::md5_body() noexcept -> void
 {
     using namespace md5_body_detail;
 
@@ -469,7 +471,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::md5_body() noexcept -> void
 namespace detail {
 
 template <typename T>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(T begin, T end) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_GPU_ENABLED inline auto md5(T begin, T end) noexcept -> md5_hasher::return_type
 {
     if (end < begin)
     {
@@ -491,7 +493,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5(T begin, T end) noexcept -> md5_hashe
 
 } // Namespace detail
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char* str) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const char* str) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -502,7 +504,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char* str) n
     return detail::md5(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const char* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -512,7 +514,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char* str, b
     return detail::md5(str, str + len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const boost::crypt::uint8_t* str) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const boost::crypt::uint8_t* str) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -523,7 +525,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const boost::crypt
     return detail::md5(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const boost::crypt::uint8_t* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const boost::crypt::uint8_t* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -533,7 +535,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const boost::crypt
     return detail::md5(str, str + len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char16_t* str) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const char16_t* str) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -544,7 +546,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char16_t* st
     return detail::md5(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char16_t* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const char16_t* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -554,7 +556,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char16_t* st
     return detail::md5(str, str + len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char32_t* str) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const char32_t* str) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -565,7 +567,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char32_t* st
     return detail::md5(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char32_t* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const char32_t* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -577,7 +579,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char32_t* st
 
 // On some platforms wchar_t is 16 bits and others it's 32
 // Since we check sizeof() the underlying with SFINAE in the actual implementation this is handled transparently
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const wchar_t* str) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const wchar_t* str) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -588,7 +590,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const wchar_t* str
     return detail::md5(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const wchar_t* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto md5(const wchar_t* str, boost::crypt::size_t len) noexcept -> md5_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -721,7 +723,7 @@ BOOST_CRYPT_EXPORT inline auto md5_file(std::string_view filepath) noexcept -> m
 #ifdef BOOST_CRYPT_HAS_SPAN
 
 BOOST_CRYPT_EXPORT template <typename T, std::size_t extent>
-constexpr auto md5(std::span<T, extent> data) noexcept -> md5_hasher::return_type
+inline auto md5(std::span<T, extent> data) noexcept -> md5_hasher::return_type
 {
     return detail::md5(data.begin(), data.end());
 }
@@ -731,7 +733,7 @@ constexpr auto md5(std::span<T, extent> data) noexcept -> md5_hasher::return_typ
 #ifdef BOOST_CRYPT_HAS_CUDA
 
 template <typename T, boost::crypt::size_t extent>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(cuda::std::span<T, extent> data) noexcept -> md5_hasher::return_type
+BOOST_CRYPT_GPU_ENABLED inline auto md5(cuda::std::span<T, extent> data) noexcept -> md5_hasher::return_type
 {
     return detail::md5(data.begin(), data.end());
 }
