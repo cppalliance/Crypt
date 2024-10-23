@@ -7,6 +7,7 @@
 #ifndef BOOST_CRYPT_HASH_SHA1_HPP
 #define BOOST_CRYPT_HASH_SHA1_HPP
 
+#include <boost/crypt/hash/detail/hasher_base_512.hpp>
 #include <boost/crypt/hash/hasher_state.hpp>
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/bit.hpp>
@@ -30,58 +31,38 @@
 namespace boost {
 namespace crypt {
 
-BOOST_CRYPT_EXPORT class sha1_hasher
+BOOST_CRYPT_EXPORT class sha1_hasher final : public hash_detail::hasher_base_512<20U, 5U>
 {
 public:
 
-    using return_type = boost::crypt::array<boost::crypt::uint8_t, 20>;
+    BOOST_CRYPT_GPU_ENABLED sha1_hasher() noexcept { this->init(); }
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init() -> void;
-
-    template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;
-
-    template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
-
-    template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
-
-    template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
-
-
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type ;
+    BOOST_CRYPT_GPU_ENABLED inline auto init() noexcept -> void;
 
 private:
 
-    boost::crypt::array<boost::crypt::uint32_t, 5> intermediate_hash_ { 0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0 };
-    boost::crypt::array<boost::crypt::uint8_t, 64> buffer_ {};
-
-    boost::crypt::size_t buffer_index_ {};
-    boost::crypt::size_t low_ {};
-    boost::crypt::size_t high_ {};
-
-    bool computed {};
-    bool corrupted {};
-
-    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_process_message_block() -> void;
-
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
-
-    BOOST_CRYPT_GPU_ENABLED constexpr auto pad_message() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void override;
 };
 
-namespace detail {
+BOOST_CRYPT_GPU_ENABLED inline auto sha1_hasher::init() noexcept -> void
+{
+    hash_detail::hasher_base_512<20U, 5U>::base_init();
 
-BOOST_CRYPT_GPU_ENABLED
-constexpr auto round1(boost::crypt::uint32_t& A,
-                      boost::crypt::uint32_t& B,
-                      boost::crypt::uint32_t& C,
-                      boost::crypt::uint32_t& D,
-                      boost::crypt::uint32_t& E,
-                      boost::crypt::uint32_t  W)
+    intermediate_hash_[0] = 0x67452301;
+    intermediate_hash_[1] = 0xEFCDAB89;
+    intermediate_hash_[2] = 0x98BADCFE;
+    intermediate_hash_[3] = 0x10325476;
+    intermediate_hash_[4] = 0xC3D2E1F0;
+}
+
+namespace sha1_detail {
+
+BOOST_CRYPT_GPU_ENABLED inline auto round1(boost::crypt::uint32_t& A,
+                                           boost::crypt::uint32_t& B,
+                                           boost::crypt::uint32_t& C,
+                                           boost::crypt::uint32_t& D,
+                                           boost::crypt::uint32_t& E,
+                                           boost::crypt::uint32_t  W)
 {
     const auto temp {detail::rotl(A, 5U) + ((B & C) | ((~B) & D)) + E + W + 0x5A827999U};
     E = D;
@@ -91,13 +72,12 @@ constexpr auto round1(boost::crypt::uint32_t& A,
     A = temp;
 }
 
-BOOST_CRYPT_GPU_ENABLED
-constexpr auto round2(boost::crypt::uint32_t& A,
-                      boost::crypt::uint32_t& B,
-                      boost::crypt::uint32_t& C,
-                      boost::crypt::uint32_t& D,
-                      boost::crypt::uint32_t& E,
-                      boost::crypt::uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED inline auto round2(boost::crypt::uint32_t& A,
+                                           boost::crypt::uint32_t& B,
+                                           boost::crypt::uint32_t& C,
+                                           boost::crypt::uint32_t& D,
+                                           boost::crypt::uint32_t& E,
+                                           boost::crypt::uint32_t  W)
 {
     const auto temp {detail::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0x6ED9EBA1U};
     E = D;
@@ -107,13 +87,12 @@ constexpr auto round2(boost::crypt::uint32_t& A,
     A = temp;
 }
 
-BOOST_CRYPT_GPU_ENABLED
-constexpr auto round3(boost::crypt::uint32_t& A,
-                      boost::crypt::uint32_t& B,
-                      boost::crypt::uint32_t& C,
-                      boost::crypt::uint32_t& D,
-                      boost::crypt::uint32_t& E,
-                      boost::crypt::uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED inline auto round3(boost::crypt::uint32_t& A,
+                                           boost::crypt::uint32_t& B,
+                                           boost::crypt::uint32_t& C,
+                                           boost::crypt::uint32_t& D,
+                                           boost::crypt::uint32_t& E,
+                                           boost::crypt::uint32_t  W)
 {
     const auto temp {detail::rotl(A, 5U) + ((B & C) | (B & D) | (C & D)) + E + W + 0x8F1BBCDCU};
     E = D;
@@ -123,13 +102,12 @@ constexpr auto round3(boost::crypt::uint32_t& A,
     A = temp;
 }
 
-BOOST_CRYPT_GPU_ENABLED
-constexpr auto round4(boost::crypt::uint32_t& A,
-                      boost::crypt::uint32_t& B,
-                      boost::crypt::uint32_t& C,
-                      boost::crypt::uint32_t& D,
-                      boost::crypt::uint32_t& E,
-                      boost::crypt::uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED inline auto round4(boost::crypt::uint32_t& A,
+                                           boost::crypt::uint32_t& B,
+                                           boost::crypt::uint32_t& C,
+                                           boost::crypt::uint32_t& D,
+                                           boost::crypt::uint32_t& E,
+                                           boost::crypt::uint32_t  W)
 {
     const auto temp {detail::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0xCA62C1D6U};
     E = D;
@@ -139,11 +117,13 @@ constexpr auto round4(boost::crypt::uint32_t& A,
     A = temp;
 }
 
-} // Namespace detail
+} // Namespace sha1_detail
 
 // See definitions from the RFC on the rounds
-constexpr auto sha1_hasher::sha1_process_message_block() -> void
+BOOST_CRYPT_GPU_ENABLED inline auto sha1_hasher::process_message_block() noexcept -> void
 {
+    using namespace sha1_detail;
+
     boost::crypt::array<boost::crypt::uint32_t, 80> W {};
 
     // Init the first 16 words of W
@@ -168,92 +148,92 @@ constexpr auto sha1_hasher::sha1_process_message_block() -> void
     auto E {intermediate_hash_[4]};
 
     // Round 1
-    detail::round1(A, B, C, D, E, W[0]);
-    detail::round1(A, B, C, D, E, W[1]);
-    detail::round1(A, B, C, D, E, W[2]);
-    detail::round1(A, B, C, D, E, W[3]);
-    detail::round1(A, B, C, D, E, W[4]);
-    detail::round1(A, B, C, D, E, W[5]);
-    detail::round1(A, B, C, D, E, W[6]);
-    detail::round1(A, B, C, D, E, W[7]);
-    detail::round1(A, B, C, D, E, W[8]);
-    detail::round1(A, B, C, D, E, W[9]);
-    detail::round1(A, B, C, D, E, W[10]);
-    detail::round1(A, B, C, D, E, W[11]);
-    detail::round1(A, B, C, D, E, W[12]);
-    detail::round1(A, B, C, D, E, W[13]);
-    detail::round1(A, B, C, D, E, W[14]);
-    detail::round1(A, B, C, D, E, W[15]);
-    detail::round1(A, B, C, D, E, W[16]);
-    detail::round1(A, B, C, D, E, W[17]);
-    detail::round1(A, B, C, D, E, W[18]);
-    detail::round1(A, B, C, D, E, W[19]);
+    round1(A, B, C, D, E, W[0]);
+    round1(A, B, C, D, E, W[1]);
+    round1(A, B, C, D, E, W[2]);
+    round1(A, B, C, D, E, W[3]);
+    round1(A, B, C, D, E, W[4]);
+    round1(A, B, C, D, E, W[5]);
+    round1(A, B, C, D, E, W[6]);
+    round1(A, B, C, D, E, W[7]);
+    round1(A, B, C, D, E, W[8]);
+    round1(A, B, C, D, E, W[9]);
+    round1(A, B, C, D, E, W[10]);
+    round1(A, B, C, D, E, W[11]);
+    round1(A, B, C, D, E, W[12]);
+    round1(A, B, C, D, E, W[13]);
+    round1(A, B, C, D, E, W[14]);
+    round1(A, B, C, D, E, W[15]);
+    round1(A, B, C, D, E, W[16]);
+    round1(A, B, C, D, E, W[17]);
+    round1(A, B, C, D, E, W[18]);
+    round1(A, B, C, D, E, W[19]);
 
     // Round 2
-    detail::round2(A, B, C, D, E, W[20]);
-    detail::round2(A, B, C, D, E, W[21]);
-    detail::round2(A, B, C, D, E, W[22]);
-    detail::round2(A, B, C, D, E, W[23]);
-    detail::round2(A, B, C, D, E, W[24]);
-    detail::round2(A, B, C, D, E, W[25]);
-    detail::round2(A, B, C, D, E, W[26]);
-    detail::round2(A, B, C, D, E, W[27]);
-    detail::round2(A, B, C, D, E, W[28]);
-    detail::round2(A, B, C, D, E, W[29]);
-    detail::round2(A, B, C, D, E, W[30]);
-    detail::round2(A, B, C, D, E, W[31]);
-    detail::round2(A, B, C, D, E, W[32]);
-    detail::round2(A, B, C, D, E, W[33]);
-    detail::round2(A, B, C, D, E, W[34]);
-    detail::round2(A, B, C, D, E, W[35]);
-    detail::round2(A, B, C, D, E, W[36]);
-    detail::round2(A, B, C, D, E, W[37]);
-    detail::round2(A, B, C, D, E, W[38]);
-    detail::round2(A, B, C, D, E, W[39]);
+    round2(A, B, C, D, E, W[20]);
+    round2(A, B, C, D, E, W[21]);
+    round2(A, B, C, D, E, W[22]);
+    round2(A, B, C, D, E, W[23]);
+    round2(A, B, C, D, E, W[24]);
+    round2(A, B, C, D, E, W[25]);
+    round2(A, B, C, D, E, W[26]);
+    round2(A, B, C, D, E, W[27]);
+    round2(A, B, C, D, E, W[28]);
+    round2(A, B, C, D, E, W[29]);
+    round2(A, B, C, D, E, W[30]);
+    round2(A, B, C, D, E, W[31]);
+    round2(A, B, C, D, E, W[32]);
+    round2(A, B, C, D, E, W[33]);
+    round2(A, B, C, D, E, W[34]);
+    round2(A, B, C, D, E, W[35]);
+    round2(A, B, C, D, E, W[36]);
+    round2(A, B, C, D, E, W[37]);
+    round2(A, B, C, D, E, W[38]);
+    round2(A, B, C, D, E, W[39]);
 
     // Round 3
-    detail::round3(A, B, C, D, E, W[40]);
-    detail::round3(A, B, C, D, E, W[41]);
-    detail::round3(A, B, C, D, E, W[42]);
-    detail::round3(A, B, C, D, E, W[43]);
-    detail::round3(A, B, C, D, E, W[44]);
-    detail::round3(A, B, C, D, E, W[45]);
-    detail::round3(A, B, C, D, E, W[46]);
-    detail::round3(A, B, C, D, E, W[47]);
-    detail::round3(A, B, C, D, E, W[48]);
-    detail::round3(A, B, C, D, E, W[49]);
-    detail::round3(A, B, C, D, E, W[50]);
-    detail::round3(A, B, C, D, E, W[51]);
-    detail::round3(A, B, C, D, E, W[52]);
-    detail::round3(A, B, C, D, E, W[53]);
-    detail::round3(A, B, C, D, E, W[54]);
-    detail::round3(A, B, C, D, E, W[55]);
-    detail::round3(A, B, C, D, E, W[56]);
-    detail::round3(A, B, C, D, E, W[57]);
-    detail::round3(A, B, C, D, E, W[58]);
-    detail::round3(A, B, C, D, E, W[59]);
+    round3(A, B, C, D, E, W[40]);
+    round3(A, B, C, D, E, W[41]);
+    round3(A, B, C, D, E, W[42]);
+    round3(A, B, C, D, E, W[43]);
+    round3(A, B, C, D, E, W[44]);
+    round3(A, B, C, D, E, W[45]);
+    round3(A, B, C, D, E, W[46]);
+    round3(A, B, C, D, E, W[47]);
+    round3(A, B, C, D, E, W[48]);
+    round3(A, B, C, D, E, W[49]);
+    round3(A, B, C, D, E, W[50]);
+    round3(A, B, C, D, E, W[51]);
+    round3(A, B, C, D, E, W[52]);
+    round3(A, B, C, D, E, W[53]);
+    round3(A, B, C, D, E, W[54]);
+    round3(A, B, C, D, E, W[55]);
+    round3(A, B, C, D, E, W[56]);
+    round3(A, B, C, D, E, W[57]);
+    round3(A, B, C, D, E, W[58]);
+    round3(A, B, C, D, E, W[59]);
 
     // Round 4
-    detail::round4(A, B, C, D, E, W[60]);
-    detail::round4(A, B, C, D, E, W[61]);
-    detail::round4(A, B, C, D, E, W[62]);
-    detail::round4(A, B, C, D, E, W[63]);
-    detail::round4(A, B, C, D, E, W[64]);
-    detail::round4(A, B, C, D, E, W[65]);
-    detail::round4(A, B, C, D, E, W[66]);
-    detail::round4(A, B, C, D, E, W[67]);
-    detail::round4(A, B, C, D, E, W[68]);
-    detail::round4(A, B, C, D, E, W[69]);
-    detail::round4(A, B, C, D, E, W[70]);
-    detail::round4(A, B, C, D, E, W[71]);
-    detail::round4(A, B, C, D, E, W[72]);
-    detail::round4(A, B, C, D, E, W[73]);
-    detail::round4(A, B, C, D, E, W[74]);
-    detail::round4(A, B, C, D, E, W[75]);
-    detail::round4(A, B, C, D, E, W[76]);
-    detail::round4(A, B, C, D, E, W[77]);
-    detail::round4(A, B, C, D, E, W[78]);
-    detail::round4(A, B, C, D, E, W[79]);
+    round4(A, B, C, D, E, W[60]);
+    round4(A, B, C, D, E, W[61]);
+    round4(A, B, C, D, E, W[62]);
+    round4(A, B, C, D, E, W[63]);
+    round4(A, B, C, D, E, W[64]);
+    round4(A, B, C, D, E, W[65]);
+    round4(A, B, C, D, E, W[66]);
+    round4(A, B, C, D, E, W[67]);
+    round4(A, B, C, D, E, W[68]);
+    round4(A, B, C, D, E, W[69]);
+    round4(A, B, C, D, E, W[70]);
+    round4(A, B, C, D, E, W[71]);
+    round4(A, B, C, D, E, W[72]);
+    round4(A, B, C, D, E, W[73]);
+    round4(A, B, C, D, E, W[74]);
+    round4(A, B, C, D, E, W[75]);
+    round4(A, B, C, D, E, W[76]);
+    round4(A, B, C, D, E, W[77]);
+    round4(A, B, C, D, E, W[78]);
+    round4(A, B, C, D, E, W[79]);
 
     intermediate_hash_[0] += A;
     intermediate_hash_[1] += B;
@@ -264,231 +244,10 @@ constexpr auto sha1_hasher::sha1_process_message_block() -> void
     buffer_index_ = 0U;
 }
 
-// Like MD5, the message must be padded to an even 512 bits.
-// The first bit of padding must be a 1
-// The last 64-bits should be the length of the message
-// All bits in between should be 0s
-constexpr auto sha1_hasher::pad_message() noexcept -> void
-{
-    constexpr boost::crypt::size_t message_length_start_index {56U};
-
-    // We don't have enough space for everything we need
-    if (buffer_index_ >= message_length_start_index)
-    {
-        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x80);
-        while (buffer_index_ < buffer_.size())
-        {
-            buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x00);
-        }
-
-        sha1_process_message_block();
-
-        while (buffer_index_ < message_length_start_index)
-        {
-            buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x00);
-        }
-    }
-    else
-    {
-        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x80);
-        while (buffer_index_ < message_length_start_index)
-        {
-            buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(0x00);
-        }
-    }
-
-    // Add the message length to the end of the buffer
-    BOOST_CRYPT_ASSERT(buffer_index_ == message_length_start_index);
-
-    buffer_[56U] = static_cast<boost::crypt::uint8_t>(high_ >> 24U);
-    buffer_[57U] = static_cast<boost::crypt::uint8_t>(high_ >> 16U);
-    buffer_[58U] = static_cast<boost::crypt::uint8_t>(high_ >>  8U);
-    buffer_[59U] = static_cast<boost::crypt::uint8_t>(high_);
-    buffer_[60U] = static_cast<boost::crypt::uint8_t>(low_ >> 24U);
-    buffer_[61U] = static_cast<boost::crypt::uint8_t>(low_ >> 16U);
-    buffer_[62U] = static_cast<boost::crypt::uint8_t>(low_ >>  8U);
-    buffer_[63U] = static_cast<boost::crypt::uint8_t>(low_);
-
-    sha1_process_message_block();
-}
-
-template <typename ForwardIter>
-constexpr auto sha1_hasher::sha1_update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state
-{
-    if (size == 0U)
-    {
-        return hasher_state::success;
-    }
-    if (computed)
-    {
-        corrupted = true;
-    }
-    if (corrupted)
-    {
-        return hasher_state::state_error;
-    }
-
-    while (size-- && !corrupted)
-    {
-        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(static_cast<boost::crypt::uint8_t>(*data) &
-                                                                      static_cast<boost::crypt::uint8_t>(0xFF));
-        low_ += 8U;
-
-        if (BOOST_CRYPT_UNLIKELY(low_ == 0))
-        {
-            // Would indicate size_t rollover which should not happen on a single data stream
-            // LCOV_EXCL_START
-            ++high_;
-            if (high_ == 0)
-            {
-                corrupted = true;
-                return hasher_state::input_too_long;
-            }
-            // LCOV_EXCL_STOP
-        }
-
-        if (buffer_index_ == buffer_.size())
-        {
-            sha1_process_message_block();
-        }
-
-        ++data;
-    }
-
-    return hasher_state::success;
-}
-
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::init() -> void
-{
-    intermediate_hash_[0] = 0x67452301;
-    intermediate_hash_[1] = 0xEFCDAB89;
-    intermediate_hash_[2] = 0x98BADCFE;
-    intermediate_hash_[3] = 0x10325476;
-    intermediate_hash_[4] = 0xC3D2E1F0;
-
-    buffer_.fill(0);
-    buffer_index_ = 0UL;
-    low_ = 0UL;
-    high_ = 0UL;
-    computed = false;
-    corrupted = false;
-}
-
-template <typename ByteType>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_byte(ByteType byte) noexcept -> hasher_state
-{
-    static_assert(boost::crypt::is_convertible_v<ByteType, boost::crypt::uint8_t>, "Byte must be convertible to uint8_t");
-    const auto value {static_cast<boost::crypt::uint8_t>(byte)};
-    return sha1_update(&value, 1UL);
-}
-
-template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
-{
-    if (!utility::is_null(buffer))
-    {
-        return sha1_update(buffer, byte_count);
-    }
-    else
-    {
-        return hasher_state::null;
-    }
-}
-
-template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
-{
-    #ifndef BOOST_CRYPT_HAS_CUDA
-
-    if (!utility::is_null(buffer))
-    {
-        const auto* char_ptr {reinterpret_cast<const char *>(std::addressof(*buffer))};
-        const auto* data {reinterpret_cast<const unsigned char *>(char_ptr)};
-        return sha1_update(data, byte_count * 2U);
-    }
-    else
-    {
-        return hasher_state::null;
-    }
-
-    #else
-
-    if (!utility::is_null(buffer))
-    {
-        const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
-        return sha1_update(data, byte_count * 2U);
-    }
-    else
-    {
-        return hasher_state::null;
-    }
-
-    #endif
-}
-
-template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool>>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
-{
-    #ifndef BOOST_CRYPT_HAS_CUDA
-
-    if (!utility::is_null(buffer))
-    {
-        const auto* char_ptr {reinterpret_cast<const char *>(std::addressof(*buffer))};
-        const auto* data {reinterpret_cast<const unsigned char *>(char_ptr)};
-        return sha1_update(data, byte_count * 4U);
-    }
-    else
-    {
-        return hasher_state::null;
-    }
-
-    #else
-
-    if (!utility::is_null(buffer))
-    {
-        const auto* data {reinterpret_cast<const unsigned char*>(buffer)};
-        return sha1_update(data, byte_count * 4U);
-    }
-    else
-    {
-        return hasher_state::null;
-    }
-
-    #endif
-}
-
-constexpr auto sha1_hasher::get_digest() noexcept -> sha1_hasher::return_type
-{
-    boost::crypt::array<boost::crypt::uint8_t, 20> digest{};
-
-    if (corrupted)
-    {
-        // Return empty message on corruption
-        return digest;
-    }
-    if (!computed)
-    {
-        pad_message();
-
-        // Overwrite whatever is in the buffer in case it is sensitive
-        buffer_.fill(0);
-        low_ = 0U;
-        high_ = 0U;
-        computed = true;
-    }
-
-    for (boost::crypt::size_t i {}; i < digest.size(); ++i)
-    {
-        digest[i] = static_cast<boost::crypt::uint8_t>(intermediate_hash_[i >> 2U] >> 8 * (3 - (i & 0x03)));
-    }
-
-    return digest;
-}
-
 namespace detail {
 
 template <typename T>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(T begin, T end) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_GPU_ENABLED inline auto sha1(T begin, T end) noexcept -> sha1_hasher::return_type
 {
     if (end < begin)
     {
@@ -511,7 +270,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(T begin, T end) noexcept -> sha1_has
 
 } // namespace detail
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char* str) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char* str) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -522,7 +281,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char* str) 
     return detail::sha1(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -532,7 +291,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char* str, 
     return detail::sha1(str, str + len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const boost::crypt::uint8_t* str) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const boost::crypt::uint8_t* str) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -543,7 +302,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const boost::cryp
     return detail::sha1(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const boost::crypt::uint8_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const boost::crypt::uint8_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -553,7 +312,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const boost::cryp
     return detail::sha1(str, str + len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char16_t* str) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char16_t* str) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -564,7 +323,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char16_t* s
     return detail::sha1(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char16_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char16_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -574,7 +333,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char16_t* s
     return detail::sha1(str, str + len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char32_t* str) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char32_t* str) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -585,7 +344,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char32_t* s
     return detail::sha1(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char32_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char32_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -597,7 +356,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const char32_t* s
 
 // On some platforms wchar_t is 16 bits and others it's 32
 // Since we check sizeof() the underlying with SFINAE in the actual implementation this is handled transparently
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const wchar_t* str) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const wchar_t* str) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -608,7 +367,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const wchar_t* st
     return detail::sha1(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(const wchar_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha1(const wchar_t* str, boost::crypt::size_t len) noexcept -> sha1_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -741,7 +500,7 @@ BOOST_CRYPT_EXPORT inline auto sha1_file(std::string_view filepath) noexcept -> 
 #ifdef BOOST_CRYPT_HAS_SPAN
 
 BOOST_CRYPT_EXPORT template <typename T, std::size_t extent>
-constexpr auto sha1(std::span<T, extent> data) noexcept -> sha1_hasher::return_type
+inline auto sha1(std::span<T, extent> data) noexcept -> sha1_hasher::return_type
 {
     return detail::sha1(data.begin(), data.end());
 }
@@ -751,7 +510,7 @@ constexpr auto sha1(std::span<T, extent> data) noexcept -> sha1_hasher::return_t
 #ifdef BOOST_CRYPT_HAS_CUDA
 
 template <typename T, boost::crypt::size_t extent>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(cuda::std::span<T, extent> data) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_GPU_ENABLED inline auto sha1(cuda::std::span<T, extent> data) noexcept -> sha1_hasher::return_type
 {
     return detail::sha1(data.begin(), data.end());
 }

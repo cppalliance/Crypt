@@ -21,25 +21,25 @@ namespace crypt {
 
 uisng return_type = boost::crypt::array<uint8_t, 16>;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char* str) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const char* str) noexcept -> return_type;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char* str, size_t len) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const char* str, size_t len) noexcept -> return_type;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const unsigned char* str) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const unsigned char* str) noexcept -> return_type;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const unsigned char* str, size_t len) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const unsigned char* str, size_t len) noexcept -> return_type;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char16_t* str) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const char16_t* str) noexcept -> return_type;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char16_t* str, size_t len) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const char16_t* str, size_t len) noexcept -> return_type;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char32_t* str) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const char32_t* str) noexcept -> return_type;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const char32_t* str, size_t len) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const char32_t* str, size_t len) noexcept -> return_type;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const wchar_t* str) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const wchar_t* str) noexcept -> return_type;
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(const wchar_t* str, size_t len) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(const wchar_t* str, size_t len) noexcept -> return_type;
 
 inline auto md5(const std::string& str) noexcept -> return_type;
 
@@ -64,14 +64,14 @@ inline auto md5(std::wstring_view str) noexcept -> return_type;
 #ifdef BOOST_CRYPT_HAS_SPAN
 
 template <typename T, std::size_t extent>
-constexpr auto md5(std::span<T, extent> data) noexcept -> return_type;
+inline auto md5(std::span<T, extent> data) noexcept -> return_type;
 
 #endif // BOOST_CRYPT_HAS_SPAN
 
 #ifdef BOOST_CRYPT_HAS_CUDA
 
 template <typename T, boost::crypt::size_t extent>
-BOOST_CRYPT_GPU_ENABLED constexpr auto md5(cuda::std::span<T, extent> data) noexcept -> return_type;
+BOOST_CRYPT_GPU_ENABLED inline auto md5(cuda::std::span<T, extent> data) noexcept -> return_type;
 
 #endif // BOOST_CRYPT_HAS_CUDA
 
@@ -118,12 +118,12 @@ class md5_hasher
     void init();
 
     template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_byte(ByteType byte) noexcept -> hasher_state;
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, size_t byte_count) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, size_t byte_count) noexcept -> hasher_state;
 
-    constexpr auto get_digest() noexcept -> return_type;
+    inline auto get_digest() noexcept -> return_type;
 };
 
 } // namespace crypt

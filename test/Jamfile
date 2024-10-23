@@ -44,6 +44,9 @@ project : requirements
   ;
 
 
+# ODR Violations
+run link_1.cpp link_2.cpp link_3.cpp ;
+
 # Basic Testing
 run quick.cpp ;
 run test_md5.cpp ;
