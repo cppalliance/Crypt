@@ -52,7 +52,7 @@ public:
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool> = true>
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
-    BOOST_CRYPT_GPU_ENABLED auto get_digest() noexcept -> return_type;
+    virtual BOOST_CRYPT_GPU_ENABLED auto get_digest() noexcept -> return_type;
 
 protected:
 
@@ -66,9 +66,6 @@ protected:
     boost::crypt::array<boost::crypt::uint32_t, intermediate_hash_size> intermediate_hash_ {};
     boost::crypt::array<boost::crypt::uint8_t , 64U> buffer_ {};
     boost::crypt::size_t buffer_index_ {};
-
-private:
-
     boost::crypt::size_t low_ {};
     boost::crypt::size_t high_ {};
     bool computed {};
