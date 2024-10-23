@@ -31,7 +31,7 @@
 namespace boost {
 namespace crypt {
 
-BOOST_CRYPT_EXPORT class md5_hasher : public hash_detail::hasher_base_512<16U, 4U>
+BOOST_CRYPT_EXPORT class md5_hasher final : public hash_detail::hasher_base_512<16U, 4U>
 {
 public:
 
