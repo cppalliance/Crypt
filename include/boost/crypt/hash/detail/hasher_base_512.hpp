@@ -56,7 +56,8 @@ public:
 
 protected:
 
-    virtual BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void = 0;
+    // This fucntion should be pure virtual but GCC < 9 won't accept that
+    virtual BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void {};
 
     BOOST_CRYPT_GPU_ENABLED inline auto pad_message() noexcept -> void;
 
