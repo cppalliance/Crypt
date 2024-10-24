@@ -13,3 +13,4 @@ run test_md5_nvcc.cu ;
 run test_sha1_nvcc.cu ;
 run test_sha224_nvcc.cu ;
 run test_sha256_nvcc.cu ;
+run test_sha512_nvcc.cu ;
