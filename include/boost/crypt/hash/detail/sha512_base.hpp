@@ -252,6 +252,8 @@ auto sha512_base<digest_size>::pad_message() noexcept -> void
     buffer_[125U] = static_cast<boost::crypt::uint8_t>(low_ >> 16U);
     buffer_[126U] = static_cast<boost::crypt::uint8_t>(low_ >>  8U);
     buffer_[127U] = static_cast<boost::crypt::uint8_t>(low_);
+
+    process_message_block();
 }
 
 namespace sha512_detail {
