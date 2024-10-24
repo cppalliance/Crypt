@@ -11,4 +11,5 @@ project : requirements
 
 run test_md5_nvrtc.cpp ;
 run test_sha1_nvrtc.cpp ;
+run test_sha224_nvrtc.cpp ;
 run test_sha256_nvrtc.cpp ;
