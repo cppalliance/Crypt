@@ -4,6 +4,7 @@
 
 #include <boost/crypt/hash/md5.hpp>
 #include <boost/crypt/hash/sha1.hpp>
+#include <boost/crypt/hash/sha224.hpp>
 #include <boost/crypt/hash/sha256.hpp>
 
 void test_odr_use();
@@ -20,7 +21,8 @@ void test()
 void f1()
 {
     test<boost::crypt::md5_hasher>();
-    test<boost::crypt::sha256_hasher>();
     test<boost::crypt::sha1_hasher>();
+    test<boost::crypt::sha224_hasher>();
+    test<boost::crypt::sha256_hasher>();
 }
 // LCOV_EXCL_STOP
