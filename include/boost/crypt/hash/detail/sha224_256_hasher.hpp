@@ -56,6 +56,7 @@ public:
     BOOST_CRYPT_GPU_ENABLED inline auto init() noexcept -> void { init(is_sha224()); }
 };
 
+// Initial values for SHA224
 template <boost::crypt::size_t digest_size>
 auto sha_224_256_hasher<digest_size>::init(const boost::crypt::true_type&) noexcept -> void
 {
@@ -72,6 +73,7 @@ auto sha_224_256_hasher<digest_size>::init(const boost::crypt::true_type&) noexc
     intermediate_hash_[7] = 0xBEFA4FA4;
 }
 
+// Initial values for SHA256
 template <boost::crypt::size_t digest_size>
 auto sha_224_256_hasher<digest_size>::init(const boost::crypt::false_type&) noexcept -> void
 {
