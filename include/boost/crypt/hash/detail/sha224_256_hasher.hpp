@@ -1,6 +1,9 @@
 // Copyright 2024 Matt Borland
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
+//
+// See: https://datatracker.ietf.org/doc/html/rfc4634
+// See: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 
 #ifndef BOOST_CRYPT_HASH_DETAIL_SHA224_256_HASHER_HPP
 #define BOOST_CRYPT_HASH_DETAIL_SHA224_256_HASHER_HPP
