@@ -402,6 +402,22 @@ local windows_pipeline(name, image, environment, arch = "amd64") =
         ["deb http://apt.llvm.org/noble/ llvm-toolchain-noble-19 main"],
     ),
 
+    linux_pipeline(
+        "Linux 24.04 Clang 19 UBSAN",
+        "cppalliance/droneubuntu2404:1",
+        { TOOLSET: 'clang', COMPILER: 'clang++-19', CXXSTD: '03,11,14,17,20,2b' } + ubsan,
+        "clang-19",
+        ["deb http://apt.llvm.org/noble/ llvm-toolchain-noble-19 main"],
+    ),
+
+    linux_pipeline(
+        "Linux 24.04 Clang 19 ASAN",
+        "cppalliance/droneubuntu2404:1",
+        { TOOLSET: 'clang', COMPILER: 'clang++-19', CXXSTD: '03,11,14,17,20,2b' } + asan,
+        "clang-19",
+        ["deb http://apt.llvm.org/noble/ llvm-toolchain-noble-19 main"],
+    ),
+
     macos_pipeline(
         "MacOS 12.4 Xcode 13.4.1 UBSAN",
         { TOOLSET: 'clang', COMPILER: 'clang++', CXXSTD: '03,11,14,17,20,2b' } + ubsan,

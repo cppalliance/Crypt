@@ -27,6 +27,8 @@ include::crypt/sha1.adoc[]
 
 include::crypt/sha256.adoc[]
 
+include::crypt/sha384.adoc[]
+
 include::crypt/config.adoc[]
 
 include::crypt/reference.adoc[]
