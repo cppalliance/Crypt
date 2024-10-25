@@ -29,7 +29,7 @@ include::crypt/sha256.adoc[]
 
 include::crypt/sha384.adoc[]
 
-
+include::crypt/sha512.adoc[]
 
 include::crypt/sha512_224.adoc[]
 
