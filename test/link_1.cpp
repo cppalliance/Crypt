@@ -6,6 +6,9 @@
 #include <boost/crypt/hash/sha1.hpp>
 #include <boost/crypt/hash/sha224.hpp>
 #include <boost/crypt/hash/sha256.hpp>
+#include <boost/crypt/hash/sha512.hpp>
+#include <boost/crypt/hash/sha512_224.hpp>
+#include <boost/crypt/hash/sha512_256.hpp>
 
 void test_odr_use();
 
@@ -24,5 +27,8 @@ void f1()
     test<boost::crypt::sha1_hasher>();
     test<boost::crypt::sha224_hasher>();
     test<boost::crypt::sha256_hasher>();
+    test<boost::crypt::sha512_hasher>();
+    test<boost::crypt::sha512_224_hasher>();
+    test<boost::crypt::sha512_256_hasher>();
 }
 // LCOV_EXCL_STOP

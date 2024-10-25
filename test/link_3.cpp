@@ -4,7 +4,11 @@
 
 #include <boost/crypt/hash/md5.hpp>
 #include <boost/crypt/hash/sha1.hpp>
+#include <boost/crypt/hash/sha224.hpp>
 #include <boost/crypt/hash/sha256.hpp>
+#include <boost/crypt/hash/sha512.hpp>
+#include <boost/crypt/hash/sha512_224.hpp>
+#include <boost/crypt/hash/sha512_256.hpp>
 
 // LCOV_EXCL_START
 void f1();
