@@ -17,6 +17,7 @@ https://www.boost.org/LICENSE_1_0.txt
 - <<md5_hasher, `md5_hasher`>>
 - <<sha1_hasher, `sha1_hasher`>>
 - <<sha256_hasher, `sha256_hasher`>>
+- <<sha384_hasher, `sha384_hasher`>>
 
 == Enums
 
