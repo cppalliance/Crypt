@@ -33,7 +33,7 @@ namespace crypt {
 namespace hash_detail {
 
 template <boost::crypt::size_t digest_size>
-class sha512_base
+class sha512_base final
 {
 private:
 

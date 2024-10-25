@@ -12,7 +12,7 @@
 namespace boost {
 namespace crypt {
 
-BOOST_CRYPT_EXPORT class sha256_hasher final : public hash_detail::sha_224_256_hasher<32U> {};
+BOOST_CRYPT_EXPORT using sha256_hasher = hash_detail::sha_224_256_hasher<32U>;
 
 namespace detail {
 
