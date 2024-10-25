@@ -7,6 +7,7 @@
 #define BOOST_CRYPT_UTILITIES_ARRAY_HPP
 
 #include <boost/crypt/utility/config.hpp>
+#include <boost/crypt/utility/algorithm.hpp>
 #include <boost/crypt/utility/cstdint.hpp>
 #include <boost/crypt/utility/cstddef.hpp>
 #include <boost/crypt/utility/type_traits.hpp>
@@ -124,6 +125,42 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto fill_array(ForwardIter first, ForwardIter
     {
         *first++ = static_cast<decltype(*first)>(value);
     }
+}
+
+template<typename T, size_t N>
+BOOST_CRYPT_GPU_ENABLED constexpr auto operator==(const array<T, N>& left, const array<T, N>& right) -> bool
+{
+    return boost::crypt::equal(left.begin(), left.end(), right.begin());
+}
+
+template<typename T, size_t N>
+BOOST_CRYPT_GPU_ENABLED constexpr auto operator<(const array<T, N>& left, const array<T, N>& right) -> bool
+{
+    return boost::crypt::lexicographical_compare(left.begin(), left.end(), right.begin(), right.end());
+}
+
+template<typename T, size_t N>
+BOOST_CRYPT_GPU_ENABLED constexpr auto operator!=(const array<T, N>& left, const array<T, N>& right) -> bool
+{
+    return (!(left == right));
+}
+
+template<typename T, size_t N>
+BOOST_CRYPT_GPU_ENABLED constexpr auto operator>(const array<T, N>& left, const array<T, N>& right) -> bool
+{
+    return (right < left);
+}
+
+template<typename T, size_t N>
+BOOST_CRYPT_GPU_ENABLED constexpr auto operator>=(const array<T, N>& left, const array<T, N>& right) -> bool
+{
+    return (!(left < right));
+}
+
+template<typename T, size_t N>
+BOOST_CRYPT_GPU_ENABLED constexpr auto operator<=(const array<T, N>& left, const array<T, N>& right) -> bool
+{
+    return (!(right < left));
 }
 
 template<typename T>
