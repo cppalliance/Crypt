@@ -85,6 +85,21 @@ void string_view_test()
                 // LCOV_EXCL_STOP
             }
         }
+
+        boost::crypt::sha224_hasher hasher;
+        const auto current_state = hasher.process_bytes(string_view_message);
+        BOOST_TEST(current_state == boost::crypt::hasher_state::success);
+        const auto result2 = hasher.get_digest();
+        for (std::size_t i {}; i < message_result.size(); ++i)
+        {
+            if (!BOOST_TEST_EQ(result2[i], valid_result[i]))
+            {
+                // LCOV_EXCL_START
+                std::cerr << "Failure with: " << std::get<0>(test_value) << '\n';
+                break;
+                // LCOV_EXCL_STOP
+            }
+        }
     }
     #endif
 }
@@ -325,6 +340,16 @@ void test_span()
     for (std::size_t i {}; i < res.size(); ++i)
     {
         BOOST_TEST_EQ(res[i], expected_res[i]);
+    }
+
+    boost::crypt::sha224_hasher hasher;
+    auto current_state = hasher.process_bytes(byte_span);
+    BOOST_TEST(current_state == boost::crypt::hasher_state::success);
+    const auto res_2 = hasher.get_digest();
+
+    for (std::size_t i {}; i < res.size(); ++i)
+    {
+        BOOST_TEST_EQ(res_2[i], expected_res[i]);
     }
 
     #endif // BOOST_CRYPT_HAS_SPAN
