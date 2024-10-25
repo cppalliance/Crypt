@@ -1,20 +1,15 @@
 ///////////////////////////////////////////////////////////////////////////////
-//  Copyright Christopher Kormanyos 2023.
+//  Copyright Christopher Kormanyos 2024.
 //  Distributed under the Boost Software License,
 //  Version 1.0. (See accompanying file LICENSE_1_0.txt
 //  or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#endif
-
 // cd /mnt/c/ChrisGitRepos/cppalliance/crypt/test/metal
 // mkdir -p bin
-// arm-none-eabi-g++ -std=c++17 -Wall -Wextra -Wpedantic -O0 -g -gdwarf-2 -ffunction-sections -fdata-sections -x c++ -fno-rtti -fno-use-cxa-atexit -fno-exceptions -fno-nonansi-builtins -fno-threadsafe-statics -fno-enforce-eh-specs -ftemplate-depth=128 -mcpu=cortex-m4 -mtune=cortex-m4 -mthumb -mfloat-abi=soft -mno-unaligned-access -mno-long-calls -I../../include -DBOOST_DECIMAL_DISABLE_CLIB -DAPP_BENCHMARK_STANDALONE_MAIN app_benchmark_hasher.cpp ./target/micros/stm32f429/make/single/crt.cpp ./target/micros/stm32f429/make/single/mcal_gcc_cxx_completion_with_stdlib.cpp -nostartfiles -Wl,--gc-sections -Wl,-Map,./bin/app_benchmark_hasher.map -T ./target/micros/stm32f429/make/stm32f429.ld --specs=nano.specs --specs=nosys.specs -Wl,--print-memory-usage -o ./bin/app_benchmark_hasher.elf
-// arm-none-eabi-objcopy ./bin/app_benchmark_hasher.elf -O ihex ./bin/app_benchmark_hasher.hex
-// ls -la ./bin/app_benchmark_hasher.elf ./bin/app_benchmark_hasher.hex ./bin/app_benchmark_hasher.map
+// arm-none-eabi-g++ -std=c++20 -Wall -Wextra -Wpedantic -Os -g -gdwarf-2 -ffunction-sections -fdata-sections -x c++ -fno-rtti -fno-use-cxa-atexit -fno-exceptions -fno-nonansi-builtins -fno-threadsafe-statics -fno-enforce-eh-specs -ftemplate-depth=128 -mcpu=cortex-m4 -mtune=cortex-m4 -mthumb -mfloat-abi=soft -mno-unaligned-access -mno-long-calls -I../../include -DBOOST_CRYPT_DISABLE_IOSTREAM -DBOOST_CRYPT_NO_EXCEPTIONS -DAPP_BENCHMARK_STANDALONE_MAIN app_benchmark_hasher_256.cpp ./target/micros/stm32f429/make/single/crt.cpp ./target/micros/stm32f429/make/single/mcal_gcc_cxx_completion_with_stdlib.cpp -nostartfiles -Wl,--gc-sections -Wl,-Map,./bin/app_benchmark_hasher_256.map -T ./target/micros/stm32f429/make/stm32f429.ld --specs=nano.specs --specs=nosys.specs -Wl,--print-memory-usage -o ./bin/app_benchmark_hasher_256.elf
+// arm-none-eabi-objcopy ./bin/app_benchmark_hasher_256.elf -O ihex ./bin/app_benchmark_hasher_256.hex
+// ls -la ./bin/app_benchmark_hasher_256.elf ./bin/app_benchmark_hasher_256.hex ./bin/app_benchmark_hasher_256.map
 
 #if !defined(BOOST_CRYPT_STANDALONE)
 #define BOOST_DECIMAL_STANDALONE
@@ -28,7 +23,7 @@ namespace detail {
 
 } // namespace detail
 
-auto run_hasher() -> bool;
+auto run_hasher_256() -> bool;
 
 } // namespace benchmark
 } // namespace app
@@ -40,12 +35,12 @@ namespace local
 
 } // namespace local
 
-auto app::benchmark::run_hasher() -> bool
+auto app::benchmark::run_hasher_256() -> bool
 {
   auto app_benchmark_result_is_ok = true;
 
   // "abc"
-  const std::array<std::uint8_t, 3U> message = 
+  const std::array<std::uint8_t, 3U> message =
   {{
     0x61U, 0x62U, 0x63U
   }};
@@ -53,7 +48,7 @@ auto app::benchmark::run_hasher() -> bool
   using local_hasher_type = local::hasher_type;
   using local_result_type = typename local_hasher_type::return_type;
 
-  const local_result_type control = 
+  constexpr local_result_type control = 
   {{
     0xBAU, 0x78U, 0x16U, 0xBFU, 0x8FU, 0x01U, 0xCFU, 0xEAU,
     0x41U, 0x41U, 0x40U, 0xDEU, 0x5DU, 0xAEU, 0x22U, 0x23U,
@@ -67,7 +62,7 @@ auto app::benchmark::run_hasher() -> bool
 
   my_hasher.process_bytes(message.data(), message.size());
 
-  const local_result_type result = my_hasher.get_digest();
+  const local_result_type result { my_hasher.get_digest() };
 
   const bool result_hash_is_ok { result == control };
 
@@ -92,7 +87,7 @@ extern "C"
 
     for(unsigned i = 0U; i < 64U; ++i)
     {
-      result_is_ok &= app::benchmark::run_hasher();
+      result_is_ok &= app::benchmark::run_hasher_256();
     }
 
     app_benchmark_standalone_result =
@@ -128,6 +123,3 @@ extern "C"
 }
 #endif // APP_BENCHMARK_STANDALONE_MAIN
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
