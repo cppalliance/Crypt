@@ -72,3 +72,7 @@ run test_nist_cavs_sha384_short_long.cpp ;
 
 run test_nist_cavs_sha512_monte.cpp ;
 run test_nist_cavs_sha512_short_long.cpp ;
+
+run test_nist_cavs_sha512_224_monte.cpp ;
+run test_nist_cavs_sha512_224_short_long.cpp ;
+
