@@ -34,6 +34,26 @@ template <boost::crypt::size_t digest_size,
           boost::crypt::size_t intermediate_hash_size>
 class hasher_base_512
 {
+protected:
+
+    // This function should be pure virtual but GCC < 9 won't accept that
+    // LCOV_EXCL_START
+    virtual BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void {};
+    // LCOV_EXCL_STOP
+
+    BOOST_CRYPT_GPU_ENABLED inline auto pad_message() noexcept -> void;
+
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED inline auto update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
+
+    boost::crypt::array<boost::crypt::uint32_t, intermediate_hash_size> intermediate_hash_ {};
+    boost::crypt::array<boost::crypt::uint8_t , 64U> buffer_ {};
+    boost::crypt::size_t buffer_index_ {};
+    boost::crypt::size_t low_ {};
+    boost::crypt::size_t high_ {};
+    bool computed {};
+    bool corrupted {};
+
 public:
 
     using return_type = boost::crypt::array<boost::crypt::uint8_t, digest_size>;
@@ -79,26 +99,6 @@ public:
     #endif // BOOST_CRYPT_HAS_CUDA
 
     virtual BOOST_CRYPT_GPU_ENABLED inline auto get_digest() noexcept -> return_type;
-
-protected:
-
-    // This function should be pure virtual but GCC < 9 won't accept that
-    // LCOV_EXCL_START
-    virtual BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void {};
-    // LCOV_EXCL_STOP
-
-    BOOST_CRYPT_GPU_ENABLED inline auto pad_message() noexcept -> void;
-
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED inline auto update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
-
-    boost::crypt::array<boost::crypt::uint32_t, intermediate_hash_size> intermediate_hash_ {};
-    boost::crypt::array<boost::crypt::uint8_t , 64U> buffer_ {};
-    boost::crypt::size_t buffer_index_ {};
-    boost::crypt::size_t low_ {};
-    boost::crypt::size_t high_ {};
-    bool computed {};
-    bool corrupted {};
 };
 
 template <boost::crypt::size_t digest_size, boost::crypt::size_t intermediate_hash_size>
