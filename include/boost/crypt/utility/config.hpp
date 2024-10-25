@@ -58,6 +58,11 @@
 // ---- Constexpr arrays -----
 
 // ----- Assertions -----
+
+#ifdef BOOST_CRYPT_NO_EXCEPTIONS
+#  define BOOST_CRYPT_ASSERT(x)
+#  define BOOST_CRYPT_ASSERT_MSG(expr, msg)
+#else
 #ifndef BOOST_CRYPT_HAS_CUDA
 #  ifndef BOOST_CRYPT_BUILD_MODULE
 #    include <cassert>
@@ -67,6 +72,7 @@
 #else
 #  define BOOST_CRYPT_ASSERT(x)
 #  define BOOST_CRYPT_ASSERT_MSG(expr, msg)
+#endif
 #endif
 // ----- Assertions -----
 
