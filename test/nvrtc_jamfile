@@ -15,3 +15,4 @@ run test_sha224_nvrtc.cpp ;
 run test_sha256_nvrtc.cpp ;
 run test_sha384_nvrtc.cpp ;
 run test_sha512_nvrtc.cpp ;
+run test_sha512_224_nvrtc.cpp ;

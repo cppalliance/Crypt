@@ -55,6 +55,7 @@ run test_sha224.cpp ;
 run test_sha256.cpp ;
 run test_sha384.cpp ;
 run test_sha512.cpp ;
+run test_sha512_224.cpp ;
 
 # NIST standard testing
 run test_nist_cavs_sha1_monte.cpp ;
@@ -71,3 +72,7 @@ run test_nist_cavs_sha384_short_long.cpp ;
 
 run test_nist_cavs_sha512_monte.cpp ;
 run test_nist_cavs_sha512_short_long.cpp ;
+
+run test_nist_cavs_sha512_224_monte.cpp ;
+run test_nist_cavs_sha512_224_short_long.cpp ;
+
