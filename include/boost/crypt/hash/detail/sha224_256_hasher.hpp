@@ -19,7 +19,9 @@
 #include <boost/crypt/utility/strlen.hpp>
 #include <boost/crypt/utility/cstddef.hpp>
 #include <boost/crypt/utility/iterator.hpp>
+#ifndef BOOST_CRYPT_DISABLE_IOSTREAM
 #include <boost/crypt/utility/file.hpp>
+#endif
 #include <boost/crypt/utility/null.hpp>
 
 #if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
