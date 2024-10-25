@@ -222,6 +222,8 @@ auto sha512_file_impl(utility::file_reader<block_size>& reader) noexcept -> sha5
 
 } // namespace detail
 
+#ifndef BOOST_CRYPT_DISABLE_IOSTREAM
+
 BOOST_CRYPT_EXPORT inline auto sha512_file(const std::string& filepath) noexcept -> sha512_hasher::return_type
 {
     try
@@ -253,7 +255,9 @@ BOOST_CRYPT_EXPORT inline auto sha512_file(const char* filepath) noexcept -> sha
     }
 }
 
-#ifdef BOOST_CRYPT_HAS_STRING_VIEW
+#endif // !BOOST_CRYPT_DISABLE_IOSTREAM
+
+#if (defined(BOOST_CRYPT_HAS_STRING_VIEW) && !defined(BOOST_CRYPT_DISABLE_IOSTREAM))
 
 BOOST_CRYPT_EXPORT inline auto sha512_file(std::string_view filepath) noexcept -> sha512_hasher::return_type
 {
@@ -268,7 +272,7 @@ BOOST_CRYPT_EXPORT inline auto sha512_file(std::string_view filepath) noexcept -
     }
 }
 
-#endif // BOOST_CRYPT_HAS_STRING_VIEW
+#endif // BOOST_CRYPT_HAS_STRING_VIEW && !BOOST_CRYPT_DISABLE_IOSTREAM
 
 #endif // BOOST_CRYPT_HAS_CUDA
 
