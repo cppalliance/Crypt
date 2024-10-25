@@ -36,7 +36,7 @@ namespace crypt {
 namespace hash_detail {
 
 template <boost::crypt::size_t digest_size>
-class sha_224_256_hasher : public hasher_base_512<digest_size, 8U>
+class sha_224_256_hasher final : public hasher_base_512<digest_size, 8U>
 {
 private:
     static_assert(digest_size == 28U || digest_size == 32U, "Digest size must be 28 (SHA224) or 32 (SHA256)");

@@ -5,15 +5,15 @@
 // See: https://datatracker.ietf.org/doc/html/rfc6234
 // See: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf#page=31
 
-#ifndef BOOST_CRYPT_HASH_SHA512_HPP
-#define BOOST_CRYPT_HASH_SHA512_HPP
+#ifndef BOOST_CRYPT_HASH_SHA384_HPP
+#define BOOST_CRYPT_HASH_SHA384_HPP
 
 #include <boost/crypt/hash/detail/sha512_base.hpp>
 
 namespace boost {
 namespace crypt {
 
-BOOST_CRYPT_EXPORT class sha384_hasher final : public hash_detail::sha512_base<48U> {};
+BOOST_CRYPT_EXPORT using sha384_hasher = hash_detail::sha512_base<48U>;
 
 namespace detail {
 
@@ -299,4 +299,4 @@ BOOST_CRYPT_GPU_ENABLED inline auto sha384(cuda::std::span<T, extent> data) noex
 } // namespace crypt
 } // namespace boost
 
-#endif // BOOST_CRYPT_HASH_SHA512_HPP
+#endif // BOOST_CRYPT_HASH_SHA384_HPP
