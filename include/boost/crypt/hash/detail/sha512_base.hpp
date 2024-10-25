@@ -360,7 +360,7 @@ auto sha512_base<digest_size>::process_message_block() noexcept -> void
 {
     #ifdef BOOST_CRYPT_HAS_CUDA
 
-    BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::array<boost::crypt::uint64_t, 80U> sha512_k = {
+    constexpr boost::crypt::array<boost::crypt::uint64_t, 80U> sha512_k = {
             0x428A2F98D728AE22ULL, 0x7137449123EF65CDULL, 0xB5C0FBCFEC4D3B2FULL,
             0xE9B5DBA58189DBBCULL, 0x3956C25BF348B538ULL, 0x59F111F1B605D019ULL,
             0x923F82A4AF194F9BULL, 0xAB1C5ED5DA6D8118ULL, 0xD807AA98A3030242ULL,
