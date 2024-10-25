@@ -364,7 +364,7 @@ inline auto hasher_base_512<digest_size, intermediate_hash_size>::process_bytes(
 
 template <boost::crypt::size_t digest_size, boost::crypt::size_t intermediate_hash_size>
 template <typename T, boost::crypt::size_t extent>
-inline auto hasher_base_512<digest_size, intermediate_hash_size>::process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state
+BOOST_CRYPT_GPU_ENABLED inline auto hasher_base_512<digest_size, intermediate_hash_size>::process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state
 {
     return process_bytes(data.begin(), data.size());
 }

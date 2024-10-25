@@ -85,6 +85,32 @@ public:
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool> = true>
     BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+
+    inline auto process_bytes(std::string_view str) noexcept -> hasher_state;
+
+    inline auto process_bytes(std::u16string_view str) noexcept -> hasher_state;
+
+    inline auto process_bytes(std::u32string_view str) noexcept -> hasher_state;
+
+    inline auto process_bytes(std::wstring_view str) noexcept -> hasher_state;
+
+    #endif // BOOST_CRYPT_HAS_STRING_VIEW
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+
+    template <typename T, boost::crypt::size_t extent>
+    inline auto process_bytes(std::span<T, extent> data) noexcept -> hasher_state;
+
+    #endif // BOOST_CRYPT_HAS_SPAN
+
+    #ifdef BOOST_CRYPT_HAS_CUDA
+
+    template <typename T, boost::crypt::size_t extent>
+    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state;
+
+    #endif // BOOST_CRYPT_HAS_CUDA
+
     BOOST_CRYPT_GPU_ENABLED inline auto get_digest() noexcept -> return_type;
 };
 
@@ -539,6 +565,56 @@ auto sha512_base<digest_size>::init() noexcept -> void
 
     init(sha_type());
 }
+
+#ifdef BOOST_CRYPT_HAS_STRING_VIEW
+
+template <boost::crypt::size_t digest_size>
+inline auto sha512_base<digest_size>::process_bytes(std::string_view str) noexcept -> hasher_state
+{
+    return process_bytes(str.begin(), str.size());
+}
+
+template <boost::crypt::size_t digest_size>
+inline auto sha512_base<digest_size>::process_bytes(std::u16string_view str) noexcept -> hasher_state
+{
+    return process_bytes(str.begin(), str.size());
+}
+
+template <boost::crypt::size_t digest_size>
+inline auto sha512_base<digest_size>::process_bytes(std::u32string_view str) noexcept -> hasher_state
+{
+    return process_bytes(str.begin(), str.size());
+}
+
+template <boost::crypt::size_t digest_size>
+inline auto sha512_base<digest_size>::process_bytes(std::wstring_view str) noexcept -> hasher_state
+{
+    return process_bytes(str.begin(), str.size());
+}
+
+#endif // BOOST_CRYPT_HAS_STRING_VIEW
+
+#ifdef BOOST_CRYPT_HAS_SPAN
+
+template <boost::crypt::size_t digest_size>
+template <typename T, boost::crypt::size_t extent>
+inline auto sha512_base<digest_size>::process_bytes(std::span<T, extent> data) noexcept -> hasher_state
+{
+    return process_bytes(data.begin(), data.size());
+}
+
+#endif // BOOST_CRYPT_HAS_SPAN
+
+#ifdef BOOST_CRYPT_HAS_CUDA
+
+template <boost::crypt::size_t digest_size, boost::crypt::size_t intermediate_hash_size>
+template <typename T, boost::crypt::size_t extent>
+BOOST_CRYPT_GPU_ENABLED inline auto sha512_base<digest_size>::process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state
+{
+    return process_bytes(data.begin(), data.size());
+}
+
+#endif // BOOST_CRYPT_HAS_SPAN
 
 } // namespace hash_detail
 } // namespace crypt
