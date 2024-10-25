@@ -607,7 +607,7 @@ inline auto sha512_base<digest_size>::process_bytes(std::span<T, extent> data) n
 
 #ifdef BOOST_CRYPT_HAS_CUDA
 
-template <boost::crypt::size_t digest_size, boost::crypt::size_t intermediate_hash_size>
+template <boost::crypt::size_t digest_size>
 template <typename T, boost::crypt::size_t extent>
 BOOST_CRYPT_GPU_ENABLED inline auto sha512_base<digest_size>::process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state
 {
