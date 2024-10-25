@@ -19,6 +19,8 @@ https://www.boost.org/LICENSE_1_0.txt
 - <<sha256_hasher, `sha256_hasher`>>
 - <<sha384_hasher, `sha384_hasher`>>
 
+- <<sha512_224_hasher, `sha512_224_hasher`>>
+
 == Enums
 
 - <<hasher_state, `hasher_state`>>
