@@ -322,6 +322,8 @@ BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof, capacity>::ge
 
         buffer_[buffer_index_] = static_cast<boost::crypt::uint8_t>(0x01);
 
+        process_message_block();
+
         low_ = 0UL;
         high_ = 0UL;
         computed_ = true;
