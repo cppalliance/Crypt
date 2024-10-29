@@ -5,6 +5,8 @@
 
 // Must be included first
 
+#define BOOST_CRYPT_ENABLE_MD5
+
 #include <nvrtc.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
