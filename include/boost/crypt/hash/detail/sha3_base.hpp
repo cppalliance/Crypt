@@ -134,8 +134,16 @@ BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof>::update(Forwa
 
     while (size--)
     {
+        // Clearly everything has been casted to the correct type...
+        #if defined(__GNUC__) && __GNUC__ >= 7
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wconversion"
+        #endif
         buffer_[buffer_index_++] ^= static_cast<boost::crypt::uint8_t>(static_cast<boost::crypt::uint8_t>(*data) &
                                                                        static_cast<boost::crypt::uint8_t>(0xFF));
+        #if defined(__GNUC__) && __GNUC__ >= 7
+        #pragma GCC diagnostic pop
+        #endif
 
         if (buffer_index_ == buffer_size_)
         {
