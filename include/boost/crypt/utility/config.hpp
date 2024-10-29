@@ -152,7 +152,8 @@
 
 // ----- Endianness -----
 
-#if defined(_WIN32)
+// See: https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#hardware-implementation
+#if defined(_WIN32) || defined(BOOST_CRYPT_HAS_CUDA)
 
 #define BOOST_CRYPT_ENDIAN_BIG_BYTE 0
 #define BOOST_CRYPT_ENDIAN_LITTLE_BYTE 1
