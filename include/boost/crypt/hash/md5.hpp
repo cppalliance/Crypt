@@ -44,7 +44,7 @@ public:
 private:
 
     // Needed to keep process_message_block private with CRTP
-    friend class hasher_base_512<16U, 4U, md5_hasher>;
+    friend class hash_detail::hasher_base_512<16U, 4U, md5_hasher>;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_message_block() noexcept -> void;
 };
