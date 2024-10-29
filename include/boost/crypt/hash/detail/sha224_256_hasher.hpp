@@ -62,7 +62,7 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto init() noexcept -> void { init(is_sha224()); }
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> sha_224_256_hasher::return_type { return base_class::get_base_digest(); }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> typename sha_224_256_hasher::return_type { return base_class::get_base_digest(); }
 };
 
 // Initial values for SHA224
