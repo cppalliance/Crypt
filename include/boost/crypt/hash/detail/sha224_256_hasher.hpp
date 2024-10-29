@@ -36,36 +36,40 @@ namespace crypt {
 namespace hash_detail {
 
 template <boost::crypt::size_t digest_size>
-class sha_224_256_hasher final : public hasher_base_512<digest_size, 8U>
+class sha_224_256_hasher final : public hasher_base_512<digest_size, 8U, sha_224_256_hasher<digest_size>>
 {
 private:
     static_assert(digest_size == 28U || digest_size == 32U, "Digest size must be 28 (SHA224) or 32 (SHA256)");
 
-    using base_class = hasher_base_512<digest_size, 8U>;
+    friend class hasher_base_512<digest_size, 8U, sha_224_256_hasher<digest_size>>;
+    
+    using base_class = hasher_base_512<digest_size, 8U, sha_224_256_hasher<digest_size>>;
     using base_class::intermediate_hash_;
     using base_class::buffer_;
     using base_class::buffer_index_;
 
     using is_sha224 = boost::crypt::integral_constant<bool, digest_size == 28U>;
 
-    BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void override;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_message_block() noexcept -> void;
 
-    BOOST_CRYPT_GPU_ENABLED inline auto init(const boost::crypt::true_type&) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const boost::crypt::true_type&) noexcept -> void;
 
-    BOOST_CRYPT_GPU_ENABLED inline auto init(const boost::crypt::false_type&) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const boost::crypt::false_type&) noexcept -> void;
 
 public:
 
-    BOOST_CRYPT_GPU_ENABLED sha_224_256_hasher() noexcept { init(); }
+    BOOST_CRYPT_GPU_ENABLED constexpr sha_224_256_hasher() noexcept { init(); }
 
-    BOOST_CRYPT_GPU_ENABLED inline auto init() noexcept -> void { init(is_sha224()); }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init() noexcept -> void { init(is_sha224()); }
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> sha_224_256_hasher::return_type { return base_class::get_base_digest(); }
 };
 
 // Initial values for SHA224
 template <boost::crypt::size_t digest_size>
-auto sha_224_256_hasher<digest_size>::init(const boost::crypt::true_type&) noexcept -> void
+constexpr auto sha_224_256_hasher<digest_size>::init(const boost::crypt::true_type&) noexcept -> void
 {
-    hasher_base_512<digest_size, 8U>::base_init();
+    hasher_base_512<digest_size, 8U, sha_224_256_hasher<digest_size>>::base_init();
 
     // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
     intermediate_hash_[0] = 0xC1059ED8;
@@ -80,9 +84,9 @@ auto sha_224_256_hasher<digest_size>::init(const boost::crypt::true_type&) noexc
 
 // Initial values for SHA256
 template <boost::crypt::size_t digest_size>
-auto sha_224_256_hasher<digest_size>::init(const boost::crypt::false_type&) noexcept -> void
+constexpr auto sha_224_256_hasher<digest_size>::init(const boost::crypt::false_type&) noexcept -> void
 {
-    hasher_base_512<digest_size, 8U>::base_init();
+    hasher_base_512<digest_size, 8U, sha_224_256_hasher<digest_size>>::base_init();
 
     // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
     intermediate_hash_[0] = 0x6A09E667;
@@ -117,32 +121,32 @@ BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::array<boost::crypt::uint32_t, 64> sha
 
 // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
 // See section 4.1.2
-BOOST_CRYPT_GPU_ENABLED inline auto big_sigma0(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
+BOOST_CRYPT_GPU_ENABLED constexpr auto big_sigma0(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
 {
     return detail::rotr(value, 2U) ^ detail::rotr(value, 13U) ^ detail::rotr(value, 22U);
 }
 
-BOOST_CRYPT_GPU_ENABLED inline auto big_sigma1(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
+BOOST_CRYPT_GPU_ENABLED constexpr auto big_sigma1(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
 {
     return detail::rotr(value, 6U) ^ detail::rotr(value, 11U) ^ detail::rotr(value, 25U);
 }
 
-BOOST_CRYPT_GPU_ENABLED inline auto little_sigma0(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
+BOOST_CRYPT_GPU_ENABLED constexpr auto little_sigma0(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
 {
     return detail::rotr(value, 7U) ^ detail::rotr(value, 18U) ^ (value >> 3U);
 }
 
-BOOST_CRYPT_GPU_ENABLED inline auto little_sigma1(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
+BOOST_CRYPT_GPU_ENABLED constexpr auto little_sigma1(const boost::crypt::uint32_t value) noexcept -> boost::crypt::uint32_t
 {
     return detail::rotr(value, 17U) ^ detail::rotr(value, 19U) ^ (value >> 10U);
 }
 
-BOOST_CRYPT_GPU_ENABLED inline auto sha_ch(const boost::crypt::uint32_t x, const boost::crypt::uint32_t y, const boost::crypt::uint32_t z) noexcept -> boost::crypt::uint32_t
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha_ch(const boost::crypt::uint32_t x, const boost::crypt::uint32_t y, const boost::crypt::uint32_t z) noexcept -> boost::crypt::uint32_t
 {
     return (x & y) ^ ((~x) & z);
 }
 
-BOOST_CRYPT_GPU_ENABLED inline auto sha_maj(const boost::crypt::uint32_t x, const boost::crypt::uint32_t y, const boost::crypt::uint32_t z) noexcept -> boost::crypt::uint32_t
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha_maj(const boost::crypt::uint32_t x, const boost::crypt::uint32_t y, const boost::crypt::uint32_t z) noexcept -> boost::crypt::uint32_t
 {
     return (x & y) ^ (x & z) ^ (y & z);
 }
@@ -151,7 +155,7 @@ BOOST_CRYPT_GPU_ENABLED inline auto sha_maj(const boost::crypt::uint32_t x, cons
 
 // See definitions from the RFC on the rounds
 template <boost::crypt::size_t digest_size>
-auto sha_224_256_hasher<digest_size>::process_message_block() noexcept -> void
+constexpr auto sha_224_256_hasher<digest_size>::process_message_block() noexcept -> void
 {
     // On the host we prefer this array to be static but,
     // in a CUDA environment it solves linking problems to move into the function
