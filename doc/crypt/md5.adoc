@@ -9,6 +9,8 @@ https://www.boost.org/LICENSE_1_0.txt
 
 = MD5
 
+WARNING: MD5 is not secure so it must be explicitly enabled as an acknowledgment of the risk of using it.
+
 This library supports MD5 as described in https://www.ietf.org/rfc/rfc1321.txt[RFC 1321].
 There is a wide range of acceptable inputs for the base md5 function:
 

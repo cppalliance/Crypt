@@ -10,9 +10,7 @@ https://www.boost.org/LICENSE_1_0.txt
 
 == User Configurable Macros
 
-The following configuration macros are available:
-
-- None at this time
+- `BOOST_CRYPT_ENABLE_MD5`: Without this define `#include <boost/crypt/hash/md5.hpp>` will issue a `#error` because it is in-secure.
 
 == Automatic Configuration Macros
 

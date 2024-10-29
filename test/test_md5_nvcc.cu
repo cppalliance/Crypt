@@ -3,6 +3,8 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#define BOOST_CRYPT_ENABLE_MD5
+
 #include <boost/crypt/hash/md5.hpp>
 #include "cuda_managed_ptr.hpp"
 #include "stopwatch.hpp"
