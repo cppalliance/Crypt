@@ -24,7 +24,7 @@
 using digest_type = boost::crypt::array<boost::crypt::uint8_t, 16>;
 
 const char* cuda_kernel = R"(
-
+#define BOOST_CRYPT_ENABLE_MD5
 #include <boost/crypt/hash/md5.hpp>
 using digest_type = boost::crypt::array<boost::crypt::uint8_t, 16>;
 extern "C" __global__
