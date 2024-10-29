@@ -7,6 +7,8 @@
 #ifndef BOOST_CRYPT_HASH_MD5_HPP
 #define BOOST_CRYPT_HASH_MD5_HPP
 
+#ifdef BOOST_CRYPT_ENABLE_MD5
+
 #include <boost/crypt/hash/detail/hasher_base_512.hpp>
 #include <boost/crypt/hash/hasher_state.hpp>
 #include <boost/crypt/utility/config.hpp>
@@ -539,5 +541,11 @@ BOOST_CRYPT_GPU_ENABLED inline auto md5(cuda::std::span<T, extent> data) noexcep
 
 } // namespace crypt
 } // namespace boost
+
+#else // Don't allow MD5
+
+#error "MD5 must be explicitly enabled as it is no longer considered secure!"
+
+#endif
 
 #endif // BOOST_CRYPT_HASH_MD5_HPP
