@@ -59,7 +59,7 @@ public:
 
     using return_type = boost::crypt::array<boost::crypt::uint8_t, digest_size>;
 
-    BOOST_CRYPT_GPU_ENABLED sha3_base() noexcept { init(); };
+    BOOST_CRYPT_GPU_ENABLED constexpr sha3_base() noexcept { init(); };
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto init() noexcept -> void;
 
