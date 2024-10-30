@@ -150,4 +150,25 @@
 #endif
 // ----- Build module -----
 
+// ----- Endianness -----
+
+// See: https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#hardware-implementation
+#if defined(_WIN32) || defined(BOOST_CRYPT_HAS_CUDA)
+
+#define BOOST_CRYPT_ENDIAN_BIG_BYTE 0
+#define BOOST_CRYPT_ENDIAN_LITTLE_BYTE 1
+
+#elif defined(__BYTE_ORDER__)
+
+#define BOOST_CRYPT_ENDIAN_BIG_BYTE (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#define BOOST_CRYPT_ENDIAN_LITTLE_BYTE (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+
+#else
+
+#error Could not determine endian type. Please file an issue at https://github.com/cppalliance/crypt with your architecture
+
+#endif // Determine endianness
+
+// ----- Endianness -----
+
 #endif //BOOST_CRYPT_DETAIL_CONFIG_HPP
