@@ -17,3 +17,5 @@ run test_sha384_nvrtc.cpp ;
 run test_sha512_nvrtc.cpp ;
 run test_sha512_224_nvrtc.cpp ;
 run test_sha512_256_nvrtc.cpp ;
+run test_sha3_512_nvrtc.cpp ;
+run test_sha3_384_nvrtc.cpp ;
