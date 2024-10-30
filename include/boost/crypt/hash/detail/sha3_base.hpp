@@ -44,7 +44,7 @@ private:
     static constexpr boost::crypt::size_t buffer_size_ {200U - 2U * digest_size};
     
     boost::crypt::array<boost::crypt::uint64_t, 25U> state_array_ {};
-    boost::crypt::array<boost::crypt::uint8_t, 200U> buffer_ {};
+    boost::crypt::array<boost::crypt::uint8_t, buffer_size_> buffer_ {};
     boost::crypt::size_t buffer_index_ {};
     bool computed_ {};
     bool corrupted_ {};
