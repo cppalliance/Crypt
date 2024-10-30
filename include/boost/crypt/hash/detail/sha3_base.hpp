@@ -40,11 +40,9 @@ private:
 
     static_assert((!is_xof && (digest_size == 28U || digest_size == 32U || digest_size == 48U || digest_size == 64U)) || is_xof,
                   "Digest size must be 28 (SHA3-224), 32 (SHA3-256), 48 (SHA3-384), or 64(SHA3-512) or this must be an xof");
-
-    static constexpr boost::crypt::size_t buffer_size_ {200U - 2U * digest_size};
     
     boost::crypt::array<boost::crypt::uint64_t, 25U> state_array_ {};
-    boost::crypt::array<boost::crypt::uint8_t, buffer_size_> buffer_ {};
+    boost::crypt::array<boost::crypt::uint8_t, 200U - 2U * digest_size> buffer_ {};
     boost::crypt::size_t buffer_index_ {};
     bool computed_ {};
     bool corrupted_ {};
@@ -145,7 +143,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::update(Fo
         #pragma GCC diagnostic pop
         #endif
 
-        if (buffer_index_ == buffer_size_)
+        if (buffer_index_ == buffer_.size())
         {
             process_message_block();
         }
@@ -343,7 +341,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_diges
     if (!computed_)
     {
         buffer_[buffer_index_] ^= static_cast<boost::crypt::uint8_t>(0x06U);
-        buffer_[buffer_size_ - 1U] ^= static_cast<boost::crypt::uint8_t>(0x80U);
+        buffer_.back() ^= static_cast<boost::crypt::uint8_t>(0x80U);
         process_message_block();
         computed_ = true;
     }
