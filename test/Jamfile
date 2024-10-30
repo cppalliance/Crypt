@@ -88,3 +88,6 @@ run test_nist_cavs_sha3_512_short_long.cpp ;
 
 run test_nist_cavs_sha3_384_monte.cpp ;
 run test_nist_cavs_sha3_384_short_long.cpp ;
+
+run test_nist_cavs_sha3_256_monte.cpp ;
+run test_nist_cavs_sha3_256_short_long.cpp ;
