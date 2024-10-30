@@ -202,7 +202,7 @@ BOOST_CRYPT_EXPORT constexpr auto sha3_384(std::wstring_view str) -> sha3_384_ha
 
 namespace detail {
 
-template <boost::crypt::size_t block_size = 64U>
+template <boost::crypt::size_t block_size>
 auto sha3_384_file_impl(utility::file_reader<block_size>& reader) noexcept -> sha3_384_hasher::return_type
 {
     sha3_384_hasher hasher;
@@ -224,7 +224,7 @@ BOOST_CRYPT_EXPORT inline auto sha3_384_file(const std::string& filepath) noexce
 {
     try
     {
-        utility::file_reader<64U> reader(filepath);
+        utility::file_reader<104U> reader(filepath);
         return detail::sha3_384_file_impl(reader);
     }
     catch (const std::runtime_error&)
@@ -242,7 +242,7 @@ BOOST_CRYPT_EXPORT inline auto sha3_384_file(const char* filepath) noexcept -> s
             return sha3_384_hasher::return_type{};
         }
 
-        utility::file_reader<64U> reader(filepath);
+        utility::file_reader<104U> reader(filepath);
         return detail::sha3_384_file_impl(reader);
     }
     catch (const std::runtime_error&)
@@ -259,7 +259,7 @@ BOOST_CRYPT_EXPORT inline auto sha3_384_file(std::string_view filepath) noexcept
 {
     try
     {
-        utility::file_reader<64U> reader(filepath);
+        utility::file_reader<104U> reader(filepath);
         return detail::sha3_384_file_impl(reader);
     }
     catch (const std::runtime_error&)
