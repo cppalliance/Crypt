@@ -50,9 +50,9 @@ private:
     bool corrupted_ {};
 
     template <typename ForwardIterator>
-    BOOST_CRYPT_GPU_ENABLED inline auto update(ForwardIterator data, boost::crypt::size_t size) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto update(ForwardIterator data, boost::crypt::size_t size) noexcept -> hasher_state;
 
-    BOOST_CRYPT_GPU_ENABLED inline auto process_message_block() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_message_block() noexcept -> void;
 
 
 public:
@@ -61,52 +61,52 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED sha3_base() noexcept { init(); };
 
-    BOOST_CRYPT_GPU_ENABLED inline auto init() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init() noexcept -> void;
 
     template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_byte(ByteType byte) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool> = true>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state;
 
     #ifdef BOOST_CRYPT_HAS_STRING_VIEW
 
-    inline auto process_bytes(std::string_view str) noexcept -> hasher_state;
+    constexpr auto process_bytes(std::string_view str) noexcept -> hasher_state;
 
-    inline auto process_bytes(std::u16string_view str) noexcept -> hasher_state;
+    constexpr auto process_bytes(std::u16string_view str) noexcept -> hasher_state;
 
-    inline auto process_bytes(std::u32string_view str) noexcept -> hasher_state;
+    constexpr auto process_bytes(std::u32string_view str) noexcept -> hasher_state;
 
-    inline auto process_bytes(std::wstring_view str) noexcept -> hasher_state;
+    constexpr auto process_bytes(std::wstring_view str) noexcept -> hasher_state;
 
     #endif // BOOST_CRYPT_HAS_STRING_VIEW
 
     #ifdef BOOST_CRYPT_HAS_SPAN
 
     template <typename T, boost::crypt::size_t extent>
-    inline auto process_bytes(std::span<T, extent> data) noexcept -> hasher_state;
+    constexpr auto process_bytes(std::span<T, extent> data) noexcept -> hasher_state;
 
     #endif // BOOST_CRYPT_HAS_SPAN
 
     #ifdef BOOST_CRYPT_HAS_CUDA
 
     template <typename T, boost::crypt::size_t extent>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state;
 
     #endif // BOOST_CRYPT_HAS_CUDA
 
-    BOOST_CRYPT_GPU_ENABLED inline auto get_digest() noexcept -> return_type;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
 
 };
 
 template <boost::crypt::size_t digest_size, bool is_xof>
-BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof>::init() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::init() noexcept -> void
 {
     state_array_.fill(0);
     buffer_.fill(0);
@@ -117,7 +117,7 @@ BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof>::init() noexc
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename ForwardIterator>
-BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof>::update(ForwardIterator data, boost::crypt::size_t size) noexcept -> hasher_state
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::update(ForwardIterator data, boost::crypt::size_t size) noexcept -> hasher_state
 {
     if (size == 0U)
     {
@@ -188,7 +188,7 @@ BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::array<boost::crypt::uint64_t, num_rou
 } // namespace sha3_detail
 
 template <boost::crypt::size_t digest_size, bool is_xof>
-BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof>::process_message_block() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::process_message_block() noexcept -> void
 {
     #ifdef BOOST_CRYPT_HAS_CUDA
 
@@ -332,7 +332,7 @@ BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof>::process_mess
 }
 
 template <boost::crypt::size_t digest_size, bool is_xof>
-BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof>::get_digest() noexcept -> sha3_base<digest_size, is_xof>::return_type
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_digest() noexcept -> sha3_base<digest_size, is_xof>::return_type
 {
     return_type digest{};
 
@@ -361,7 +361,7 @@ BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof>::get_digest()
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename ByteType>
-auto sha3_base<digest_size, is_xof>::process_byte(ByteType byte) noexcept -> hasher_state
+constexpr auto sha3_base<digest_size, is_xof>::process_byte(ByteType byte) noexcept -> hasher_state
 {
     static_assert(boost::crypt::is_convertible_v<ByteType, boost::crypt::uint8_t>, "Byte must be convertible to uint8_t");
     const auto value {static_cast<boost::crypt::uint8_t>(byte)};
@@ -370,7 +370,7 @@ auto sha3_base<digest_size, is_xof>::process_byte(ByteType byte) noexcept -> has
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 1, bool>>
-auto sha3_base<digest_size, is_xof>::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
+constexpr auto sha3_base<digest_size, is_xof>::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     if (!utility::is_null(buffer))
     {
@@ -384,7 +384,7 @@ auto sha3_base<digest_size, is_xof>::process_bytes(ForwardIter buffer, boost::cr
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 2, bool>>
-auto sha3_base<digest_size, is_xof>::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
+constexpr auto sha3_base<digest_size, is_xof>::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     #ifndef BOOST_CRYPT_HAS_CUDA
 
@@ -416,7 +416,7 @@ auto sha3_base<digest_size, is_xof>::process_bytes(ForwardIter buffer, boost::cr
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename ForwardIter, boost::crypt::enable_if_t<sizeof(typename utility::iterator_traits<ForwardIter>::value_type) == 4, bool>>
-auto sha3_base<digest_size, is_xof>::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
+constexpr auto sha3_base<digest_size, is_xof>::process_bytes(ForwardIter buffer, boost::crypt::size_t byte_count) noexcept -> hasher_state
 {
     #ifndef BOOST_CRYPT_HAS_CUDA
 
@@ -449,25 +449,25 @@ auto sha3_base<digest_size, is_xof>::process_bytes(ForwardIter buffer, boost::cr
 #ifdef BOOST_CRYPT_HAS_STRING_VIEW
 
 template <boost::crypt::size_t digest_size, bool is_xof>
-inline auto sha3_base<digest_size, is_xof>::process_bytes(std::string_view str) noexcept -> hasher_state
+constexpr auto sha3_base<digest_size, is_xof>::process_bytes(std::string_view str) noexcept -> hasher_state
 {
     return process_bytes(str.begin(), str.size());
 }
 
 template <boost::crypt::size_t digest_size, bool is_xof>
-inline auto sha3_base<digest_size, is_xof>::process_bytes(std::u16string_view str) noexcept -> hasher_state
+constexpr auto sha3_base<digest_size, is_xof>::process_bytes(std::u16string_view str) noexcept -> hasher_state
 {
     return process_bytes(str.begin(), str.size());
 }
 
 template <boost::crypt::size_t digest_size, bool is_xof>
-inline auto sha3_base<digest_size, is_xof>::process_bytes(std::u32string_view str) noexcept -> hasher_state
+constexpr auto sha3_base<digest_size, is_xof>::process_bytes(std::u32string_view str) noexcept -> hasher_state
 {
     return process_bytes(str.begin(), str.size());
 }
 
 template <boost::crypt::size_t digest_size, bool is_xof>
-inline auto sha3_base<digest_size, is_xof>::process_bytes(std::wstring_view str) noexcept -> hasher_state
+constexpr auto sha3_base<digest_size, is_xof>::process_bytes(std::wstring_view str) noexcept -> hasher_state
 {
     return process_bytes(str.begin(), str.size());
 }
@@ -478,7 +478,7 @@ inline auto sha3_base<digest_size, is_xof>::process_bytes(std::wstring_view str)
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename T, boost::crypt::size_t extent>
-inline auto sha3_base<digest_size, is_xof>::process_bytes(std::span<T, extent> data) noexcept -> hasher_state
+constexpr auto sha3_base<digest_size, is_xof>::process_bytes(std::span<T, extent> data) noexcept -> hasher_state
 {
     return process_bytes(data.begin(), data.size());
 }
@@ -489,7 +489,7 @@ inline auto sha3_base<digest_size, is_xof>::process_bytes(std::span<T, extent> d
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename T, boost::crypt::size_t extent>
-BOOST_CRYPT_GPU_ENABLED inline auto sha3_base<digest_size, is_xof>::process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state
 {
     return process_bytes(data.begin(), data.size());
 }
