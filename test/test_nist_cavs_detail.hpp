@@ -473,6 +473,73 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
   return result_is_ok;
 }
 
+// See: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/sha3/sha3vs.pdf
+// Section 6.2.3
+template<typename HasherType>
+auto test_vectors_monte_sha3(const nist::cavs::test_vector_container_type& test_vectors_monte, const std::vector<std::uint8_t>& seed_init) -> bool
+{
+    bool result_is_ok { (!test_vectors_monte.empty()) };
+
+    if (result_is_ok)
+    {
+        using local_hasher_type = HasherType;
+        using local_result_type = typename local_hasher_type::return_type;
+
+        using local_array_type = local_result_type;
+
+        // Obtain the test-specific initial seed.
+
+        local_array_type MDi { };
+
+        const std::size_t copy_len
+        {
+                (std::min)(static_cast<std::size_t>(MDi.size()), static_cast<std::size_t>(seed_init.size()))
+        };
+
+        static_cast<void>
+        (
+            std::copy
+            (
+                seed_init.cbegin(),
+                seed_init.cbegin() + static_cast<typename std::vector<std::uint8_t>::difference_type>(copy_len),
+                MDi.begin()
+            )
+        );
+
+        for (size_t j = 0; j < 100; j++)
+        {
+            for (size_t i = 1; i < 1001; i++)
+            {
+                local_hasher_type this_hash { };
+
+                this_hash.init();
+
+                this_hash.process_bytes(MDi.data(), MDi.size());
+
+                MDi = this_hash.get_digest();
+            }
+
+            // The output at this point is MDi.
+
+            const bool result_this_monte_step_is_ok =
+            std::equal
+            (
+                MDi.cbegin(),
+                MDi.cend(),
+                test_vectors_monte[j].my_result.cbegin()
+            );
+
+            result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
+
+            BOOST_TEST(result_this_monte_step_is_ok);
+        }
+    }
+
+    BOOST_TEST(result_is_ok);
+
+    return result_is_ok;
+}
+
 } // namespace cavs
 } // namespace nist
 
