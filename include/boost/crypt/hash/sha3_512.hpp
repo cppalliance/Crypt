@@ -16,7 +16,7 @@ BOOST_CRYPT_EXPORT using sha3_512_hasher = hash_detail::sha3_base<64U>;
 namespace detail {
 
 template <typename T>
-BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(T begin, T end) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(T begin, T end) noexcept -> sha3_512_hasher::return_type
 {
     if (end < begin)
     {
@@ -45,7 +45,7 @@ BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(T begin, T end) noexcept -> sha3_51
 
 } // namespace detail
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char* str) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const char* str) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -56,7 +56,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char* str)
     return detail::sha3_512(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const char* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -66,7 +66,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char* str,
     return detail::sha3_512(str, str + len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const boost::crypt::uint8_t* str) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const boost::crypt::uint8_t* str) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -77,7 +77,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const boost::cry
     return detail::sha3_512(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const boost::crypt::uint8_t* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const boost::crypt::uint8_t* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -87,7 +87,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const boost::cry
     return detail::sha3_512(str, str + len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char16_t* str) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const char16_t* str) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -98,7 +98,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char16_t* 
     return detail::sha3_512(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char16_t* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const char16_t* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -108,7 +108,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char16_t* 
     return detail::sha3_512(str, str + len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char32_t* str) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const char32_t* str) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -119,7 +119,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char32_t* 
     return detail::sha3_512(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char32_t* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const char32_t* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -131,7 +131,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const char32_t* 
 
 // On some platforms wchar_t is 16 bits and others it's 32
 // Since we check sizeof() the underlying with SFINAE in the actual implementation this is handled transparently
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const wchar_t* str) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const wchar_t* str) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -142,7 +142,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const wchar_t* s
     return detail::sha3_512(str, str + message_len);
 }
 
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(const wchar_t* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(const wchar_t* str, boost::crypt::size_t len) noexcept -> sha3_512_hasher::return_type
 {
     if (str == nullptr)
     {
@@ -178,22 +178,22 @@ BOOST_CRYPT_EXPORT inline auto sha3_512(const std::wstring& str) noexcept -> sha
 
 #ifdef BOOST_CRYPT_HAS_STRING_VIEW
 
-BOOST_CRYPT_EXPORT inline auto sha3_512(std::string_view str) -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT constexpr auto sha3_512(std::string_view str) -> sha3_512_hasher::return_type
 {
     return detail::sha3_512(str.begin(), str.end());
 }
 
-BOOST_CRYPT_EXPORT inline auto sha3_512(std::u16string_view str) -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT constexpr auto sha3_512(std::u16string_view str) -> sha3_512_hasher::return_type
 {
     return detail::sha3_512(str.begin(), str.end());
 }
 
-BOOST_CRYPT_EXPORT inline auto sha3_512(std::u32string_view str) -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT constexpr auto sha3_512(std::u32string_view str) -> sha3_512_hasher::return_type
 {
     return detail::sha3_512(str.begin(), str.end());
 }
 
-BOOST_CRYPT_EXPORT inline auto sha3_512(std::wstring_view str) -> sha3_512_hasher::return_type
+BOOST_CRYPT_EXPORT constexpr auto sha3_512(std::wstring_view str) -> sha3_512_hasher::return_type
 {
     return detail::sha3_512(str.begin(), str.end());
 }
@@ -204,7 +204,7 @@ BOOST_CRYPT_EXPORT inline auto sha3_512(std::wstring_view str) -> sha3_512_hashe
 
 namespace detail {
 
-template <boost::crypt::size_t block_size = 64U>
+template <boost::crypt::size_t block_size>
 auto sha3_512_file_impl(utility::file_reader<block_size>& reader) noexcept -> sha3_512_hasher::return_type
 {
     sha3_512_hasher hasher;
@@ -226,7 +226,7 @@ BOOST_CRYPT_EXPORT inline auto sha3_512_file(const std::string& filepath) noexce
 {
     try
     {
-        utility::file_reader<64U> reader(filepath);
+        utility::file_reader<72U> reader(filepath);
         return detail::sha3_512_file_impl(reader);
     }
     catch (const std::runtime_error&)
@@ -244,7 +244,7 @@ BOOST_CRYPT_EXPORT inline auto sha3_512_file(const char* filepath) noexcept -> s
             return sha3_512_hasher::return_type{};
         }
 
-        utility::file_reader<64U> reader(filepath);
+        utility::file_reader<72U> reader(filepath);
         return detail::sha3_512_file_impl(reader);
     }
     catch (const std::runtime_error&)
@@ -261,7 +261,7 @@ BOOST_CRYPT_EXPORT inline auto sha3_512_file(std::string_view filepath) noexcept
 {
     try
     {
-        utility::file_reader<64U> reader(filepath);
+        utility::file_reader<72U> reader(filepath);
         return detail::sha3_512_file_impl(reader);
     }
     catch (const std::runtime_error&)
@@ -279,7 +279,7 @@ BOOST_CRYPT_EXPORT inline auto sha3_512_file(std::string_view filepath) noexcept
 #ifdef BOOST_CRYPT_HAS_SPAN
 
 BOOST_CRYPT_EXPORT template <typename T, std::size_t extent>
-inline auto sha3_512(std::span<T, extent> data) noexcept -> sha3_512_hasher::return_type
+constexpr auto sha3_512(std::span<T, extent> data) noexcept -> sha3_512_hasher::return_type
 {
     return detail::sha3_512(data.begin(), data.end());
 }
@@ -289,7 +289,7 @@ inline auto sha3_512(std::span<T, extent> data) noexcept -> sha3_512_hasher::ret
 #ifdef BOOST_CRYPT_HAS_CUDA
 
 template <typename T, boost::crypt::size_t extent>
-BOOST_CRYPT_GPU_ENABLED inline auto sha3_512(cuda::std::span<T, extent> data) noexcept -> sha3_512_hasher::return_type
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_512(cuda::std::span<T, extent> data) noexcept -> sha3_512_hasher::return_type
 {
     return detail::sha3_512(data.begin(), data.end());
 }

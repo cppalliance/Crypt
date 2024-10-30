@@ -18,3 +18,4 @@ run test_sha512_nvcc.cu ;
 run test_sha512_224_nvcc.cu ;
 run test_sha512_256_nvcc.cu ;
 run test_sha3_512_nvcc.cu ;
+run test_sha3_384_nvcc.cu ;
