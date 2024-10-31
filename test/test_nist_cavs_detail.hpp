@@ -816,7 +816,8 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
 
                 for (auto& val : MDi)
                 {
-                    val = static_cast<std::uint8_t>(0);
+                    // LCOV skips the following line even though MDi is not empty
+                    val = static_cast<std::uint8_t>(0); // LCOV_EXCL_LINE
                 }
 
                 const auto output_length = this_hash.get_digest(MDi);
