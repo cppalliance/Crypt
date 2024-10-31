@@ -171,4 +171,17 @@
 
 // ----- Endianness -----
 
+// ----- if constexpr -----
+
+// NVRTC does everything at RunTime so it has no concept of if constexpr
+#ifdef BOOST_CRYPT_HAS_NVRTC
+#  define BOOST_CRYPT_IF_CONSTEXPR if
+#elif defined(__cpp_if_constexpr) && __cpp_if_constexpr >= 201606L
+#  define BOOST_CRYPT_IF_CONSTEXPR if constexpr
+#else
+#  define BOOST_CRYPT_IF_CONSTEXPR if
+#endif
+
+// ----- if constexpr -----
+
 #endif //BOOST_CRYPT_DETAIL_CONFIG_HPP
