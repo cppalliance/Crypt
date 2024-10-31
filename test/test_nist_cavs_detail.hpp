@@ -567,7 +567,8 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
 
         this_hash.process_bytes(test_vector.my_msg.data(), test_vector.my_msg.size());
 
-        std::vector<std::uint8_t> bits(lengths[i]);
+        std::vector<std::uint8_t> bits {};
+        bits.resize(lengths[i]);
 
         const auto result_01 { this_hash.get_digest(bits) };
 
