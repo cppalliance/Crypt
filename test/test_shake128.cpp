@@ -210,8 +210,15 @@ void test_continuous_output()
         {
             const auto status {hasher.get_digest(message_result)};
             BOOST_TEST_EQ(status, message_result.size());
-            BOOST_TEST(!std::equal(message_result.begin(), message_result.end(),
-                                   message_result_previous.begin(), message_result.end()));
+            int same_counter = 0;
+            for (std::size_t j {}; j < message_result.size(); ++j)
+            {
+                if (message_result[j] == message_result_previous[j])
+                {
+                    ++same_counter;
+                }
+            }
+            BOOST_TEST_LE(same_counter, 64);
             message_result_previous = message_result;
         }
 
