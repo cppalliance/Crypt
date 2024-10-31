@@ -99,3 +99,4 @@ run test_nist_cavs_sha3_224_short_long.cpp ;
 
 run test_nist_cavs_shake128_short_long.cpp ;
 run test_nist_cavs_shake128_monte.cpp ;
+run test_nist_cavs_shake128_variable_output.cpp ;
