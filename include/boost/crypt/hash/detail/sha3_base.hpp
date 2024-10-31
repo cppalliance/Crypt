@@ -416,13 +416,21 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_diges
         auto* data {reinterpret_cast<unsigned char*>(char_ptr)};
         return xof_digest_impl(data, len);
     }
+    else
+    {
+        return 0U;
+    }
 
     #else
 
     if (!utility::is_null(buffer))
     {
         auto* data {reinterpret_cast<const unsigned char*>(return_buffer)};
-        xof_digest_impl(data, len);
+        return xof_digest_impl(data, len);
+    }
+    else
+    {
+        return 0U;
     }
 
     #endif
