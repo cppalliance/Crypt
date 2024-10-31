@@ -814,7 +814,10 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
                 // Only process the leftmost 128 bit of output
                 this_hash.process_bytes(MDi.data(), 16);
 
-                MDi.clear();
+                for (auto& val : MDi)
+                {
+                    val = static_cast<std::uint8_t>(0);
+                }
 
                 const auto output_length = this_hash.get_digest(MDi);
                 BOOST_TEST_EQ(output_length, lengths[j]);
