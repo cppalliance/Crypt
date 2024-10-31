@@ -441,7 +441,14 @@ template <typename Container>
 BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_digest(Container& container) noexcept -> boost::crypt::size_t
 {
     static_assert(boost::crypt::is_convertible_v<typename Container::value_type, boost::crypt::uint8_t>, "The container must be capable of holding bytes");
-    return get_digest(container.begin(), container.size());
+    if (container.begin() == container.end())
+    {
+        return 0U;
+    }
+    else
+    {
+        return get_digest(container.begin(), container.size());
+    }
 }
 
 template <boost::crypt::size_t digest_size, bool is_xof>
