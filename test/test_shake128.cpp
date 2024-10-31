@@ -195,6 +195,30 @@ void test_user_container()
     }
 }
 
+void test_continuous_output()
+{
+    boost::crypt::shake128_hasher hasher;
+
+    for (const auto& test_value : test_values)
+    {
+        const auto msg {std::get<0>(test_value)};
+        hasher.process_bytes(msg, std::strlen(msg));
+        std::array<std::uint8_t, 64U> message_result {};
+        std::array<std::uint8_t, 64U> message_result_previous {};
+        hasher.get_digest(message_result_previous);
+        for (std::size_t i {}; i < 100; ++i)
+        {
+            const auto status {hasher.get_digest(message_result)};
+            BOOST_TEST_EQ(status, message_result.size());
+            BOOST_TEST(!std::equal(message_result.begin(), message_result.end(),
+                                   message_result_previous.begin(), message_result.end()));
+            message_result_previous = message_result;
+        }
+
+        hasher.init();
+    }
+}
+
 void test_user_pointer()
 {
     boost::crypt::shake128_hasher hasher;
@@ -423,6 +447,7 @@ int main()
     test_class();
     test_user_container();
     test_user_pointer();
+    test_continuous_output();
 
     // The Windows file system returns a different result than on UNIX platforms
     #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
