@@ -191,6 +191,10 @@ void test_user_container()
             }
         }
 
+        std::vector<std::uint8_t> bad;
+        const auto bad_container = hasher.get_digest(bad);
+        BOOST_TEST_EQ(bad_container, 0U);
+
         hasher.init();
     }
 }
