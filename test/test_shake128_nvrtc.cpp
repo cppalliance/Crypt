@@ -14,25 +14,25 @@
 #include <random>
 #include <exception>
 
-#include <boost/crypt/hash/sha512_256.hpp>
+#include <boost/crypt/hash/shake128.hpp>
 #include "generate_random_strings.hpp"
 #include "cuda_managed_ptr.hpp"
 #include "stopwatch.hpp"
 
-using digest_type = boost::crypt::sha512_256_hasher::return_type;
+using digest_type = boost::crypt::shake128_hasher::return_type;
 
 const char* cuda_kernel = R"(
 
-#include <boost/crypt/hash/sha512_256.hpp>
-using digest_type = boost::crypt::sha512_256_hasher::return_type;
+#include <boost/crypt/hash/shake128.hpp>
+using digest_type = boost::crypt::shake128_hasher::return_type;
 extern "C" __global__
-void test_sha512_256_kernel(char** in, digest_type* out, int numElements)
+void test_shake128_kernel(char** in, digest_type* out, int numElements)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i < numElements)
     {
-        out[i] = boost::crypt::sha512_256(in[i]);
+        out[i] = boost::crypt::shake128(in[i]);
     }
 }
 
@@ -83,10 +83,10 @@ int main()
         nvrtcProgram prog;
         nvrtcResult res;
 
-        res = nvrtcCreateProgram(&prog, cuda_kernel, "test_sha512_256_kernel.cu", 0, nullptr, nullptr);
+        res = nvrtcCreateProgram(&prog, cuda_kernel, "test_shake128_kernel.cu", 0, nullptr, nullptr);
         checkNVRTCError(res, "Failed to create NVRTC program");
 
-        nvrtcAddNameExpression(prog, "test_sha512_256_kernel");
+        nvrtcAddNameExpression(prog, "test_shake128_kernel");
 
         #ifdef BOOST_CRYPT_NVRTC_CI_RUN
         const char* opts[] = {"--std=c++14", "--gpu-architecture=compute_70", "--include-path=/home/runner/work/crypt/boost-root/libs/crypt/include/", "-I/usr/local/cuda/include"};
@@ -117,7 +117,7 @@ int main()
         CUmodule module;
         CUfunction kernel;
         checkCUError(cuModuleLoadDataEx(&module, ptx, 0, 0, 0), "Failed to load module");
-        checkCUError(cuModuleGetFunction(&kernel, module, "test_sha512_256_kernel"), "Failed to get kernel function");
+        checkCUError(cuModuleGetFunction(&kernel, module, "test_shake128_kernel"), "Failed to get kernel function");
 
         // Allocate memory
         int numElements = 50000;
@@ -152,7 +152,7 @@ int main()
         int fail_counter = 0;
         for (int i = 0; i < numElements; ++i)
         {
-            auto res = boost::crypt::sha512_256(input_vector1[i]);
+            auto res = boost::crypt::shake128(input_vector1[i]);
 
             for (int j = 0; j < res.size(); ++j)
             {

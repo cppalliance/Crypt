@@ -1,0 +1,58 @@
+// Copyright 2024 Matt Borland
+// Distributed under the Boost Software License, Version 1.0.
+// https://www.boost.org/LICENSE_1_0.txt
+
+#include <boost/crypt/hash/shake128.hpp>
+#include <iostream>
+#include <exception>
+#include <string>
+#include <cstdlib>
+
+extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size)
+{
+    try
+    {
+        auto c_data = reinterpret_cast<const char*>(data);
+        std::string c_data_str {c_data, size}; // Guarantee null termination since we can't pass the size argument
+
+        boost::crypt::shake128(c_data_str);
+        boost::crypt::shake128(c_data, size);
+        boost::crypt::shake128(data, size);
+
+        #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+        std::string_view view {c_data_str};
+        boost::crypt::shake128(view);
+        #endif
+
+        #ifdef BOOST_CRYPT_HAS_SPAN
+        std::span data_span {c_data, size};
+        boost::crypt::shake128(data_span);
+        #endif
+
+        // Fuzz the hasher object
+        boost::crypt::shake128_hasher hasher;
+        hasher.process_bytes(data, size);
+        hasher.process_bytes(data, size);
+        hasher.process_bytes(data, size);
+        hasher.get_digest();
+        hasher.process_bytes(data, size); // State is invalid but should not crash
+
+        hasher.init();
+        std::uint8_t* return_buffer = static_cast<std::uint8_t*>(std::malloc(size));
+        hasher.process_bytes(data, size);
+        hasher.get_digest(return_buffer, size);
+        if (return_buffer != nullptr)
+        {
+            std::free(return_buffer);
+            return_buffer = nullptr;
+        }
+        hasher.get_digest(return_buffer, size);
+    }
+    catch(...)
+    {
+        std::cerr << "Error with: " << data << std::endl;
+        std::terminate();
+    }
+
+    return 0;
+}
