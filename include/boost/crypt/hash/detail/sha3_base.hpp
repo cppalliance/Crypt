@@ -340,7 +340,7 @@ template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename ForwardIter>
 BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::xof_digest_impl(ForwardIter return_buffer, boost::crypt::size_t len) noexcept -> boost::crypt::size_t
 {
-    static_assert(is_xof, "Producing a digest of variable size is only allowed with SHAKE128 and SHAKE256 (XOF hashers)");
+    BOOST_CRYPT_ASSERT_MSG(is_xof, "Producing a digest of variable size is only allowed with SHAKE128 and SHAKE256 (XOF hashers)");
 
     if (corrupted_)
     {

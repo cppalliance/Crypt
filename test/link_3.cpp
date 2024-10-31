@@ -12,6 +12,7 @@
 #include <boost/crypt/hash/sha512_224.hpp>
 #include <boost/crypt/hash/sha512_256.hpp>
 #include <boost/crypt/hash/sha3_512.hpp>
+#include <boost/crypt/hash/shake128.hpp>
 
 // LCOV_EXCL_START
 void f1();
