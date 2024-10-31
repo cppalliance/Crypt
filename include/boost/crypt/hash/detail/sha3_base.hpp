@@ -53,7 +53,7 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_message_block() noexcept -> void;
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto xof_digest_impl(ForwardIter return_buffer, boost::crypt::size_t len) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto xof_digest_impl(ForwardIter return_buffer, boost::crypt::size_t len) noexcept -> boost::crypt::size_t;
 
 public:
 
@@ -104,10 +104,10 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest(ForwardIter return_buffer, boost::crypt::size_t len) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest(ForwardIter return_buffer, boost::crypt::size_t len) noexcept -> boost::crypt::size_t;
 
     template <typename Container>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest(Container& container) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest(Container& container) noexcept -> boost::crypt::size_t;
 };
 
 template <boost::crypt::size_t digest_size, bool is_xof>
@@ -338,13 +338,13 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::process_m
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename ForwardIter>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::xof_digest_impl(ForwardIter return_buffer, boost::crypt::size_t len) noexcept -> void
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::xof_digest_impl(ForwardIter return_buffer, boost::crypt::size_t len) noexcept -> boost::crypt::size_t
 {
     static_assert(is_xof, "Producing a digest of variable size is only allowed with SHAKE128 and SHAKE256 (XOF hashers)");
 
     if (corrupted_)
     {
-        return return_buffer;
+        return 0U;
     }
     if (!computed_)
     {
@@ -364,7 +364,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::xof_diges
         *return_buffer++ = buffer_[buffer_index_++];
     }
 
-    return return_buffer;
+    return len;
 }
 
 template <boost::crypt::size_t digest_size, bool is_xof>
@@ -406,7 +406,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_diges
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename ForwardIter>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_digest(ForwardIter return_buffer, boost::crypt::size_t len) noexcept -> void
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_digest(ForwardIter return_buffer, boost::crypt::size_t len) noexcept -> boost::crypt::size_t
 {
     #ifndef BOOST_CRYPT_HAS_CUDA
 
@@ -414,7 +414,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_diges
     {
         auto* char_ptr {reinterpret_cast<char*>(std::addressof(*return_buffer))};
         auto* data {reinterpret_cast<unsigned char*>(char_ptr)};
-        xof_digest_impl(data, len);
+        return xof_digest_impl(data, len);
     }
 
     #else
@@ -430,10 +430,10 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_diges
 
 template <boost::crypt::size_t digest_size, bool is_xof>
 template <typename Container>
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_digest(Container& container) noexcept -> void
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_base<digest_size, is_xof>::get_digest(Container& container) noexcept -> boost::crypt::size_t
 {
     static_assert(boost::crypt::is_convertible_v<typename Container::value_type, boost::crypt::uint8_t>, "The container must be capable of holding bytes");
-    get_digest(container.begin(), container.size());
+    return get_digest(container.begin(), container.size());
 }
 
 template <boost::crypt::size_t digest_size, bool is_xof>
