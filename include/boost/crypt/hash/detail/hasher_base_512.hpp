@@ -35,6 +35,9 @@ template <boost::crypt::size_t digest_size,
           typename Derived>
 class hasher_base_512
 {
+public:
+    static constexpr boost::crypt::size_t block_size {64U};
+
 protected:
 
     // Use CRTP to make this constexpr with C++14
@@ -46,7 +49,7 @@ protected:
     BOOST_CRYPT_GPU_ENABLED constexpr auto update(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
 
     boost::crypt::array<boost::crypt::uint32_t, intermediate_hash_size> intermediate_hash_ {};
-    boost::crypt::array<boost::crypt::uint8_t , 64U> buffer_ {};
+    boost::crypt::array<boost::crypt::uint8_t , block_size> buffer_ {};
     boost::crypt::size_t buffer_index_ {};
     boost::crypt::size_t low_ {};
     boost::crypt::size_t high_ {};

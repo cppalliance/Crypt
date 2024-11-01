@@ -35,6 +35,10 @@ namespace hash_detail {
 template <boost::crypt::size_t digest_size>
 class sha512_base final
 {
+public:
+
+    static constexpr boost::crypt::size_t block_size {128U};
+
 private:
 
     static_assert(digest_size == 28U || digest_size == 32U || digest_size == 48U || digest_size == 64U,
