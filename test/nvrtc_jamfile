@@ -22,3 +22,4 @@ run test_sha3_384_nvrtc.cpp ;
 run test_sha3_256_nvrtc.cpp ;
 run test_sha3_224_nvrtc.cpp ;
 run test_shake128_nvrtc.cpp ;
+run test_shake256_nvrtc.cpp ;
