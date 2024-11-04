@@ -52,8 +52,6 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_message_block() noexcept -> void;
 };
 
-BOOST_CRYPT_EXPORT using hmac_md5 = hmac<md5_hasher>;
-
 BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::init() noexcept -> void
 {
     hash_detail::hasher_base_512<16U, 4U, md5_hasher>::base_init();
