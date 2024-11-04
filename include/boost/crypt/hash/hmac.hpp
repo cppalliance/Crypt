@@ -76,11 +76,16 @@ constexpr auto
 hmac<HasherType>::init_from_keys(const boost::crypt::array<boost::crypt::uint8_t, block_size_> &inner_key,
                                  const boost::crypt::array<boost::crypt::uint8_t, block_size_> &outer_key) noexcept -> hasher_state
 {
+    computed_ = false;
+    corrupted_ = false;
+    inner_hash_.init();
+    outer_hash_.init();
+
     inner_key_ = inner_key;
     outer_key_ = outer_key;
 
     const auto inner_result {inner_hash_.process_bytes(inner_key_.begin(), inner_key_.size())};
-    const auto outer_result {outer_hash_.process_bytes(outer_hash_.begin(), outer_key_.size())};
+    const auto outer_result {outer_hash_.process_bytes(outer_key_.begin(), outer_key_.size())};
 
     if (BOOST_CRYPT_LIKELY(inner_result == hasher_state::success && outer_result == hasher_state::success))
     {
@@ -163,6 +168,11 @@ template <typename HasherType>
 template <typename ForwardIter>
 constexpr auto hmac<HasherType>::init(ForwardIter key, boost::crypt::size_t size) noexcept -> hasher_state
 {
+    computed_ = false;
+    corrupted_ = false;
+    inner_hash_.init();
+    outer_hash_.init();
+
     boost::crypt::array<boost::crypt::uint8_t, block_size_> k0 {};
 
     if (utility::is_null(key) || size == 0U)
