@@ -50,7 +50,7 @@ public:
                                                           const key_type& outer_key) noexcept -> hasher_state;
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter key, boost::crypt::size_t size) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
 
@@ -123,9 +123,9 @@ constexpr auto hmac<HasherType>::get_digest() noexcept -> return_type
 
 template <typename HasherType>
 template <typename ForwardIter>
-constexpr auto hmac<HasherType>::process_bytes(ForwardIter key, boost::crypt::size_t size) noexcept -> hasher_state
+constexpr auto hmac<HasherType>::process_bytes(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state
 {
-    if (utility::is_null(key) || size == 0U)
+    if (utility::is_null(data) || size == 0U)
     {
         return hasher_state::null;
     }
@@ -134,7 +134,7 @@ constexpr auto hmac<HasherType>::process_bytes(ForwardIter key, boost::crypt::si
         return hasher_state::state_error;
     }
 
-    const auto status_code {inner_hash_.process_bytes(key, size)};
+    const auto status_code {inner_hash_.process_bytes(data, size)};
     if (BOOST_CRYPT_LIKELY(status_code == hasher_state::success))
     {
         return hasher_state::success;
