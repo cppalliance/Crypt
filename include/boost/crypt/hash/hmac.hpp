@@ -158,7 +158,6 @@ constexpr auto hmac<HasherType>::process_bytes(ForwardIter data, boost::crypt::s
                 return hasher_state::input_too_long;
             default:
                 BOOST_CRYPT_UNREACHABLE;
-                return status_code;
         }
         // LCOV_EXCL_STOP
     }
