@@ -7,6 +7,7 @@
 #include <boost/crypt/hash/hmac.hpp>
 #include <boost/crypt/hash/md5.hpp>
 #include <boost/crypt/hash/sha1.hpp>
+#include <boost/crypt/hash/sha256.hpp>
 #include <boost/core/lightweight_test.hpp>
 
 template <typename HasherType>
@@ -44,12 +45,24 @@ void basic_tests()
             BOOST_TEST_EQ(res[i], soln[i]);
         }
     }
+    else BOOST_CRYPT_IF_CONSTEXPR (boost::crypt::is_same_v<HasherType, boost::crypt::sha256_hasher>)
+    {
+        constexpr boost::crypt::array<boost::crypt::uint8_t, 32U> soln = {
+            0xf7, 0xbc, 0x83, 0xf4, 0x30, 0x53, 0x84, 0x24, 0xb1, 0x32, 0x98, 0xe6, 0xaa, 0x6f, 0xb1, 0x43, 0xef, 0x4d, 0x59, 0xa1, 0x49, 0x46, 0x17, 0x59, 0x97, 0x47, 0x9d, 0xbc, 0x2d, 0x1a, 0x3c, 0xd8
+        };
+
+        for (boost::crypt::size_t i {}; i < res.size(); ++i)
+        {
+            BOOST_TEST_EQ(res[i], soln[i]);
+        }
+    }
 }
 
 int main()
 {
     basic_tests<boost::crypt::md5_hasher>();
     basic_tests<boost::crypt::sha1_hasher>();
+    basic_tests<boost::crypt::sha256_hasher>();
 
     return boost::report_errors();
 }
