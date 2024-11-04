@@ -9,6 +9,7 @@
 
 #include <boost/crypt/hash/detail/hasher_base_512.hpp>
 #include <boost/crypt/hash/hasher_state.hpp>
+#include <boost/crypt/hash/hmac.hpp>
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/bit.hpp>
 #include <boost/crypt/utility/byte.hpp>
@@ -47,6 +48,8 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> sha1_hasher::return_type { return get_base_digest(); }
 };
+
+BOOST_CRYPT_EXPORT using hmac_sha1 = hmac<sha1_hasher>;
 
 BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::init() noexcept -> void
 {

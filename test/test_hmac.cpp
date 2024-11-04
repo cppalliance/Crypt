@@ -6,6 +6,7 @@
 
 #include <boost/crypt/hash/hmac.hpp>
 #include <boost/crypt/hash/md5.hpp>
+#include <boost/crypt/hash/sha1.hpp>
 #include <boost/core/lightweight_test.hpp>
 
 template <typename HasherType>
@@ -32,11 +33,23 @@ void basic_tests()
             BOOST_TEST_EQ(res[i], soln[i]);
         }
     }
+    else BOOST_CRYPT_IF_CONSTEXPR (boost::crypt::is_same_v<HasherType, boost::crypt::sha1_hasher>)
+    {
+        constexpr boost::crypt::array<boost::crypt::uint8_t, 20U> soln = {
+            0xde, 0x7c, 0x9b, 0x85, 0xb8, 0xb7, 0x8a, 0xa6, 0xbc, 0x8a, 0x7a, 0x36, 0xf7, 0x0a, 0x90, 0x70, 0x1c, 0x9d, 0xb4, 0xd9
+        };
+
+        for (boost::crypt::size_t i {}; i < res.size(); ++i)
+        {
+            BOOST_TEST_EQ(res[i], soln[i]);
+        }
+    }
 }
 
 int main()
 {
     basic_tests<boost::crypt::md5_hasher>();
+    basic_tests<boost::crypt::sha1_hasher>();
 
     return boost::report_errors();
 }
