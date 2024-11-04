@@ -81,12 +81,84 @@ void basic_tests()
     }
 }
 
+template <typename HasherType>
+void test_edges()
+{
+    boost::crypt::hmac<HasherType> hmac_tester;
+    const char* msg {"The quick brown fox jumps over the lazy dog"};
+
+    // Usage before init
+    const auto state1 {hmac_tester.process_bytes(msg, std::strlen(msg))};
+    BOOST_TEST(state1 == boost::crypt::hasher_state::state_error);
+
+    // Init with nullptr
+    const auto state2 {hmac_tester.init("nullptr", 0)};
+    BOOST_TEST(state2 == boost::crypt::hasher_state::null);
+
+    // Good init
+    const auto state3 {hmac_tester.init("key", 3)};
+    BOOST_TEST(state3 == boost::crypt::hasher_state::success);
+
+    // Pass in nullptr
+    const auto state4 {hmac_tester.process_bytes("msg", 0)};
+    BOOST_TEST(state4 == boost::crypt::hasher_state::null);
+
+    // Good pass
+    const auto state5 {hmac_tester.process_bytes(msg, std::strlen(msg))};
+    BOOST_TEST(state5 == boost::crypt::hasher_state::success);
+
+    // Get digest twice
+    hmac_tester.get_digest();
+    const auto res {hmac_tester.get_digest()};
+
+    for (const auto byte : res)
+    {
+        BOOST_TEST_EQ(byte, static_cast<std::uint8_t>(0));
+    }
+
+    const char* big_key {"This is a really really really really really really really really really really"
+                         " really really really really really really really really really really"
+                         " really really really really really really really really really really"
+                         " really really really really really really really really really really"
+                         " really really really really really really really really really really"
+                         " really really really really really really really really really really"
+                         " really really really really really really really really really really"
+                         " really really really really really really really really really really"
+                         " really really really really really really really really really really"
+                         " really really really really really really really really really really"
+                         " long key"};
+
+    const auto state6 {hmac_tester.init(big_key, std::strlen(big_key))};
+    BOOST_TEST(state6 == boost::crypt::hasher_state::success);
+
+    // Init from keys
+    const auto outer_key {hmac_tester.get_outer_key()};
+    const auto inner_key {hmac_tester.get_inner_key()};
+
+    hmac_tester.process_bytes(msg, std::strlen(msg));
+    const auto res2 {hmac_tester.get_digest()};
+
+    hmac_tester.init_from_keys(inner_key, outer_key);
+    hmac_tester.process_bytes(msg, std::strlen(msg));
+    const auto res3 {hmac_tester.get_digest()};
+
+    for (std::size_t i {}; i < res2.size(); ++i)
+    {
+        BOOST_TEST_EQ(res2[i], res3[i]);
+    }
+}
+
 int main()
 {
     basic_tests<boost::crypt::md5_hasher>();
     basic_tests<boost::crypt::sha1_hasher>();
     basic_tests<boost::crypt::sha256_hasher>();
     basic_tests<boost::crypt::sha512_hasher>();
+
+    test_edges<boost::crypt::md5_hasher>();
+    test_edges<boost::crypt::sha1_hasher>();
+    test_edges<boost::crypt::sha256_hasher>();
+    test_edges<boost::crypt::sha512_hasher>();
 
     return boost::report_errors();
 }
