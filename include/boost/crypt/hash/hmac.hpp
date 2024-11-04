@@ -36,7 +36,7 @@ private:
 
 public:
 
-    BOOST_CRYPT_GPU_ENABLED constexpr hmac() noexcept {}
+    BOOST_CRYPT_GPU_ENABLED constexpr hmac() noexcept = default;
 
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr hmac(ForwardIter key, boost::crypt::size_t size) noexcept { init(key, size); }
