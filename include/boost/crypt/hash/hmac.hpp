@@ -188,7 +188,7 @@ constexpr auto hmac<HasherType>::init(ForwardIter key, boost::crypt::size_t size
         hasher.process_bytes(key, size);
         const auto res {hasher.get_digest()};
         
-        BOOST_CRYPT_ASSERT(res.size() == k0.size());
+        BOOST_CRYPT_ASSERT(res.size() <= k0.size());
 
         auto key_iter {res.begin()};
         for (auto& byte : k0)
