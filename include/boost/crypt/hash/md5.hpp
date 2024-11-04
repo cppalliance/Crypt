@@ -11,6 +11,7 @@
 
 #include <boost/crypt/hash/detail/hasher_base_512.hpp>
 #include <boost/crypt/hash/hasher_state.hpp>
+#include <boost/crypt/hash/hmac.hpp>
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/bit.hpp>
 #include <boost/crypt/utility/byte.hpp>
@@ -50,6 +51,8 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_message_block() noexcept -> void;
 };
+
+BOOST_CRYPT_EXPORT using hmac_md5 = hmac<md5_hasher>;
 
 BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::init() noexcept -> void
 {
