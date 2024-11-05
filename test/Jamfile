@@ -97,6 +97,7 @@ run test_nist_cavs_sha512_256_hmac.cpp ;
 
 run test_nist_cavs_sha3_512_monte.cpp ;
 run test_nist_cavs_sha3_512_short_long.cpp ;
+run test_nist_cavs_sha3_512_hmac.cpp ;
 
 run test_nist_cavs_sha3_384_monte.cpp ;
 run test_nist_cavs_sha3_384_short_long.cpp ;
