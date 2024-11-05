@@ -36,13 +36,17 @@ namespace hash_detail {
 template <boost::crypt::size_t digest_size, bool is_xof = false>
 class sha3_base
 {
+public:
+
+    static constexpr boost::crypt::size_t block_size {200U - 2U * digest_size};
+
 private:
 
     static_assert((!is_xof && (digest_size == 28U || digest_size == 32U || digest_size == 48U || digest_size == 64U)) || is_xof,
                   "Digest size must be 28 (SHA3-224), 32 (SHA3-256), 48 (SHA3-384), or 64(SHA3-512) or this must be an xof");
 
     boost::crypt::array<boost::crypt::uint64_t, 25U> state_array_ {};
-    boost::crypt::array<boost::crypt::uint8_t, 200U - 2U * digest_size> buffer_ {};
+    boost::crypt::array<boost::crypt::uint8_t, block_size> buffer_ {};
     boost::crypt::size_t buffer_index_ {};
     bool computed_ {};
     bool corrupted_ {};
