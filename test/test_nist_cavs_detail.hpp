@@ -982,6 +982,60 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
     return result_is_ok;
 }
 
+
+// See: https://csrc.nist.gov/csrc/media/projects/cryptographic-algorithm-validation-program/documents/mac/hmacvs.pdf
+template <typename HasherType>
+auto test_vectors_hmac(const nist::cavs::test_vector_container_type& test_vectors) -> bool
+{
+    using local_hasher_type = HasherType;
+    using local_result_type = typename local_hasher_type::return_type;
+
+    BOOST_TEST((!test_vectors.empty()));
+
+    bool result_is_ok { true };
+
+    for(const auto& test_vector : test_vectors)
+    {
+        boost::crypt::hmac<HasherType> this_hash { };
+
+        // Make pass 1 through the messages.
+        // Use the triple-combination of init/process/get-result functions.
+
+        this_hash.init(test_vector.my_key);
+
+        this_hash.process_bytes(test_vector.my_msg.data(), test_vector.my_msg.size());
+
+        const local_result_type result_01 { this_hash.get_digest() };
+
+        const bool result_hash_01_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_01.cbegin()) };
+
+        BOOST_TEST(result_hash_01_is_ok);
+
+        // Make pass 2 through the messages.
+        // Use the triple-combination of init/process/get-result functions.
+        // Even though this is not required in CAVS testing, it is
+        // done in order to ensure that the init() function properly
+        // puts the hasher-object into its initialized state.
+
+        this_hash.init(test_vector.my_key);
+
+        this_hash.process_bytes(test_vector.my_msg);
+
+        const local_result_type result_02 { this_hash.get_digest() };
+
+        const bool result_hash_02_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_02.cbegin()) };
+
+        BOOST_TEST(result_hash_02_is_ok);
+
+        // Collect the combined results of pass 1 and pass 2.
+        const bool result_hash_is_ok = (result_hash_01_is_ok && result_hash_02_is_ok);
+
+        result_is_ok = (result_hash_is_ok && result_is_ok);
+    }
+
+    return result_is_ok;
+}
+
 } // namespace cavs
 } // namespace nist
 
