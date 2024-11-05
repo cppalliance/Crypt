@@ -42,6 +42,7 @@ struct test_object_hash
 public:
   using size_type    = std::size_t;
   using message_type = std::vector<std::uint8_t>;
+  using key_type     = std::vector<std::uint8_t>;
   using result_type  = std::vector<std::uint8_t>;
 
   test_object_hash() = delete;
@@ -83,100 +84,158 @@ public:
         }
   { }
 
+    explicit test_object_hash(const std::string& key_data, const std::string& msg_data, const std::string& mac_data)
+    : my_msg
+      {
+          [&msg_data]()
+          {
+              const auto byte_data { detail::convert_hex_string_to_byte_container(msg_data) };
+              return message_type(byte_data.cbegin(),   byte_data.cend());
+          }()
+      },
+      my_result
+      {
+          [&mac_data]()
+          {
+              const auto byte_data { detail::convert_hex_string_to_byte_container(mac_data) };
+              return message_type(byte_data.cbegin(), byte_data.cend());
+          }()
+      },
+      my_key
+      {
+          [&key_data]()
+          {
+              const auto byte_data { detail::convert_hex_string_to_byte_container(key_data) };
+              return message_type(byte_data.cbegin(), byte_data.cend());
+          }()
+      }
+        { }
+
   const size_type    my_length { };
   const message_type my_msg    { };
   const result_type  my_result { };
+  const key_type     my_key    { };
 };
 
 using test_vector_container_type = std::deque<test_object_hash>;
 
-auto where_file_shabytesvectors(const std::string& test_vectors_filename) -> std::string
+enum class test_type : unsigned
+{
+    sha,
+    hmac
+};
+
+auto where_file(const std::string& test_vectors_filename, test_type test) -> std::string
 {
   // Try to open the file in each of the known relative paths
   // in order to find out where it is located.
 
-  // Boost-root
-  std::string test_vectors_filename_relative = "libs/crypt/test/nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
-
-  std::ifstream in_01(test_vectors_filename_relative.c_str());
-
-  const bool file_01_is_open { in_01.is_open() };
-
-  // LCOV_EXCL_START
-  if(file_01_is_open)
-  {
-    in_01.close();
-  }
-  else
-  {
-    // Local test directory or IDE
-    test_vectors_filename_relative = "nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
-
-    std::ifstream in_02(test_vectors_filename_relative.c_str());
-
-    const bool file_02_is_open { in_02.is_open() };
-
-    if(file_02_is_open)
+    std::string folder_path;
+    switch (test)
     {
-      in_02.close();
+        case test_type::sha:
+            folder_path = "shabytesvectors/";
+            break;
+        case test_type::hmac:
+            folder_path = "hmac/";
+            break;
+    }
+
+    // Boost-root
+    std::string test_vectors_filename_relative = "libs/crypt/test/nist_cavs/vectors/" + folder_path + test_vectors_filename;
+
+    std::ifstream in_01(test_vectors_filename_relative.c_str());
+
+    const bool file_01_is_open { in_01.is_open() };
+
+    // LCOV_EXCL_START
+    if(file_01_is_open)
+    {
+        in_01.close();
     }
     else
     {
-      // test/cover
-      test_vectors_filename_relative = "../nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
+        // Local test directory or IDE
+        test_vectors_filename_relative = "nist_cavs/vectors/" + folder_path + test_vectors_filename;
 
-      std::ifstream in_03(test_vectors_filename_relative.c_str());
+        std::ifstream in_02(test_vectors_filename_relative.c_str());
 
-      const bool file_03_is_open { in_03.is_open() };
+        const bool file_02_is_open { in_02.is_open() };
 
-      if(file_03_is_open)
-      {
-        in_03.close();
-      }
-      else
-      {
-        // CMake builds
-        test_vectors_filename_relative = "../../../../libs/crypt/test/nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
-
-        std::ifstream in_04(test_vectors_filename_relative.c_str());
-
-        const bool file_04_is_open { in_04.is_open() };
-
-        if(file_04_is_open)
+        if(file_02_is_open)
         {
-          in_04.close();
+            in_02.close();
         }
         else
         {
-          // Try to open the file from the absolute path.
-          test_vectors_filename_relative = test_vectors_filename;
+            // test/cover
+            test_vectors_filename_relative = "../nist_cavs/vectors/" + folder_path + test_vectors_filename;
 
-          std::ifstream in_05(test_vectors_filename_relative.c_str());
+            std::ifstream in_03(test_vectors_filename_relative.c_str());
 
-          const bool file_05_is_open { in_05.is_open() };
+            const bool file_03_is_open { in_03.is_open() };
 
-          if(file_05_is_open)
-          {
-            in_05.close();
-          }
-          else
-          {
-            test_vectors_filename_relative = "";
-          }
+            if(file_03_is_open)
+            {
+                in_03.close();
+            }
+            else
+            {
+                // CMake builds
+                test_vectors_filename_relative = "../../../../libs/crypt/test/nist_cavs/vectors/" + folder_path + test_vectors_filename;
+
+                std::ifstream in_04(test_vectors_filename_relative.c_str());
+
+                const bool file_04_is_open { in_04.is_open() };
+
+                if(file_04_is_open)
+                {
+                    in_04.close();
+                }
+                else
+                {
+                    // Try to open the file from the absolute path.
+                    test_vectors_filename_relative = test_vectors_filename;
+
+                    std::ifstream in_05(test_vectors_filename_relative.c_str());
+
+                    const bool file_05_is_open { in_05.is_open() };
+
+                    if(file_05_is_open)
+                    {
+                        in_05.close();
+                    }
+                    else
+                    {
+                        // Clion Cmake builds
+                        test_vectors_filename_relative = "../../../libs/crypt/test/nist_cavs/vectors/" + folder_path + test_vectors_filename;
+
+                        std::ifstream in_06(test_vectors_filename_relative.c_str());
+
+                        const bool file_06_is_open { in_06.is_open() };
+                        if (file_06_is_open)
+                        {
+                            in_06.close();
+                        }
+                        else
+                        {
+                            test_vectors_filename_relative = "";
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
-  // LCOV_EXCL_STOP
+    // LCOV_EXCL_STOP
 
-  return test_vectors_filename_relative;
+    return test_vectors_filename_relative;
 }
 
 auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_container_type& test_vectors_to_get) -> bool
 {
   bool result_parse_is_ok { false };
 
-  const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_vectors_filename) };
+  const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::sha) };
 
   const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
@@ -260,7 +319,7 @@ auto parse_file_vectors_variable_xof(const std::string& test_vectors_filename, t
 {
     bool result_parse_is_ok { false };
 
-    const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_vectors_filename) };
+    const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::sha) };
 
     const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
@@ -344,7 +403,7 @@ auto parse_file_monte(const std::string& test_monte_filename, test_vector_contai
 {
   bool result_parse_is_ok { false };
 
-  const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_monte_filename) };
+  const std::string test_vectors_filename_relative { where_file(test_monte_filename, test_type::sha) };
 
   const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
@@ -413,7 +472,7 @@ auto parse_file_monte_xof(const std::string& test_monte_filename, test_vector_co
 {
     bool result_parse_is_ok { false };
 
-    const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_monte_filename) };
+    const std::string test_vectors_filename_relative { where_file(test_monte_filename, test_type::sha) };
 
     const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
