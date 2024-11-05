@@ -7,7 +7,7 @@
 #define BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP
 
 #include <boost/core/lightweight_test.hpp>
-
+#include <boost/crypt/hash/hmac.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -42,6 +42,7 @@ struct test_object_hash
 public:
   using size_type    = std::size_t;
   using message_type = std::vector<std::uint8_t>;
+  using key_type     = std::vector<std::uint8_t>;
   using result_type  = std::vector<std::uint8_t>;
 
   test_object_hash() = delete;
@@ -83,100 +84,158 @@ public:
         }
   { }
 
+    explicit test_object_hash(const std::string& key_data, const std::string& msg_data, const std::string& mac_data)
+    : my_msg
+      {
+          [&msg_data]()
+          {
+              const auto byte_data { detail::convert_hex_string_to_byte_container(msg_data) };
+              return message_type(byte_data.cbegin(),   byte_data.cend());
+          }()
+      },
+      my_result
+      {
+          [&mac_data]()
+          {
+              const auto byte_data { detail::convert_hex_string_to_byte_container(mac_data) };
+              return message_type(byte_data.cbegin(), byte_data.cend());
+          }()
+      },
+      my_key
+      {
+          [&key_data]()
+          {
+              const auto byte_data { detail::convert_hex_string_to_byte_container(key_data) };
+              return message_type(byte_data.cbegin(), byte_data.cend());
+          }()
+      }
+        { }
+
   const size_type    my_length { };
   const message_type my_msg    { };
   const result_type  my_result { };
+  const key_type     my_key    { };
 };
 
 using test_vector_container_type = std::deque<test_object_hash>;
 
-auto where_file_shabytesvectors(const std::string& test_vectors_filename) -> std::string
+enum class test_type : unsigned
+{
+    sha,
+    hmac
+};
+
+auto where_file(const std::string& test_vectors_filename, test_type test) -> std::string
 {
   // Try to open the file in each of the known relative paths
   // in order to find out where it is located.
 
-  // Boost-root
-  std::string test_vectors_filename_relative = "libs/crypt/test/nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
-
-  std::ifstream in_01(test_vectors_filename_relative.c_str());
-
-  const bool file_01_is_open { in_01.is_open() };
-
-  // LCOV_EXCL_START
-  if(file_01_is_open)
-  {
-    in_01.close();
-  }
-  else
-  {
-    // Local test directory or IDE
-    test_vectors_filename_relative = "nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
-
-    std::ifstream in_02(test_vectors_filename_relative.c_str());
-
-    const bool file_02_is_open { in_02.is_open() };
-
-    if(file_02_is_open)
+    std::string folder_path;
+    switch (test)
     {
-      in_02.close();
+        case test_type::sha:
+            folder_path = "shabytesvectors/";
+            break;
+        case test_type::hmac:
+            folder_path = "hmac/";
+            break;
+    }
+
+    // Boost-root
+    std::string test_vectors_filename_relative = "libs/crypt/test/nist_cavs/vectors/" + folder_path + test_vectors_filename;
+
+    std::ifstream in_01(test_vectors_filename_relative.c_str());
+
+    const bool file_01_is_open { in_01.is_open() };
+
+    // LCOV_EXCL_START
+    if(file_01_is_open)
+    {
+        in_01.close();
     }
     else
     {
-      // test/cover
-      test_vectors_filename_relative = "../nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
+        // Local test directory or IDE
+        test_vectors_filename_relative = "nist_cavs/vectors/" + folder_path + test_vectors_filename;
 
-      std::ifstream in_03(test_vectors_filename_relative.c_str());
+        std::ifstream in_02(test_vectors_filename_relative.c_str());
 
-      const bool file_03_is_open { in_03.is_open() };
+        const bool file_02_is_open { in_02.is_open() };
 
-      if(file_03_is_open)
-      {
-        in_03.close();
-      }
-      else
-      {
-        // CMake builds
-        test_vectors_filename_relative = "../../../../libs/crypt/test/nist_cavs/vectors/shabytesvectors/" + test_vectors_filename;
-
-        std::ifstream in_04(test_vectors_filename_relative.c_str());
-
-        const bool file_04_is_open { in_04.is_open() };
-
-        if(file_04_is_open)
+        if(file_02_is_open)
         {
-          in_04.close();
+            in_02.close();
         }
         else
         {
-          // Try to open the file from the absolute path.
-          test_vectors_filename_relative = test_vectors_filename;
+            // test/cover
+            test_vectors_filename_relative = "../nist_cavs/vectors/" + folder_path + test_vectors_filename;
 
-          std::ifstream in_05(test_vectors_filename_relative.c_str());
+            std::ifstream in_03(test_vectors_filename_relative.c_str());
 
-          const bool file_05_is_open { in_05.is_open() };
+            const bool file_03_is_open { in_03.is_open() };
 
-          if(file_05_is_open)
-          {
-            in_05.close();
-          }
-          else
-          {
-            test_vectors_filename_relative = "";
-          }
+            if(file_03_is_open)
+            {
+                in_03.close();
+            }
+            else
+            {
+                // CMake builds
+                test_vectors_filename_relative = "../../../../libs/crypt/test/nist_cavs/vectors/" + folder_path + test_vectors_filename;
+
+                std::ifstream in_04(test_vectors_filename_relative.c_str());
+
+                const bool file_04_is_open { in_04.is_open() };
+
+                if(file_04_is_open)
+                {
+                    in_04.close();
+                }
+                else
+                {
+                    // Try to open the file from the absolute path.
+                    test_vectors_filename_relative = test_vectors_filename;
+
+                    std::ifstream in_05(test_vectors_filename_relative.c_str());
+
+                    const bool file_05_is_open { in_05.is_open() };
+
+                    if(file_05_is_open)
+                    {
+                        in_05.close();
+                    }
+                    else
+                    {
+                        // Clion Cmake builds
+                        test_vectors_filename_relative = "../../../libs/crypt/test/nist_cavs/vectors/" + folder_path + test_vectors_filename;
+
+                        std::ifstream in_06(test_vectors_filename_relative.c_str());
+
+                        const bool file_06_is_open { in_06.is_open() };
+                        if (file_06_is_open)
+                        {
+                            in_06.close();
+                        }
+                        else
+                        {
+                            test_vectors_filename_relative = "";
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
-  // LCOV_EXCL_STOP
+    // LCOV_EXCL_STOP
 
-  return test_vectors_filename_relative;
+    return test_vectors_filename_relative;
 }
 
 auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_container_type& test_vectors_to_get) -> bool
 {
   bool result_parse_is_ok { false };
 
-  const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_vectors_filename) };
+  const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::sha) };
 
   const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
@@ -256,11 +315,88 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
   return result_parse_is_ok;
 }
 
+auto parse_file_vectors_hmac(const std::string& test_vectors_filename, test_vector_container_type& test_vectors_to_get) -> bool
+{
+    bool result_parse_is_ok { false };
+
+    const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::hmac) };
+
+    const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
+
+    BOOST_TEST(result_filename_plausible_is_ok);
+
+    if(result_filename_plausible_is_ok)
+    {
+        // Read the file for creating the test cases.
+        std::ifstream in(test_vectors_filename_relative.c_str());
+
+        const bool file_is_open = in.is_open();
+
+        if(file_is_open)
+        {
+            result_parse_is_ok = true;
+
+            std::string line    { };
+            std::string message { };
+            std::string result  { };
+            std::string key     { };
+
+            while(getline(in, line))
+            {
+                const std::string::size_type pos_key = line.find("Key =", 0U);
+                const std::string::size_type pos_msg = line.find("Msg =", 0U);
+                const std::string::size_type pos_md  = line.find("Mac =",  0U);
+
+                const bool line_is_representation_is_key = (pos_key != std::string::npos);
+                const bool line_is_representation_is_msg = (pos_msg != std::string::npos);
+                const bool line_is_representation_is_md  = (pos_md  != std::string::npos);
+
+                // Get the next key.
+                if (line_is_representation_is_key)
+                {
+                    key = line.substr(6U, line.length() - 6U);
+                }
+
+                // Get the next message.
+                if(line_is_representation_is_msg)
+                {
+                    message = line.substr(6U, line.length() - 6U);
+                }
+
+                // Get the next (expected) result.
+                if(line_is_representation_is_md)
+                {
+                    result = line.substr(6U, line.length() - 6U);
+
+                    // Use special handling for message = "00" with length = 0.
+                    if((message == "00"))
+                    {
+                        message = "";
+                    }
+
+                    // Add the new test object to v.
+                    const test_object_hash test_obj(key, message, result);
+
+                    test_vectors_to_get.push_back(test_obj);
+                }
+            }
+
+            in.close();
+
+            result_parse_is_ok = ((!test_vectors_to_get.empty()) && result_parse_is_ok);
+        }
+    }
+
+    BOOST_TEST(result_parse_is_ok);
+
+    return result_parse_is_ok;
+}
+
 auto parse_file_vectors_variable_xof(const std::string& test_vectors_filename, test_vector_container_type& test_vectors_to_get, std::vector<std::size_t>& lengths) -> bool
 {
     bool result_parse_is_ok { false };
 
-    const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_vectors_filename) };
+    const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::sha) };
 
     const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
@@ -344,7 +480,7 @@ auto parse_file_monte(const std::string& test_monte_filename, test_vector_contai
 {
   bool result_parse_is_ok { false };
 
-  const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_monte_filename) };
+  const std::string test_vectors_filename_relative { where_file(test_monte_filename, test_type::sha) };
 
   const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
@@ -413,7 +549,7 @@ auto parse_file_monte_xof(const std::string& test_monte_filename, test_vector_co
 {
     bool result_parse_is_ok { false };
 
-    const std::string test_vectors_filename_relative { where_file_shabytesvectors(test_monte_filename) };
+    const std::string test_vectors_filename_relative { where_file(test_monte_filename, test_type::sha) };
 
     const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
@@ -841,6 +977,60 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
     }
 
     BOOST_TEST(result_is_ok);
+
+    return result_is_ok;
+}
+
+
+// See: https://csrc.nist.gov/csrc/media/projects/cryptographic-algorithm-validation-program/documents/mac/hmacvs.pdf
+template <typename HasherType>
+auto test_vectors_hmac(const nist::cavs::test_vector_container_type& test_vectors) -> bool
+{
+    using local_hasher_type = HasherType;
+    using local_result_type = typename local_hasher_type::return_type;
+
+    BOOST_TEST((!test_vectors.empty()));
+
+    bool result_is_ok { true };
+
+    for(const auto& test_vector : test_vectors)
+    {
+        boost::crypt::hmac<HasherType> this_hash { };
+
+        // Make pass 1 through the messages.
+        // Use the triple-combination of init/process/get-result functions.
+
+        this_hash.init(test_vector.my_key);
+
+        this_hash.process_bytes(test_vector.my_msg.data(), test_vector.my_msg.size());
+
+        const local_result_type result_01 { this_hash.get_digest() };
+
+        const bool result_hash_01_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_01.cbegin()) };
+
+        BOOST_TEST(result_hash_01_is_ok);
+
+        // Make pass 2 through the messages.
+        // Use the triple-combination of init/process/get-result functions.
+        // Even though this is not required in CAVS testing, it is
+        // done in order to ensure that the init() function properly
+        // puts the hasher-object into its initialized state.
+
+        this_hash.init(test_vector.my_key);
+
+        this_hash.process_bytes(test_vector.my_msg);
+
+        const local_result_type result_02 { this_hash.get_digest() };
+
+        const bool result_hash_02_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_02.cbegin()) };
+
+        BOOST_TEST(result_hash_02_is_ok);
+
+        // Collect the combined results of pass 1 and pass 2.
+        const bool result_hash_is_ok = (result_hash_01_is_ok && result_hash_02_is_ok);
+
+        result_is_ok = (result_hash_is_ok && result_is_ok);
+    }
 
     return result_is_ok;
 }
