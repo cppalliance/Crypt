@@ -41,16 +41,25 @@ public:
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr hmac(ForwardIter key, boost::crypt::size_t size) noexcept { init(key, size); }
 
+    template <typename Container>
+    BOOST_CRYPT_GPU_ENABLED constexpr hmac(const Container& c) noexcept { init(c.begin(), c.size()); }
+
     BOOST_CRYPT_GPU_ENABLED constexpr hmac(const key_type& inner_key, const key_type& outer_key) noexcept { init_from_keys(inner_key, outer_key); }
 
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter key, boost::crypt::size_t size) noexcept -> hasher_state;
+
+    template <typename Container>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container& c) noexcept -> hasher_state { return init(c.begin(), c.size()); }
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto init_from_keys(const key_type& inner_key,
                                                           const key_type& outer_key) noexcept -> hasher_state;
 
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
+
+    template <typename Container>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(const Container& c) noexcept -> hasher_state { return process_bytes(c.begin(), c.size()); }
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
 
