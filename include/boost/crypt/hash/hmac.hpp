@@ -52,8 +52,9 @@ public:
     template <typename Container>
     BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container& c) noexcept -> hasher_state { return init(c.begin(), c.size()); }
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init_from_keys(const key_type& inner_key,
-                                                          const key_type& outer_key) noexcept -> hasher_state;
+    template <typename Container>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init_from_keys(const Container& inner_key,
+                                                          const Container& outer_key) noexcept -> hasher_state;
 
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
@@ -81,9 +82,9 @@ constexpr auto hmac<HasherType>::get_outer_key() noexcept -> key_type
 }
 
 template <typename HasherType>
-constexpr auto
-hmac<HasherType>::init_from_keys(const boost::crypt::array<boost::crypt::uint8_t, block_size_> &inner_key,
-                                 const boost::crypt::array<boost::crypt::uint8_t, block_size_> &outer_key) noexcept -> hasher_state
+template <typename Container>
+constexpr auto hmac<HasherType>::init_from_keys(const Container &inner_key,
+                                                const Container &outer_key) noexcept -> hasher_state
 {
     computed_ = false;
     corrupted_ = false;
