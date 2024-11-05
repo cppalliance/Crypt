@@ -7,7 +7,7 @@
 #define BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP
 
 #include <boost/core/lightweight_test.hpp>
-
+#include <boost/crypt/hash/hmac.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -337,7 +337,6 @@ auto parse_file_vectors_hmac(const std::string& test_vectors_filename, test_vect
             result_parse_is_ok = true;
 
             std::string line    { };
-            std::size_t length  { };
             std::string message { };
             std::string result  { };
             std::string key     { };
