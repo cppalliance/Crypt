@@ -315,6 +315,84 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
   return result_parse_is_ok;
 }
 
+auto parse_file_vectors_hmac(const std::string& test_vectors_filename, test_vector_container_type& test_vectors_to_get) -> bool
+{
+    bool result_parse_is_ok { false };
+
+    const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::hmac) };
+
+    const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
+
+    BOOST_TEST(result_filename_plausible_is_ok);
+
+    if(result_filename_plausible_is_ok)
+    {
+        // Read the file for creating the test cases.
+        std::ifstream in(test_vectors_filename_relative.c_str());
+
+        const bool file_is_open = in.is_open();
+
+        if(file_is_open)
+        {
+            result_parse_is_ok = true;
+
+            std::string line    { };
+            std::size_t length  { };
+            std::string message { };
+            std::string result  { };
+            std::string key     { };
+
+            while(getline(in, line))
+            {
+                const std::string::size_type pos_key = line.find("Key =", 0U);
+                const std::string::size_type pos_msg = line.find("Msg =", 0U);
+                const std::string::size_type pos_md  = line.find("Mac =",  0U);
+
+                const bool line_is_representation_is_key = (pos_key != std::string::npos);
+                const bool line_is_representation_is_msg = (pos_msg != std::string::npos);
+                const bool line_is_representation_is_md  = (pos_md  != std::string::npos);
+
+                // Get the next key.
+                if (line_is_representation_is_key)
+                {
+                    key = line.substr(6U, line.length() - 6U);
+                }
+
+                // Get the next message.
+                if(line_is_representation_is_msg)
+                {
+                    message = line.substr(6U, line.length() - 6U);
+                }
+
+                // Get the next (expected) result.
+                if(line_is_representation_is_md)
+                {
+                    result = line.substr(6U, line.length() - 6U);
+
+                    // Use special handling for message = "00" with length = 0.
+                    if((message == "00"))
+                    {
+                        message = "";
+                    }
+
+                    // Add the new test object to v.
+                    const test_object_hash test_obj(key, message, result);
+
+                    test_vectors_to_get.push_back(test_obj);
+                }
+            }
+
+            in.close();
+
+            result_parse_is_ok = ((!test_vectors_to_get.empty()) && result_parse_is_ok);
+        }
+    }
+
+    BOOST_TEST(result_parse_is_ok);
+
+    return result_parse_is_ok;
+}
+
 auto parse_file_vectors_variable_xof(const std::string& test_vectors_filename, test_vector_container_type& test_vectors_to_get, std::vector<std::size_t>& lengths) -> bool
 {
     bool result_parse_is_ok { false };
