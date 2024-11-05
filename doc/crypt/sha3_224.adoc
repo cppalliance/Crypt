@@ -1,0 +1,157 @@
+////
+Copyright 2024 Matt Borland
+Distributed under the Boost Software License, Version 1.0.
+https://www.boost.org/LICENSE_1_0.txt
+////
+
+[#sha3_224]
+:idprefix: sha3_224_
+
+= SHA3_224
+
+This library supports sha3_224 as described in https://doi.org/10.6028/NIST.FIPS.202[SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions].
+There is a wide range of acceptable inputs for the base sha3_224 function:
+
+== Hashing Functions
+
+[source, c++]
+----
+namespace boost {
+namespace crypt {
+
+uisng return_type = boost::crypt::array<uint8_t, 28>;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const char* str) noexcept -> return_type;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const char* str, size_t len) noexcept -> return_type;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const unsigned char* str) noexcept -> return_type;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const unsigned char* str, size_t len) noexcept -> return_type;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const char16_t* str) noexcept -> return_type;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const char16_t* str, size_t len) noexcept -> return_type;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const char32_t* str) noexcept -> return_type;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const char32_t* str, size_t len) noexcept -> return_type;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const wchar_t* str) noexcept -> return_type;
+
+BOOST_CRYPT_GPU_ENABLED inline auto sha3_224(const wchar_t* str, size_t len) noexcept -> return_type;
+
+inline auto sha3_224(const std::string& str) noexcept -> return_type;
+
+inline auto sha3_224(const std::u16string& str) noexcept -> return_type;
+
+inline auto sha3_224(const std::u32string& str) noexcept -> return_type;
+
+inline auto sha3_224(const std::wstring& str) noexcept -> return_type;
+
+#ifdef BOOST_CRYPT_HAS_STRING_VIEW
+
+inline auto sha3_224(std::string_view str) noexcept -> return_type;
+
+inline auto sha3_224(std::u16string_view str) noexcept -> return_type;
+
+inline auto sha3_224(std::u32string_view str) noexcept -> return_type;
+
+inline auto sha3_224(std::wstring_view str) noexcept -> return_type;
+
+#endif // BOOST_CRYPT_HAS_STRING_VIEW
+
+#ifdef BOOST_CRYPT_HAS_SPAN
+
+template <typename T, std::size_t extent>
+inline auto md5(std::span<T, extent> data) noexcept -> return_type;
+
+#endif // BOOST_CRYPT_HAS_SPAN
+
+#ifdef BOOST_CRYPT_HAS_CUDA
+
+template <typename T, boost::crypt::size_t extent>
+BOOST_CRYPT_GPU_ENABLED inline auto md5(cuda::std::span<T, extent> data) noexcept -> return_type;
+
+#endif // BOOST_CRYPT_HAS_CUDA
+
+} //namespace crypt
+} //namespace boost
+----
+
+== File Hashing Functions
+
+We also have the ability to scan files and return the sha3_224 value:
+
+[source, c++]
+----
+namespace boost {
+namespace crypt {
+
+uisng return_type = boost::crypt::array<uint8_t, 28>;
+
+inline auto sha3_224_file(const char* filepath) noexcept -> return_type;
+
+inline auto sha3_224_file(const std::string& filepath) noexcept -> return_type;
+
+inline auto sha3_224_file(std::string_view filepath) noexcept -> return_type;
+
+} // namespace crypt
+} // namespace boost
+----
+
+== Hashing Object
+
+[#sha3_224_hasher]
+Lastly, there is also the ability to create a sha3_224 hashing object and feed it bytes as the user parses them.
+This class does not use any dynamic memory allocation.
+
+[source, c++]
+----
+namespace boost {
+namespace crypt {
+
+class sha3_224_hasher
+{
+    uisng return_type = boost::crypt::array<uint8_t, 28>;
+
+    void init();
+
+    template <typename ByteType>
+    BOOST_CRYPT_GPU_ENABLED inline auto process_byte(ByteType byte) noexcept -> hasher_state;
+
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, size_t byte_count) noexcept -> hasher_state;
+
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+
+    inline auto process_bytes(std::string_view str) noexcept -> hasher_state;
+
+    inline auto process_bytes(std::u16string_view str) noexcept -> hasher_state;
+
+    inline auto process_bytes(std::u32string_view str) noexcept -> hasher_state;
+
+    inline auto process_bytes(std::wstring_view str) noexcept -> hasher_state;
+
+    #endif // BOOST_CRYPT_HAS_STRING_VIEW
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+
+    template <typename T, boost::crypt::size_t extent>
+    inline auto process_bytes(std::span<T, extent> data) noexcept -> hasher_state;
+
+    #endif // BOOST_CRYPT_HAS_SPAN
+
+    #ifdef BOOST_CRYPT_HAS_CUDA
+
+    template <typename T, boost::crypt::size_t extent>
+    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state;
+
+    #endif // BOOST_CRYPT_HAS_CUDA
+
+    inline auto get_digest() noexcept -> return_type;
+};
+
+} // namespace crypt
+} // namespace boost
+----
