@@ -72,11 +72,11 @@ public:
                                              ForwardIter2 nonce = nullptr, boost::crypt::size_t nonce_size = 0,
                                              ForwardIter3 personalization = nullptr, boost::crypt::size_t personalization_size = 0) noexcept -> drbg_state;
 
-    template <typename ForwardIter1, typename ForwardIter2 = void>
+    template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED inline auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
                                                ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> drbg_state;
 
-    template <typename ForwardIter1, typename ForwardIter2 = void>
+    template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED inline auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
                                                  ForwardIter2 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0) noexcept -> drbg_state;
 };
