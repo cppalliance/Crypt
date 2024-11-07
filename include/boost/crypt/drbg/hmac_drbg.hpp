@@ -99,6 +99,12 @@ template <typename ForwardIter>
 inline auto hmac_drbg<HMACType, max_hasher_security, outlen>::update(ForwardIter provided_data,
                                                                      boost::crypt::size_t size) noexcept -> drbg_state
 {
+    // Still need to process even with null pointer
+    if (utility::is_null(provided_data))
+    {
+        size = 0U;
+    }
+
     if (BOOST_CRYPT_LIKELY(size < 3 * outlen_bytes))
     {
         boost::crypt::array<boost::crypt::uint8_t, outlen_bytes * 4 + 1U> data_plus_value {};
@@ -116,14 +122,17 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen>::update(ForwardIter
 
         update_impl(data_plus_value.begin(), offset);
 
-        boost::crypt::size_t offset_second_pass {};
-        for (boost::crypt::size_t i {}; i < value_.size(); ++i)
+        if (size != 0U)
         {
-            data_plus_value[offset_second_pass++] = static_cast<boost::crypt::uint8_t>(value_[i]);
-        }
-        data_plus_value[offset_second_pass] = static_cast<boost::crypt::uint8_t>(0x01);
+            boost::crypt::size_t offset_second_pass {};
+            for (boost::crypt::size_t i {}; i < value_.size(); ++i)
+            {
+                data_plus_value[offset_second_pass++] = static_cast<boost::crypt::uint8_t>(value_[i]);
+            }
+            data_plus_value[offset_second_pass] = static_cast<boost::crypt::uint8_t>(0x01);
 
-        update_impl(data_plus_value.begin(), offset);
+            update_impl(data_plus_value.begin(), offset);
+        }
 
         return drbg_state::success;
     }
@@ -159,18 +168,21 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen>::update(ForwardIter
         update_impl(data_plus_value, offset);
         #endif
 
-        boost::crypt::size_t offset_second_pass {};
-        for (boost::crypt::size_t i {}; i < value_.size(); ++i)
+        if (size != 0U)
         {
-            data_plus_value[offset_second_pass++] = static_cast<boost::crypt::uint8_t>(value_[i]);
-        }
-        data_plus_value[offset_second_pass] = static_cast<boost::crypt::uint8_t>(0x01);
+            boost::crypt::size_t offset_second_pass {};
+            for (boost::crypt::size_t i {}; i < value_.size(); ++i)
+            {
+                data_plus_value[offset_second_pass++] = static_cast<boost::crypt::uint8_t>(value_[i]);
+            }
+            data_plus_value[offset_second_pass] = static_cast<boost::crypt::uint8_t>(0x01);
 
-        #ifndef BOOST_CRYPT_HAS_CUDA
-        update_impl(data_plus_value.get(), offset);
-        #else
-        update_impl(data_plus_value, offset);
-        #endif
+            #ifndef BOOST_CRYPT_HAS_CUDA
+            update_impl(data_plus_value.get(), offset);
+            #else
+            update_impl(data_plus_value, offset);
+            #endif
+        }
 
         #ifdef BOOST_CRYPT_HAS_CUDA
         cudaFree(data_plus_value);
