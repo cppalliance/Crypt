@@ -47,6 +47,7 @@ private:
     static constexpr boost::crypt::size_t min_length {max_hasher_security / 8U};
     static constexpr boost::crypt::size_t max_length {4294967296UL}; // 2^35 / 8
     static constexpr boost::crypt::size_t min_entropy {min_length * 3U / 2U};
+    static constexpr boost::crypt::size_t reseed_interval {281474976710656UL}; // 2^48
 
     typename HMACType::return_type key_ {};
     typename HMACType::return_type value_ {};
@@ -72,6 +73,10 @@ public:
     template <typename ForwardIter1, typename ForwardIter2 = void>
     BOOST_CRYPT_GPU_ENABLED inline auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
                                                ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> drbg_state;
+
+    template <typename ForwardIter1, typename ForwardIter2 = void>
+    BOOST_CRYPT_GPU_ENABLED inline auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
+                                                 ForwardIter2 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0) noexcept -> drbg_state;
 };
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
@@ -307,7 +312,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen>::reseed(ForwardIter1 entro
                                                               ForwardIter2 additional_input,
                                                               boost::crypt::size_t additional_input_size) noexcept -> drbg_state
 {
-    constexpr auto min_reseed_entropy {outlen_bytes * 2U / 3U};
+    constexpr auto min_reseed_entropy {max_hasher_security / 8U};
     if (utility::is_null(entropy) || entropy_size == 0U)
     {
         return drbg_state::null;
@@ -393,6 +398,81 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen>::reseed(ForwardIter1 entro
 
     reseed_counter_ = 1U;
     corrupted_ = false;
+    return drbg_state::success;
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
+template <typename ForwardIter1, typename ForwardIter2>
+auto hmac_drbg<HMACType, max_hasher_security, outlen>::generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
+                                                                ForwardIter2 additional_data, boost::crypt::size_t additional_data_size) noexcept -> drbg_state
+{
+    if (reseed_counter_ > reseed_interval)
+    {
+        corrupted_ = true;
+        return drbg_state::requires_reseed;
+    }
+    if (corrupted_)
+    {
+        return drbg_state::state_error;
+    }
+    if (utility::is_null(data))
+    {
+        return drbg_state::null;
+    }
+    if (!initialized_)
+    {
+        return drbg_state::uninitialized;
+    }
+
+    const boost::crypt::size_t requested_bytes {requested_bits / 8U};
+    if (requested_bytes > max_bytes_per_request)
+    {
+        return drbg_state::requested_too_many_bits;
+    }
+
+    if (utility::is_null(additional_data))
+    {
+        additional_data_size = 0U;
+    }
+    if (additional_data_size != 0U)
+    {
+        if (additional_data_size > max_length)
+        {
+            return drbg_state::personalization_too_long;
+        }
+        update(additional_data, additional_data_size);
+    }
+
+    boost::crypt::size_t bytes {};
+    while (bytes < requested_bytes)
+    {
+        HMACType hmac(key_);
+        hmac.process_bytes(value_);
+        value_ = hmac.get_digest();
+
+        if (bytes + value_.size() < requested_bytes)
+        {
+            for (boost::crypt::size_t i {}; i < value_.size(); ++i)
+            {
+                *data++ = value_[i];
+            }
+
+            bytes += value_.size();
+        }
+        else
+        {
+            boost::crypt::size_t i {};
+            while (bytes < requested_bytes)
+            {
+                *data++ = value_[i++];
+                ++bytes;
+            }
+        }
+    }
+
+    update(additional_data, additional_data_size);
+
+    ++reseed_counter_;
     return drbg_state::success;
 }
 
