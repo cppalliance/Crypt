@@ -5,6 +5,7 @@
 #ifndef BOOST_CRYPT_DRBG_HMAC_DRBG_HPP
 #define BOOST_CRYPT_DRBG_HMAC_DRBG_HPP
 
+#include <boost/crypt/fwd.hpp>
 #include <boost/crypt/drbg/drbg_state.hpp>
 #include <boost/crypt/utility/cstdint.hpp>
 #include <boost/crypt/utility/cstddef.hpp>
@@ -477,6 +478,9 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen>::generate(ForwardIter1 dat
 }
 
 } // namespace drbg
+
+BOOST_CRYPT_EXPORT using sha1_hmac_drbg = drbg::hmac_drbg<sha1_hasher, 128U, 160U>;
+
 } // namespace crypt
 } // namespace boost
 
