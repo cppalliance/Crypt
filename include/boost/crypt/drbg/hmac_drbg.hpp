@@ -68,6 +68,10 @@ public:
     BOOST_CRYPT_GPU_ENABLED inline auto init(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
                                              ForwardIter2 nonce = nullptr, boost::crypt::size_t nonce_size = 0,
                                              ForwardIter3 personalization = nullptr, boost::crypt::size_t personalization_size = 0) noexcept -> drbg_state;
+
+    template <typename ForwardIter1, typename ForwardIter2 = void>
+    BOOST_CRYPT_GPU_ENABLED inline auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+                                               ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> drbg_state;
 };
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
@@ -294,6 +298,101 @@ hmac_drbg<HMACType, max_hasher_security, outlen>::init(ForwardIter1 entropy, boo
 
     reseed_counter_ = 1U;
     initialized_ = true;
+    return drbg_state::success;
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
+template <typename ForwardIter1, typename ForwardIter2>
+auto hmac_drbg<HMACType, max_hasher_security, outlen>::reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+                                                              ForwardIter2 additional_input,
+                                                              boost::crypt::size_t additional_input_size) noexcept -> drbg_state
+{
+    constexpr auto min_reseed_entropy {outlen_bytes * 2U / 3U};
+    if (utility::is_null(entropy) || entropy_size == 0U)
+    {
+        return drbg_state::null;
+    }
+    if (entropy_size < min_reseed_entropy)
+    {
+        return drbg_state::insufficient_entropy;
+    }
+    if (utility::is_null(additional_input))
+    {
+        additional_input_size = 0U;
+    }
+
+    const auto seed_material_size {entropy_size + additional_input_size};
+
+    if (seed_material_size < 3U * min_reseed_entropy)
+    {
+        // Happy path of static memory init
+        boost::crypt::array<boost::crypt::uint8_t, 3U * min_reseed_entropy> seed_material {};
+        boost::crypt::size_t offset {};
+        for (boost::crypt::size_t i {}; i < entropy_size; ++i)
+        {
+            seed_material[offset++] = *entropy++;
+        }
+        for (boost::crypt::size_t i {}; i < additional_input_size; ++i)
+        {
+            seed_material[offset++] = *additional_input++;
+        }
+
+        BOOST_CRYPT_ASSERT(offset == seed_material_size);
+
+        const auto update_result {update(seed_material, seed_material_size)};
+        if (update_result != drbg_state::success)
+        {
+            return update_result;
+        }
+    }
+    else if (entropy_size > max_length)
+    {
+        return drbg_state::entropy_too_long;
+    }
+    else if (additional_input_size > max_length)
+    {
+        return drbg_state::personalization_too_long;
+    }
+    else
+    {
+        // We need to do dynamic memory allocation because the upper bound on memory usage is huge
+        #ifndef BOOST_CRYPT_HAS_CUDA
+        auto seed_material {std::make_unique<boost::crypt::uint8_t[]>(seed_material_size)};
+        #else
+        boost::crypt::uint8_t* seed_material;
+        cudaMallocManaged(&seed_material, seed_material_size * sizeof(boost::crypt_uint8_t));
+        #endif
+
+        if (seed_material == nullptr)
+        {
+            return drbg_state::out_of_memory; // LCOV_EXCL_LINE
+        }
+
+        boost::crypt::size_t offset {};
+        for (boost::crypt::size_t i {}; i < entropy_size; ++i)
+        {
+            seed_material[offset++] = *entropy++;
+        }
+        for (boost::crypt::size_t i {}; i < additional_input_size; ++i)
+        {
+            seed_material[offset++] = *additional_input++;
+        }
+
+        #ifndef BOOST_CRYPT_HAS_CUDA
+        const auto update_return {update(seed_material.get(), seed_material_size)};
+        #else
+        const auto update_return {update(seed_material, seed_material_size)};
+        cudaFree(seed_material);
+        #endif
+
+        if (update_return != drbg_state::success)
+        {
+            return update_return;
+        }
+    }
+
+    reseed_counter_ = 1U;
+    corrupted_ = false;
     return drbg_state::success;
 }
 
