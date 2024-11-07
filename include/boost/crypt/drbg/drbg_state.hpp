@@ -21,8 +21,9 @@ BOOST_CRYPT_EXPORT enum class drbg_state : boost::crypt::uint8_t
     personalization_too_long,
     insufficient_entropy,       // Entropy + Nonce length was not at least 3/2 security strength
     out_of_memory,              // Memory exhaustion reported by a function
-    requires_reeseeed,          // The number of cycles has exceeded the specified amount
+    requires_reseed,            // The number of cycles has exceeded the specified amount
     uninitialized,              // Random bits can not be provided since the generator is uninitialized
+    requested_too_many_bits,    // 2^19 bits is all that's allowed per request
     state_error                 // An error has occurred
 };
 
