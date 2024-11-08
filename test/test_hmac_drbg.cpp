@@ -21,8 +21,19 @@ void sha1_basic_correctness()
     // 3) Generate bits, compare
     // 4) Destroy drbg
     BOOST_TEST(rng.init(entropy, std::strlen(entropy), nonce, std::strlen(nonce)) == boost::crypt::drbg::drbg_state::success);
+    // ** INSTANTIATE:
+    // V   = 7ea45af5f8fcba082fa40bcbea2748dfe7e09f6a
+    // Key = be3976a33f77e0155b7ca84a5732d44f319e5f3a
+
     BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::drbg::drbg_state::success);
+    // ** GENERATE (FIRST CALL):
+    // V   = 0e28fe04dd16482f8e4b048675318adcd5e6e6cf
+    // Key = 764d4f1fb7b04624bcb14642acb24d70eff3c0c8
+
     BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::drbg::drbg_state::success);
+    // ** GENERATE (SECOND CALL):
+    //	V   = 749a95f0882e0179d66d8ae2697802f8f568ce2f
+    //	Key = bfcd86fcb4c2efce22f6e9b69742751a17b0056c
 
     constexpr boost::crypt::array<boost::crypt::uint8_t, 80> nist_return = {
         0xb7, 0x92, 0x8f, 0x95, 0x03, 0xa4, 0x17, 0x11, 0x07, 0x88,

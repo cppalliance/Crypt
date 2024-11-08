@@ -413,6 +413,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen>::reseed(ForwardIter1 entro
     return drbg_state::success;
 }
 
+// TODO(MBORLAND): Allow entropy for prediction resistance to also be added
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
 template <typename ForwardIter1, typename ForwardIter2>
 auto hmac_drbg<HMACType, max_hasher_security, outlen>::generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
