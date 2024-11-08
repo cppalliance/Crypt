@@ -55,7 +55,6 @@ private:
     typename HMACType::return_type value_ {};
     boost::crypt::size_t reseed_counter_ {};
     bool initialized_ {};
-    bool corrupted_ {};
 
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED inline auto update_impl(ForwardIter data_plus_value, boost::crypt::size_t size) noexcept -> void;
@@ -411,7 +410,6 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen>::reseed(ForwardIter1 entro
     }
 
     reseed_counter_ = 1U;
-    corrupted_ = false;
     return drbg_state::success;
 }
 
@@ -422,12 +420,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen>::generate(ForwardIter1 dat
 {
     if (reseed_counter_ > reseed_interval)
     {
-        corrupted_ = true;
         return drbg_state::requires_reseed;
-    }
-    if (corrupted_)
-    {
-        return drbg_state::state_error;
     }
     if (utility::is_null(data))
     {
