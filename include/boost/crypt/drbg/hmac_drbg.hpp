@@ -40,7 +40,7 @@ namespace drbg {
 // 256: SHA-256, SHA-512/256
 // 384: SHA-384
 // 512: SHA-512
-template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 class hmac_drbg
 {
 private:
@@ -77,15 +77,16 @@ public:
     BOOST_CRYPT_GPU_ENABLED inline auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
                                                ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> drbg_state;
 
-    template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*>
+    template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*, boost::crypt::enable_if_t<!prediction_resistance, bool> = true>
     BOOST_CRYPT_GPU_ENABLED inline auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
                                                  ForwardIter2 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0) noexcept -> drbg_state;
 };
 
-template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2>
-auto hmac_drbg<HMACType, max_hasher_security, outlen>::update_impl(ForwardIter1 provided_data, boost::crypt::size_t provided_data_size,
-                                                                   ForwardIter2 storage, boost::crypt::size_t storage_size) noexcept -> drbg_state
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::update_impl(
+        ForwardIter1 provided_data, boost::crypt::size_t provided_data_size,
+        ForwardIter2 storage, boost::crypt::size_t storage_size) noexcept -> drbg_state
 {
     BOOST_CRYPT_ASSERT(value_.size() + 1U + provided_data_size <= storage_size);
     static_cast<void>(storage_size);
@@ -130,10 +131,10 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen>::update_impl(ForwardIter1 
     return drbg_state::success;
 }
 
-template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter>
-inline auto hmac_drbg<HMACType, max_hasher_security, outlen>::update(ForwardIter provided_data,
-                                                                     boost::crypt::size_t size) noexcept -> drbg_state
+inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::update(
+        ForwardIter provided_data, boost::crypt::size_t size) noexcept -> drbg_state
 {
     // Still need to process even with null pointer
     if (utility::is_null(provided_data))
@@ -171,13 +172,12 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen>::update(ForwardIter
     }
 }
 
-template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
-inline auto
-hmac_drbg<HMACType, max_hasher_security, outlen>::init(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
-                                                         ForwardIter2 nonce, boost::crypt::size_t nonce_size,
-                                                         ForwardIter3 personalization,
-                                                         boost::crypt::size_t personalization_size) noexcept -> drbg_state
+inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(
+        ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+        ForwardIter2 nonce, boost::crypt::size_t nonce_size,
+        ForwardIter3 personalization, boost::crypt::size_t personalization_size) noexcept -> drbg_state
 {
     // Nonce is to be at least >= 0.5 * max_hasher_security
     // Unless entropy + nonce >= 1.5 * max_hasher_security
@@ -299,11 +299,11 @@ hmac_drbg<HMACType, max_hasher_security, outlen>::init(ForwardIter1 entropy, boo
     return drbg_state::success;
 }
 
-template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2>
-auto hmac_drbg<HMACType, max_hasher_security, outlen>::reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
-                                                              ForwardIter2 additional_input,
-                                                              boost::crypt::size_t additional_input_size) noexcept -> drbg_state
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::reseed(
+        ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+        ForwardIter2 additional_input, boost::crypt::size_t additional_input_size) noexcept -> drbg_state
 {
     constexpr auto min_reseed_entropy {max_hasher_security / 8U};
     if (utility::is_null(entropy) || entropy_size == 0U)
@@ -393,11 +393,11 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen>::reseed(ForwardIter1 entro
     return drbg_state::success;
 }
 
-// TODO(MBORLAND): Allow entropy for prediction resistance to also be added
-template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
-template <typename ForwardIter1, typename ForwardIter2>
-auto hmac_drbg<HMACType, max_hasher_security, outlen>::generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
-                                                                ForwardIter2 additional_data, boost::crypt::size_t additional_data_size) noexcept -> drbg_state
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename ForwardIter1, typename ForwardIter2, boost::crypt::enable_if_t<!prediction_resistance, bool>>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(
+        ForwardIter1 data, boost::crypt::size_t requested_bits,
+        ForwardIter2 additional_data, boost::crypt::size_t additional_data_size) noexcept -> drbg_state
 {
     if (reseed_counter_ > reseed_interval)
     {
@@ -464,9 +464,13 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen>::generate(ForwardIter1 dat
     return drbg_state::success;
 }
 
+template <bool prediction_resistance>
+BOOST_CRYPT_EXPORT using sha1_hmac_drbg_t = drbg::hmac_drbg<hmac<sha1_hasher>, 128U, 160U, prediction_resistance>;
+
 } // namespace drbg
 
-BOOST_CRYPT_EXPORT using sha1_hmac_drbg = drbg::hmac_drbg<hmac<sha1_hasher>, 128U, 160U>;
+BOOST_CRYPT_EXPORT using sha1_hmac_drbg = drbg::sha1_hmac_drbg_t<false>;
+BOOST_CRYPT_EXPORT using sha1_hmac_drbg_pr = drbg::sha1_hmac_drbg_t<true>;
 
 } // namespace crypt
 } // namespace boost
