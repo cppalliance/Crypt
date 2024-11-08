@@ -64,6 +64,13 @@ void sha1_basic_correctness()
             // LCOV_EXCL_STOP
         }
     }
+
+    const char* big_additional_input = "749a95f0882e0179d66d8ae2697802f8f568ce2fbfcd86fcb4c2efce22f6e9b69742751a17b0056c";
+    BOOST_TEST(rng.init(entropy.begin(), entropy.size(),
+                        nonce.begin(), nonce.size(),
+                        big_additional_input, std::strlen(big_additional_input)) == boost::crypt::drbg::drbg_state::success);
+
+    BOOST_TEST(rng.generate(return_bits.begin(), 640U, big_additional_input, std::strlen(big_additional_input)) == boost::crypt::drbg::drbg_state::success);
 }
 
 int main()
