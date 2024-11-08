@@ -11,8 +11,15 @@
 void sha1_basic_correctness()
 {
     boost::crypt::sha1_hmac_drbg rng;
-    const char* entropy = "e91b63309e93d1d08e30e8d556906875";
-    const char* nonce = "f59747c468b0d0da";
+
+    boost::crypt::array<boost::crypt::uint8_t, 16> entropy = {
+        0xe9, 0x1b, 0x63, 0x30, 0x9e, 0x93, 0xd1, 0xd0, 0x8e, 0x30, 0xe8, 0xd5, 0x56, 0x90, 0x68, 0x75
+    };
+
+    boost::crypt::array<boost::crypt::uint8_t, 8> nonce = {
+        0xf5, 0x97, 0x47, 0xc4, 0x68, 0xb0, 0xd0, 0xda
+    };
+
     boost::crypt::array<boost::crypt::uint8_t, 80> return_bits {};
 
     // Test process is:
@@ -20,7 +27,7 @@ void sha1_basic_correctness()
     // 2) Generate bits, do not compare
     // 3) Generate bits, compare
     // 4) Destroy drbg
-    BOOST_TEST(rng.init(entropy, std::strlen(entropy), nonce, std::strlen(nonce)) == boost::crypt::drbg::drbg_state::success);
+    BOOST_TEST(rng.init(entropy, entropy.size(), nonce, nonce.size()) == boost::crypt::drbg::drbg_state::success);
     // ** INSTANTIATE:
     // V   = 7ea45af5f8fcba082fa40bcbea2748dfe7e09f6a
     // Key = be3976a33f77e0155b7ca84a5732d44f319e5f3a
