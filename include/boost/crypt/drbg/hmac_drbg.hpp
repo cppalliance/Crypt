@@ -56,8 +56,9 @@ private:
     boost::crypt::size_t reseed_counter_ {};
     bool initialized_ {};
 
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED inline auto update_impl(ForwardIter data_plus_value, boost::crypt::size_t size) noexcept -> void;
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED inline auto update_impl(ForwardIter1 provided_data, boost::crypt::size_t provided_data_size,
+                                                    ForwardIter2 storage, boost::crypt::size_t storage_size) noexcept -> drbg_state;
 
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED inline auto update(ForwardIter provided_data, boost::crypt::size_t size) noexcept -> drbg_state;
@@ -81,16 +82,51 @@ public:
 };
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
-template <typename ForwardIter>
-auto hmac_drbg<HMACType, max_hasher_security, outlen>::update_impl(ForwardIter data_plus_value,
-                                                                   boost::crypt::size_t size) noexcept -> void
+template <typename ForwardIter1, typename ForwardIter2>
+auto hmac_drbg<HMACType, max_hasher_security, outlen>::update_impl(ForwardIter1 provided_data, boost::crypt::size_t provided_data_size,
+                                                                   ForwardIter2 storage, boost::crypt::size_t storage_size) noexcept -> drbg_state
 {
-    HMACType hmac_(key_);
-    hmac_.process_bytes(data_plus_value, size);
-    key_ = hmac_.get_digest();
-    hmac_.init(key_);
-    hmac_.process_bytes(value_);
-    value_ = hmac_.get_digest();
+    BOOST_CRYPT_ASSERT(value_.size() + 1U + provided_data_size <= storage_size);
+    static_cast<void>(storage_size);
+
+    // Step 1: V || 0x00 || provided data
+    boost::crypt::size_t offset {};
+    for (boost::crypt::size_t i {}; i < value_.size(); ++i)
+    {
+        storage[offset++] = static_cast<boost::crypt::uint8_t>(value_[i]);
+    }
+    storage[offset++] = static_cast<boost::crypt::uint8_t>(0x00);
+    for (boost::crypt::size_t i {}; i < provided_data_size; ++i)
+    {
+        storage[offset++] = static_cast<boost::crypt::uint8_t>(provided_data[i]);
+    }
+
+    HMACType hmac(key_);
+    hmac.process_bytes(storage, offset);
+    key_ = hmac.get_digest();
+    hmac.init(key_);
+    hmac.process_bytes(value_);
+    value_ = hmac.get_digest();
+
+    if (provided_data_size != 0U)
+    {
+        // Need to overwrite the value of V
+        // The provided data remains the same
+        for (boost::crypt::size_t i {}; i < value_.size(); ++i)
+        {
+            storage[i] = static_cast<boost::crypt::uint8_t>(value_[i]);
+        }
+        storage[value_.size()] = static_cast<boost::crypt::uint8_t>(0x01);
+
+        hmac.init(key_);
+        hmac.process_bytes(storage, offset);
+        key_ = hmac.get_digest();
+        hmac.init(key_);
+        hmac.process_bytes(value_);
+        value_ = hmac.get_digest();
+    }
+
+    return drbg_state::success;
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen>
@@ -107,42 +143,16 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen>::update(ForwardIter
     if (BOOST_CRYPT_LIKELY(size < 3 * outlen_bytes))
     {
         boost::crypt::array<boost::crypt::uint8_t, outlen_bytes * 4 + 1U> data_plus_value {};
-        
-        boost::crypt::size_t offset {};
-        for (boost::crypt::size_t i {}; i < value_.size(); ++i)
-        {
-            data_plus_value[offset++] = static_cast<boost::crypt::uint8_t>(value_[i]);
-        }
-        data_plus_value[offset++] = static_cast<boost::crypt::uint8_t>(0x00);
-        for (boost::crypt::size_t i {}; i < size; ++i)
-        {
-            data_plus_value[offset++] = static_cast<boost::crypt::uint8_t>(*provided_data++);
-        }
-
-        update_impl(data_plus_value.begin(), offset);
-
-        if (size != 0U)
-        {
-            boost::crypt::size_t offset_second_pass {};
-            for (boost::crypt::size_t i {}; i < value_.size(); ++i)
-            {
-                data_plus_value[offset_second_pass++] = static_cast<boost::crypt::uint8_t>(value_[i]);
-            }
-            data_plus_value[offset_second_pass] = static_cast<boost::crypt::uint8_t>(0x01);
-
-            update_impl(data_plus_value.begin(), offset);
-        }
-
-        return drbg_state::success;
+        return update_impl(provided_data, size, data_plus_value.begin(), data_plus_value.size());
     }
     else
     {
         // We need to do dynamic memory allocation because the upper bound on memory usage is huge
         #ifndef BOOST_CRYPT_HAS_CUDA
-        auto data_plus_value {std::make_unique<boost::crypt::uint8_t[]>(size)};
+        auto data_plus_value {std::make_unique<boost::crypt::uint8_t[]>(size + 1U + value_.size())};
         #else
         boost::crypt::uint8_t* data_plus_value;
-        cudaMallocManaged(&data_plus_value, size * sizeof(boost::crypt_uint8_t));
+        cudaMallocManaged(&data_plus_value, (size + 1U + value_.size()) * sizeof(boost::crypt_uint8_t));
         #endif
 
         if (data_plus_value == nullptr)
@@ -150,44 +160,13 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen>::update(ForwardIter
             return drbg_state::out_of_memory; // LCOV_EXCL_LINE
         }
 
-        boost::crypt::size_t offset {};
-        for (boost::crypt::size_t i {}; i < value_.size(); ++i)
-        {
-            data_plus_value[offset++] = static_cast<boost::crypt::uint8_t>(value_[i]);
-        }
-        data_plus_value[offset++] = static_cast<boost::crypt::uint8_t>(0x00);
-        for (boost::crypt::size_t i {}; i < size; ++i)
-        {
-            data_plus_value[offset++] = static_cast<boost::crypt::uint8_t>(*provided_data++);
-        }
-
         #ifndef BOOST_CRYPT_HAS_CUDA
-        update_impl(data_plus_value.get(), offset);
+        return update_impl(provided_data, size, data_plus_value.get(), size);
         #else
-        update_impl(data_plus_value, offset);
-        #endif
-
-        if (size != 0U)
-        {
-            boost::crypt::size_t offset_second_pass {};
-            for (boost::crypt::size_t i {}; i < value_.size(); ++i)
-            {
-                data_plus_value[offset_second_pass++] = static_cast<boost::crypt::uint8_t>(value_[i]);
-            }
-            data_plus_value[offset_second_pass] = static_cast<boost::crypt::uint8_t>(0x01);
-
-            #ifndef BOOST_CRYPT_HAS_CUDA
-            update_impl(data_plus_value.get(), offset);
-            #else
-            update_impl(data_plus_value, offset);
-            #endif
-        }
-
-        #ifdef BOOST_CRYPT_HAS_CUDA
+        const auto return_val {update_impl(provided_data, size, data_plus_value, size)};
         cudaFree(data_plus_value);
+        return return_val;
         #endif
-
-        return drbg_state::success;
     }
 }
 
