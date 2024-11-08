@@ -57,9 +57,11 @@ void sha1_basic_correctness()
     {
         if (!BOOST_TEST_EQ(return_bits[i], nist_return[i]))
         {
+            // LCOV_EXCL_START
             std::cerr << std::hex
                       << "Got: " << static_cast<boost::crypt::uint32_t>(return_bits[i])
                       << "\nExpected: " << static_cast<boost::crypt::uint32_t>(nist_return[i]) << std::endl;
+            // LCOV_EXCL_STOP
         }
     }
 }
