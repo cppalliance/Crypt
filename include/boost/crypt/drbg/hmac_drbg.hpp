@@ -150,11 +150,13 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
     else
     {
         // We need to do dynamic memory allocation because the upper bound on memory usage is huge
+        // V || 0x00 or 0x01 || additional data
+        const auto total_size {value_.size() + 1U + size};
         #ifndef BOOST_CRYPT_HAS_CUDA
-        auto data_plus_value {std::make_unique<boost::crypt::uint8_t[]>(size + 1U + value_.size())};
+        auto data_plus_value {std::make_unique<boost::crypt::uint8_t[]>(total_size)};
         #else
         boost::crypt::uint8_t* data_plus_value;
-        cudaMallocManaged(&data_plus_value, (size + 1U + value_.size()) * sizeof(boost::crypt_uint8_t));
+        cudaMallocManaged(&data_plus_value, total_size * sizeof(boost::crypt_uint8_t));
         #endif
 
         if (data_plus_value == nullptr)
@@ -163,9 +165,9 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
         }
 
         #ifndef BOOST_CRYPT_HAS_CUDA
-        return update_impl(provided_data, size, data_plus_value.get(), size);
+        return update_impl(provided_data, size, data_plus_value.get(), total_size);
         #else
-        const auto return_val {update_impl(provided_data, size, data_plus_value, size)};
+        const auto return_val {update_impl(provided_data, size, data_plus_value, total_size)};
         cudaFree(data_plus_value);
         return return_val;
         #endif
