@@ -220,15 +220,15 @@ hmac_drbg<HMACType, max_hasher_security, outlen>::init(ForwardIter1 entropy, boo
         // Seed material is: entropy_input || nonce || personalization_string
         for (boost::crypt::size_t i {}; i < entropy_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*entropy++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(entropy[i]);
         }
         for (boost::crypt::size_t i {}; i < nonce_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*nonce++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(nonce[i]);
         }
         for (boost::crypt::size_t i {}; i < personalization_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*personalization++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(personalization[i]);
         }
 
         BOOST_CRYPT_ASSERT(offset == total_input_size);
@@ -269,15 +269,15 @@ hmac_drbg<HMACType, max_hasher_security, outlen>::init(ForwardIter1 entropy, boo
         boost::crypt::size_t offset {};
         for (boost::crypt::size_t i {}; i < entropy_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*entropy++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(entropy[i]);
         }
         for (boost::crypt::size_t i {}; i < nonce_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*nonce++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(nonce[i]);
         }
         for (boost::crypt::size_t i {}; i < personalization_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*personalization++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(personalization[i]);
         }
 
         #ifndef BOOST_CRYPT_HAS_CUDA
