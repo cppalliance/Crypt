@@ -237,9 +237,9 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
         BOOST_CRYPT_ASSERT(offset == total_input_size);
 
         const auto update_return {update(seed_material.begin(), offset)};
-        if (update_return != drbg_state::success)
+        if (BOOST_CRYPT_UNLIKELY(update_return != drbg_state::success))
         {
-            return update_return;
+            return update_return; // LCOV_EXCL_LINE
         }
     }
     else if (entropy_size > max_length)
