@@ -47,9 +47,10 @@ private:
     static constexpr boost::crypt::size_t outlen_bytes {outlen / 8U};
     static constexpr boost::crypt::size_t max_bytes_per_request {65536U};
     static constexpr boost::crypt::size_t min_length {max_hasher_security / 8U};
-    static constexpr boost::crypt::size_t max_length {4294967296UL}; // 2^35 / 8
     static constexpr boost::crypt::size_t min_entropy {min_length * 3U / 2U};
-    static constexpr boost::crypt::size_t reseed_interval {281474976710656UL}; // 2^48
+
+    static constexpr boost::crypt::uint64_t max_length {4294967296ULL}; // 2^35 / 8
+    static constexpr boost::crypt::uint64_t reseed_interval {281474976710656ULL}; // 2^48
 
     typename HMACType::return_type key_ {};
     typename HMACType::return_type value_ {};
