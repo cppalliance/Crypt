@@ -149,6 +149,13 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
     }
     else
     {
+        // GCC claims the following unique pointer can be too big
+        // Good thing we check the nullptr after allocation
+        #if defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Walloc-size-larger-than="
+        #endif
+
         // We need to do dynamic memory allocation because the upper bound on memory usage is huge
         // V || 0x00 or 0x01 || additional data
         const auto total_size {value_.size() + 1U + size};
@@ -157,6 +164,10 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
         #else
         boost::crypt::uint8_t* data_plus_value;
         cudaMallocManaged(&data_plus_value, total_size * sizeof(boost::crypt_uint8_t));
+        #endif
+
+        #if defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic pop
         #endif
 
         if (data_plus_value == nullptr)
