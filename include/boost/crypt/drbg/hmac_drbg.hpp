@@ -122,6 +122,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::up
     #if defined(__GNUC__) && __GNUC__ >= 5
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Warray-bounds="
+    #pragma GCC diagnostic ignored "-Wrestrict"
     #endif
 
     // Step 1: V || 0x00 || provided data
