@@ -5,7 +5,7 @@
 #ifndef BOOST_CRYPT_HASH_HMAC_HPP
 #define BOOST_CRYPT_HASH_HMAC_HPP
 
-#include <boost/crypt/hash/hasher_state.hpp>
+#include <boost/crypt/utility/state.hpp>
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/cstddef.hpp>
 #include <boost/crypt/utility/cstdint.hpp>
@@ -47,20 +47,20 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr hmac(const key_type& inner_key, const key_type& outer_key) noexcept { init_from_keys(inner_key, outer_key); }
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter key, boost::crypt::size_t size) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter key, boost::crypt::size_t size) noexcept -> state;
 
     template <typename Container>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container& c) noexcept -> hasher_state { return init(c.begin(), c.size()); }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container& c) noexcept -> state { return init(c.begin(), c.size()); }
 
     template <typename Container>
     BOOST_CRYPT_GPU_ENABLED constexpr auto init_from_keys(const Container& inner_key,
-                                                          const Container& outer_key) noexcept -> hasher_state;
+                                                          const Container& outer_key) noexcept -> state;
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter data, boost::crypt::size_t size) noexcept -> state;
 
     template <typename Container>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(const Container& c) noexcept -> hasher_state { return process_bytes(c.begin(), c.size()); }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(const Container& c) noexcept -> state { return process_bytes(c.begin(), c.size()); }
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
 
@@ -84,7 +84,7 @@ constexpr auto hmac<HasherType>::get_outer_key() noexcept -> key_type
 template <typename HasherType>
 template <typename Container>
 constexpr auto hmac<HasherType>::init_from_keys(const Container &inner_key,
-                                                const Container &outer_key) noexcept -> hasher_state
+                                                const Container &outer_key) noexcept -> state
 {
     computed_ = false;
     corrupted_ = false;
@@ -97,16 +97,16 @@ constexpr auto hmac<HasherType>::init_from_keys(const Container &inner_key,
     const auto inner_result {inner_hash_.process_bytes(inner_key_.begin(), inner_key_.size())};
     const auto outer_result {outer_hash_.process_bytes(outer_key_.begin(), outer_key_.size())};
 
-    if (BOOST_CRYPT_LIKELY(inner_result == hasher_state::success && outer_result == hasher_state::success))
+    if (BOOST_CRYPT_LIKELY(inner_result == state::success && outer_result == state::success))
     {
         initialized_ = true;
-        return hasher_state::success;
+        return state::success;
     }
     else
     {
         // If we have some weird OOM result
         // LCOV_EXCL_START
-        if (inner_result != hasher_state::success)
+        if (inner_result != state::success)
         {
             return inner_result;
         }
@@ -138,21 +138,21 @@ constexpr auto hmac<HasherType>::get_digest() noexcept -> return_type
 
 template <typename HasherType>
 template <typename ForwardIter>
-constexpr auto hmac<HasherType>::process_bytes(ForwardIter data, boost::crypt::size_t size) noexcept -> hasher_state
+constexpr auto hmac<HasherType>::process_bytes(ForwardIter data, boost::crypt::size_t size) noexcept -> state
 {
     if (utility::is_null(data) || size == 0U)
     {
-        return hasher_state::null;
+        return state::null;
     }
     else if (!initialized_ || corrupted_)
     {
-        return hasher_state::state_error;
+        return state::state_error;
     }
 
     const auto status_code {inner_hash_.process_bytes(data, size)};
-    if (BOOST_CRYPT_LIKELY(status_code == hasher_state::success))
+    if (BOOST_CRYPT_LIKELY(status_code == state::success))
     {
-        return hasher_state::success;
+        return state::success;
     }
     else
     {
@@ -160,12 +160,12 @@ constexpr auto hmac<HasherType>::process_bytes(ForwardIter data, boost::crypt::s
         // LCOV_EXCL_START
         switch (status_code)
         {
-            case hasher_state::state_error:
+            case state::state_error:
                 corrupted_ = true;
-                return hasher_state::state_error;
-            case hasher_state::input_too_long:
+                return state::state_error;
+            case state::input_too_long:
                 corrupted_ = true;
-                return hasher_state::input_too_long;
+                return state::input_too_long;
             default:
                 BOOST_CRYPT_UNREACHABLE;
         }
@@ -175,7 +175,7 @@ constexpr auto hmac<HasherType>::process_bytes(ForwardIter data, boost::crypt::s
 
 template <typename HasherType>
 template <typename ForwardIter>
-constexpr auto hmac<HasherType>::init(ForwardIter key, boost::crypt::size_t size) noexcept -> hasher_state
+constexpr auto hmac<HasherType>::init(ForwardIter key, boost::crypt::size_t size) noexcept -> state
 {
     computed_ = false;
     corrupted_ = false;
@@ -186,7 +186,7 @@ constexpr auto hmac<HasherType>::init(ForwardIter key, boost::crypt::size_t size
 
     if (utility::is_null(key) || size == 0U)
     {
-        return hasher_state::null;
+        return state::null;
     }
 
     // Step 1: If the length of K = B set K0 = K. Go to step 4
@@ -226,16 +226,16 @@ constexpr auto hmac<HasherType>::init(ForwardIter key, boost::crypt::size_t size
     const auto inner_result {inner_hash_.process_bytes(inner_key_.begin(), inner_key_.size())};
     const auto outer_result {outer_hash_.process_bytes(outer_key_.begin(), outer_key_.size())};
 
-    if (BOOST_CRYPT_LIKELY(inner_result == hasher_state::success && outer_result == hasher_state::success))
+    if (BOOST_CRYPT_LIKELY(inner_result == state::success && outer_result == state::success))
     {
         initialized_ = true;
-        return hasher_state::success;
+        return state::success;
     }
     else
     {
         // If we have some weird OOM result
         // LCOV_EXCL_START
-        if (inner_result != hasher_state::success)
+        if (inner_result != state::success)
         {
             return inner_result;
         }

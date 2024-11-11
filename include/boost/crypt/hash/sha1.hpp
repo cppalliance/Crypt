@@ -8,7 +8,7 @@
 #define BOOST_CRYPT_HASH_SHA1_HPP
 
 #include <boost/crypt/hash/detail/hasher_base_512.hpp>
-#include <boost/crypt/hash/hasher_state.hpp>
+#include <boost/crypt/utility/state.hpp>
 #include <boost/crypt/hash/hmac.hpp>
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/bit.hpp>

@@ -16,11 +16,11 @@ void basic_tests()
 {
     boost::crypt::hmac<HasherType> hmac_tester;
     const auto state_1 {hmac_tester.init("key", 3)};
-    BOOST_TEST(state_1 == boost::crypt::hasher_state::success);
+    BOOST_TEST(state_1 == boost::crypt::state::success);
 
     const char* msg {"The quick brown fox jumps over the lazy dog"};
     const auto state_2 {hmac_tester.process_bytes(msg, std::strlen(msg))};
-    BOOST_TEST(state_2 == boost::crypt::hasher_state::success);
+    BOOST_TEST(state_2 == boost::crypt::state::success);
 
     const auto res {hmac_tester.get_digest()};
 
@@ -89,23 +89,23 @@ void test_edges()
 
     // Usage before init
     const auto state1 {hmac_tester.process_bytes(msg, std::strlen(msg))};
-    BOOST_TEST(state1 == boost::crypt::hasher_state::state_error);
+    BOOST_TEST(state1 == boost::crypt::state::state_error);
 
     // Init with nullptr
     const auto state2 {hmac_tester.init("nullptr", 0)};
-    BOOST_TEST(state2 == boost::crypt::hasher_state::null);
+    BOOST_TEST(state2 == boost::crypt::state::null);
 
     // Good init
     const auto state3 {hmac_tester.init("key", 3)};
-    BOOST_TEST(state3 == boost::crypt::hasher_state::success);
+    BOOST_TEST(state3 == boost::crypt::state::success);
 
     // Pass in nullptr
     const auto state4 {hmac_tester.process_bytes("msg", 0)};
-    BOOST_TEST(state4 == boost::crypt::hasher_state::null);
+    BOOST_TEST(state4 == boost::crypt::state::null);
 
     // Good pass
     const auto state5 {hmac_tester.process_bytes(msg, std::strlen(msg))};
-    BOOST_TEST(state5 == boost::crypt::hasher_state::success);
+    BOOST_TEST(state5 == boost::crypt::state::success);
 
     // Get digest twice
     hmac_tester.get_digest();
@@ -129,7 +129,7 @@ void test_edges()
                          " long key"};
 
     const auto state6 {hmac_tester.init(big_key, std::strlen(big_key))};
-    BOOST_TEST(state6 == boost::crypt::hasher_state::success);
+    BOOST_TEST(state6 == boost::crypt::state::success);
 
     // Init from keys
     const auto outer_key {hmac_tester.get_outer_key()};

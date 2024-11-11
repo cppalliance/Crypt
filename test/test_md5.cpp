@@ -427,12 +427,12 @@ void test_invalid_state()
 {
     boost::crypt::md5_hasher hasher;
     auto current_state = hasher.process_bytes("test", 4);
-    BOOST_TEST(current_state == boost::crypt::hasher_state::success);
+    BOOST_TEST(current_state == boost::crypt::state::success);
 
     hasher.get_digest();
 
     const auto bad_state = hasher.process_bytes("test", 4);
-    BOOST_TEST(bad_state == boost::crypt::hasher_state::state_error);
+    BOOST_TEST(bad_state == boost::crypt::state::state_error);
 
     const auto digest = hasher.get_digest();
 
@@ -444,22 +444,22 @@ void test_invalid_state()
     hasher.init();
 
     current_state = hasher.process_bytes("test", 4);
-    BOOST_TEST(current_state == boost::crypt::hasher_state::success);
+    BOOST_TEST(current_state == boost::crypt::state::success);
     const char* ptr = nullptr;
     current_state = hasher.process_bytes(ptr, 4);
-    BOOST_TEST(current_state == boost::crypt::hasher_state::null);
+    BOOST_TEST(current_state == boost::crypt::state::null);
 
     const char16_t* ptr16 = nullptr;
     current_state = hasher.process_bytes(ptr16, 4);
-    BOOST_TEST(current_state == boost::crypt::hasher_state::null);
+    BOOST_TEST(current_state == boost::crypt::state::null);
 
     const char32_t* ptr32 = nullptr;
     current_state = hasher.process_bytes(ptr32, 4);
-    BOOST_TEST(current_state == boost::crypt::hasher_state::null);
+    BOOST_TEST(current_state == boost::crypt::state::null);
 
     const wchar_t* wptr = nullptr;
     current_state = hasher.process_bytes(wptr, 4);
-    BOOST_TEST(current_state == boost::crypt::hasher_state::null);
+    BOOST_TEST(current_state == boost::crypt::state::null);
 }
 
 // This ends up being completely calculated in a constexpr fashion so Codecov complains
