@@ -27,17 +27,17 @@ void sha1_basic_correctness()
     // 2) Generate bits, do not compare
     // 3) Generate bits, compare
     // 4) Destroy drbg
-    BOOST_TEST(rng.init(entropy, entropy.size(), nonce, nonce.size()) == boost::crypt::drbg::drbg_state::success);
+    BOOST_TEST(rng.init(entropy, entropy.size(), nonce, nonce.size()) == boost::crypt::state::success);
     // ** INSTANTIATE:
     // V   = 7ea45af5f8fcba082fa40bcbea2748dfe7e09f6a
     // Key = be3976a33f77e0155b7ca84a5732d44f319e5f3a
 
-    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::drbg::drbg_state::success);
+    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::state::success);
     // ** GENERATE (FIRST CALL):
     // V   = 0e28fe04dd16482f8e4b048675318adcd5e6e6cf
     // Key = 764d4f1fb7b04624bcb14642acb24d70eff3c0c8
 
-    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::drbg::drbg_state::success);
+    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::state::success);
     // ** GENERATE (SECOND CALL):
     //	V   = 749a95f0882e0179d66d8ae2697802f8f568ce2f
     //	Key = bfcd86fcb4c2efce22f6e9b69742751a17b0056c
@@ -68,9 +68,9 @@ void sha1_basic_correctness()
     const char* big_additional_input = "749a95f0882e0179d66d8ae2697802f8f568ce2fbfcd86fcb4c2efce22f6e9b69742751a17b0056c";
     BOOST_TEST(rng.init(entropy.begin(), entropy.size(),
                         nonce.begin(), nonce.size(),
-                        big_additional_input, std::strlen(big_additional_input)) == boost::crypt::drbg::drbg_state::success);
+                        big_additional_input, std::strlen(big_additional_input)) == boost::crypt::state::success);
 
-    BOOST_TEST(rng.generate(return_bits.begin(), 640U, big_additional_input, std::strlen(big_additional_input)) == boost::crypt::drbg::drbg_state::success);
+    BOOST_TEST(rng.generate(return_bits.begin(), 640U, big_additional_input, std::strlen(big_additional_input)) == boost::crypt::state::success);
 }
 
 void sha1_additional_input()
@@ -88,19 +88,19 @@ void sha1_additional_input()
 
     BOOST_TEST(rng.init(entropy.begin(), entropy.size(),
                         nonce.begin(), nonce.size(),
-                        personalization.begin(), personalization.size()) == boost::crypt::drbg::drbg_state::success);
+                        personalization.begin(), personalization.size()) == boost::crypt::state::success);
     // ** INSTANTIATE:
     //	V   = 9c530ef5f1e277aab4e1e129091a273f0342d5c9
     //	Key = 7006c1c0c03c4ca267b19c50928f35891d8d8807
 
     boost::crypt::array<boost::crypt::uint8_t, 80> return_bits {};
 
-    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::drbg::drbg_state::success);
+    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::state::success);
     // ** GENERATE (FIRST CALL):
     //	V   = 5b1508d16daad5aff52273cd549ce6bd9e259b0d
     //	Key = b7e28116a16856b9e81bda776d421bb56e8f902f
 
-    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::drbg::drbg_state::success);
+    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::state::success);
     // ** GENERATE (SECOND CALL):
     //	V   = 71fa823bc53bfd307d6438edd7e5c581fffc27cc
     //	Key = cfccf80b126cea770b468fb8652abbd5eeea2a5e

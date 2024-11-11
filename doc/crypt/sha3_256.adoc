@@ -118,34 +118,34 @@ class sha3_256_hasher
     void init();
 
     template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_byte(ByteType byte) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_byte(ByteType byte) noexcept -> state;
 
     template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, size_t byte_count) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, size_t byte_count) noexcept -> state;
 
     #ifdef BOOST_CRYPT_HAS_STRING_VIEW
 
-    inline auto process_bytes(std::string_view str) noexcept -> hasher_state;
+    inline auto process_bytes(std::string_view str) noexcept -> state;
 
-    inline auto process_bytes(std::u16string_view str) noexcept -> hasher_state;
+    inline auto process_bytes(std::u16string_view str) noexcept -> state;
 
-    inline auto process_bytes(std::u32string_view str) noexcept -> hasher_state;
+    inline auto process_bytes(std::u32string_view str) noexcept -> state;
 
-    inline auto process_bytes(std::wstring_view str) noexcept -> hasher_state;
+    inline auto process_bytes(std::wstring_view str) noexcept -> state;
 
     #endif // BOOST_CRYPT_HAS_STRING_VIEW
 
     #ifdef BOOST_CRYPT_HAS_SPAN
 
     template <typename T, boost::crypt::size_t extent>
-    inline auto process_bytes(std::span<T, extent> data) noexcept -> hasher_state;
+    inline auto process_bytes(std::span<T, extent> data) noexcept -> state;
 
     #endif // BOOST_CRYPT_HAS_SPAN
 
     #ifdef BOOST_CRYPT_HAS_CUDA
 
     template <typename T, boost::crypt::size_t extent>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(cuda::std::span<T, extent> data) noexcept -> hasher_state;
+    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(cuda::std::span<T, extent> data) noexcept -> state;
 
     #endif // BOOST_CRYPT_HAS_CUDA
 
