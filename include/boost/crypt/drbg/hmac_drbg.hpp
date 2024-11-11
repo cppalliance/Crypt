@@ -503,7 +503,27 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::ge
         ForwardIter2 entropy, boost::crypt::size_t entropy_size,
         ForwardIter3 additional_data, boost::crypt::size_t additional_data_size) noexcept -> state
 {
-    return state::state_error;
+    if (reseed_counter_ > reseed_interval)
+    {
+        return state::requires_reseed;
+    }
+    if (utility::is_null(data) || utility::is_null(entropy))
+    {
+        return state::null;
+    }
+    if (!initialized_)
+    {
+        return state::uninitialized;
+    }
+
+    // 9.3.3 Reseed using the entropy and the additional data, then set additional data to NULL
+    const auto reseed_return {reseed(entropy, entropy_size, additional_data, additional_data_size)};
+    if (reseed_return != state::success)
+    {
+        return reseed_return;
+    }
+
+    return generate_impl(boost::crypt::false_type(), data, requested_bits);
 }
 
 template <bool prediction_resistance>
