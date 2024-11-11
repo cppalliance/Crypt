@@ -64,6 +64,19 @@ private:
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED inline auto update(ForwardIter provided_data, boost::crypt::size_t size) noexcept -> state;
 
+    template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*, typename ForwardIter3 = const boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED inline auto generate_impl(const boost::crypt::false_type&,
+                                                      ForwardIter1 data, boost::crypt::size_t requested_bits,
+                                                      ForwardIter2 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0,
+                                                      ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0) noexcept -> state;
+
+    // Provides prediction resistance
+    template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = const boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED inline auto generate_impl(const boost::crypt::true_type&,
+                                                      ForwardIter1 data, boost::crypt::size_t requested_bits,
+                                                      ForwardIter2 entropy, boost::crypt::size_t entropy_size,
+                                                      ForwardIter3 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0) noexcept -> state;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr hmac_drbg() = default;
@@ -77,10 +90,23 @@ public:
     BOOST_CRYPT_GPU_ENABLED inline auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
                                                ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> state;
 
-    template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*, boost::crypt::enable_if_t<!prediction_resistance, bool> = true>
+    template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*, typename ForwardIter3 = const boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED inline auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
-                                                 ForwardIter2 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0) noexcept -> state;
+                                                 ForwardIter2 additional_data_1 = nullptr, boost::crypt::size_t additional_data_1_size = 0,
+                                                 ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0) noexcept -> state;
+
 };
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(
+        ForwardIter1 data, boost::crypt::size_t requested_bits,
+        ForwardIter2 additional_data_1, boost::crypt::size_t additional_data_1_size,
+        ForwardIter3 additional_data_2, boost::crypt::size_t additional_data_2_size) noexcept -> state
+{
+    using impl_type = boost::crypt::integral_constant<bool, prediction_resistance>;
+    return generate_impl(impl_type(), data, requested_bits, additional_data_1, additional_data_1_size, additional_data_2, additional_data_2_size);
+}
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2>
@@ -90,6 +116,14 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::up
 {
     BOOST_CRYPT_ASSERT(value_.size() + 1U + provided_data_size <= storage_size);
     static_cast<void>(storage_size);
+
+    // GCC optimizes this to memcpy (like it should),
+    // but then complains about theoretical array boundaries (provided_data_size can be 0)
+    #if defined(__GNUC__) && __GNUC__ >= 5
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Warray-bounds="
+    #pragma GCC diagnostic ignored "-Wrestrict"
+    #endif
 
     // Step 1: V || 0x00 || provided data
     boost::crypt::size_t offset {};
@@ -102,6 +136,10 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::up
     {
         storage[offset++] = static_cast<boost::crypt::uint8_t>(provided_data[i]);
     }
+
+    #if defined(__GNUC__) && __GNUC__ >= 5
+    #pragma GCC diagnostic pop
+    #endif
 
     HMACType hmac(key_);
     hmac.process_bytes(storage, offset);
@@ -397,10 +435,12 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::re
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
-template <typename ForwardIter1, typename ForwardIter2, boost::crypt::enable_if_t<!prediction_resistance, bool>>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(
+template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
+        const boost::crypt::false_type&,
         ForwardIter1 data, boost::crypt::size_t requested_bits,
-        ForwardIter2 additional_data, boost::crypt::size_t additional_data_size) noexcept -> state
+        ForwardIter2 additional_data, boost::crypt::size_t additional_data_size,
+        ForwardIter3, boost::crypt::size_t) noexcept -> state
 {
     if (reseed_counter_ > reseed_interval)
     {
@@ -465,6 +505,37 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::ge
 
     ++reseed_counter_;
     return state::success;
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
+        const boost::crypt::true_type&,
+        ForwardIter1 data, boost::crypt::size_t requested_bits,
+        ForwardIter2 entropy, boost::crypt::size_t entropy_size,
+        ForwardIter3 additional_data, boost::crypt::size_t additional_data_size) noexcept -> state
+{
+    if (reseed_counter_ > reseed_interval)
+    {
+        return state::requires_reseed;
+    }
+    if (utility::is_null(data) || utility::is_null(entropy))
+    {
+        return state::null;
+    }
+    if (!initialized_)
+    {
+        return state::uninitialized;
+    }
+
+    // 9.3.3 Reseed using the entropy and the additional data, then set additional data to NULL
+    const auto reseed_return {reseed(entropy, entropy_size, additional_data, additional_data_size)};
+    if (reseed_return != state::success)
+    {
+        return reseed_return;
+    }
+
+    return generate_impl(boost::crypt::false_type(), data, requested_bits);
 }
 
 template <bool prediction_resistance>
