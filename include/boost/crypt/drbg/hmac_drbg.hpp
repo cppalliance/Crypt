@@ -119,10 +119,14 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::up
 
     // GCC optimizes this to memcpy (like it should),
     // but then complains about theoretical array boundaries (provided_data_size can be 0)
-    #if defined(__GNUC__) && __GNUC__ >= 5
+    #ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wsign-conversion"
+    #elif defined(__GNUC__) && __GNUC__ >= 5
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Warray-bounds="
     #pragma GCC diagnostic ignored "-Wrestrict"
+    #pragma GCC diagnostic ignored "-Wsign-conversion"
     #endif
 
     // Step 1: V || 0x00 || provided data
@@ -137,7 +141,9 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::up
         storage[offset++] = static_cast<boost::crypt::uint8_t>(provided_data[i]);
     }
 
-    #if defined(__GNUC__) && __GNUC__ >= 5
+    #ifdef __clang__
+    #pragma clang diagnostic pop
+    #elif defined(__GNUC__) && __GNUC__ >= 5
     #pragma GCC diagnostic pop
     #endif
 
@@ -269,6 +275,15 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
         boost::crypt::array<boost::crypt::uint8_t, 3 * outlen_bytes> seed_material {};
         boost::crypt::size_t offset {};
 
+        // Since we take both pointers or containers entropy[i] could either be size_t or ptrdiff_t
+        #ifdef __clang__
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wsign-conversion"
+        #elif defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wsign-conversion"
+        #endif
+
         // Seed material is: entropy_input || nonce || personalization_string
         for (boost::crypt::size_t i {}; i < entropy_size; ++i)
         {
@@ -282,6 +297,12 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
         {
             seed_material[offset++] = static_cast<boost::crypt::uint8_t>(personalization[i]);
         }
+
+        #ifdef __clang__
+        #pragma clang diagnostic pop
+        #elif defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic pop
+        #endif
 
         BOOST_CRYPT_ASSERT(offset == total_input_size);
 
@@ -312,6 +333,14 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
             return state::out_of_memory; // LCOV_EXCL_LINE
         }
 
+        #ifdef __clang__
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wsign-conversion"
+        #elif defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wsign-conversion"
+        #endif
+
         boost::crypt::size_t offset {};
         for (boost::crypt::size_t i {}; i < entropy_size; ++i)
         {
@@ -325,6 +354,12 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
         {
             seed_material[offset++] = static_cast<boost::crypt::uint8_t>(personalization[i]);
         }
+
+        #ifdef __clang__
+        #pragma clang diagnostic pop
+        #elif defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic pop
+        #endif
 
         #ifndef BOOST_CRYPT_HAS_CUDA
         const auto update_return {update(seed_material.get(), offset)};
@@ -368,17 +403,31 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::re
 
     if (seed_material_size < 3U * min_reseed_entropy)
     {
+        #ifdef __clang__
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wsign-conversion"
+        #elif defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wsign-conversion"
+        #endif
+
         // Happy path of static memory init
         boost::crypt::array<boost::crypt::uint8_t, 3U * min_reseed_entropy> seed_material {};
         boost::crypt::size_t offset {};
         for (boost::crypt::size_t i {}; i < entropy_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*entropy++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(entropy[i]);
         }
         for (boost::crypt::size_t i {}; i < additional_input_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*additional_input++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(additional_input[i]);
         }
+
+        #ifdef __clang__
+        #pragma clang diagnostic pop
+        #elif defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic pop
+        #endif
 
         BOOST_CRYPT_ASSERT(offset == seed_material_size);
 
@@ -407,15 +456,29 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::re
             return state::out_of_memory; // LCOV_EXCL_LINE
         }
 
+        #ifdef __clang__
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wsign-conversion"
+        #elif defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wsign-conversion"
+        #endif
+
         boost::crypt::size_t offset {};
         for (boost::crypt::size_t i {}; i < entropy_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*entropy++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(entropy[i]);
         }
         for (boost::crypt::size_t i {}; i < additional_input_size; ++i)
         {
-            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(*additional_input++);
+            seed_material[offset++] = static_cast<boost::crypt::uint8_t>(additional_input[i]);
         }
+
+        #ifdef __clang__
+        #pragma clang diagnostic pop
+        #elif defined(__GNUC__) && __GNUC__ >= 5
+        #pragma GCC diagnostic pop
+        #endif
 
         #ifndef BOOST_CRYPT_HAS_CUDA
         const auto update_return {update(seed_material.get(), seed_material_size)};
