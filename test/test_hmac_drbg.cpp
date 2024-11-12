@@ -71,6 +71,7 @@ void sha1_basic_correctness()
                         big_additional_input, std::strlen(big_additional_input)) == boost::crypt::state::success);
 
     BOOST_TEST(rng.generate(return_bits.begin(), 640U, big_additional_input, std::strlen(big_additional_input)) == boost::crypt::state::success);
+    BOOST_TEST(rng.reseed(big_additional_input, std::strlen(big_additional_input), big_additional_input, std::strlen(big_additional_input)) == boost::crypt::state::success);
 }
 
 void sha1_additional_input()
