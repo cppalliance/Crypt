@@ -601,11 +601,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::ge
     return generate_impl(boost::crypt::false_type(), data, requested_bits);
 }
 
-template <bool prediction_resistance>
-BOOST_CRYPT_EXPORT using sha1_hmac_drbg_t = drbg::hmac_drbg<hmac<sha1_hasher>, 128U, 160U, prediction_resistance>;
-
 } // namespace drbg
-
 } // namespace crypt
 } // namespace boost
 
