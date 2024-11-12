@@ -179,6 +179,44 @@ public:
 
     explicit test_object_drbg(const std::string& entropy_input,
                               const std::string& nonce,
+                              const std::string& personalization,
+                              const std::string& returned_bits)
+    : initial_entropy
+              {
+                      [&entropy_input]()
+                      {
+                          const auto byte_data { detail::convert_hex_string_to_byte_container(entropy_input) };
+                          return entropy_type(byte_data.cbegin(),   byte_data.cend());
+                      }()
+              },
+      drbg_nonce
+              {
+                      [&nonce]()
+                      {
+                          const auto byte_data { detail::convert_hex_string_to_byte_container(nonce) };
+                          return nonce_type(byte_data.cbegin(), byte_data.cend());
+                      }()
+              },
+      personalization_string
+              {
+                      [&personalization]()
+                      {
+                          const auto byte_data { detail::convert_hex_string_to_byte_container(personalization) };
+                          return additional_input_type(byte_data.cbegin(), byte_data.cend());
+                      }()
+              },
+      result
+              {
+                      [&returned_bits]()
+                      {
+                          const auto byte_data { detail::convert_hex_string_to_byte_container(returned_bits) };
+                          return result_type(byte_data.cbegin(), byte_data.cend());
+                      }()
+              }
+    { }
+
+    explicit test_object_drbg(const std::string& entropy_input,
+                              const std::string& nonce,
                               const std::string& additional_input_first,
                               const std::string& additional_input_second,
                               const std::string& returned_bits)
@@ -785,6 +823,116 @@ auto parse_file_monte_xof(const std::string& test_monte_filename, test_vector_co
             in.close();
 
             result_parse_is_ok = ((!test_vectors_to_get.empty()) && (count == 99U) && result_parse_is_ok);
+        }
+    }
+
+    BOOST_TEST(result_parse_is_ok);
+
+    return result_parse_is_ok;
+}
+
+template <test_type test>
+auto parse_file_drbg(const std::string& test_vectors_filename, std::deque<test_object_drbg<test>>& test_vectors_to_get) -> bool;
+
+template <>
+auto parse_file_drbg<test_type::drbg_no_reseed>(const std::string& test_vectors_filename, std::deque<test_object_drbg<test_type::drbg_no_reseed>>& test_vectors_to_get) -> bool
+{
+    bool result_parse_is_ok { false };
+
+    const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::drbg_no_reseed) };
+
+    const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
+
+    BOOST_TEST(result_filename_plausible_is_ok);
+
+    if(result_filename_plausible_is_ok)
+    {
+        std::string str_result  { };
+
+        // Read the file for creating the test cases.
+        std::ifstream in(test_vectors_filename_relative.c_str());
+
+        const bool file_is_open = in.is_open();
+
+        unsigned count { };
+
+        if(file_is_open)
+        {
+            result_parse_is_ok = true;
+            std::string line {};
+
+            std::string entropy {};
+            std::string nonce {};
+            std::string personalization_string {};
+            std::string additional_input_1 {};
+            std::string additional_input_2 {};
+            std::string returned_bits {};
+
+            while(getline(in, line))
+            {
+                const auto pos_cnt = line.find("COUNT =", 0U);
+                const auto pos_entropy_input = line.find("EntropyInput =", 0U);
+                const auto pos_nonce = line.find("Nonce =", 0U);
+                const auto pos_personalization_string = line.find("PersonalizationString =", 0U);
+                const auto pos_additional_input = line.find("AdditionalInput =", 0U);
+                const auto pos_returned_bits = line.find("ReturnedBits =", 0U);
+
+                const bool line_is_representation_is_cnt = (pos_cnt != std::string::npos);
+                const bool line_is_representation_is_entropy = (pos_entropy_input != std::string::npos);
+                const bool line_is_representation_is_nonce  = (pos_nonce  != std::string::npos);
+                const bool line_is_representation_is_personalization = (pos_personalization_string != std::string::npos);
+                const bool line_is_representation_is_additional_input = (pos_additional_input != std::string::npos);
+                const bool line_is_representation_is_returned_bits = (pos_returned_bits != std::string::npos);
+
+                // Get the next count.
+                if (line_is_representation_is_cnt)
+                {
+                    entropy = "";
+                    nonce = "";
+                    personalization_string = "";
+                    additional_input_1 = "";
+                    additional_input_2 = "";
+                    returned_bits = "";
+
+                    ++count;
+                }
+                else if (line_is_representation_is_entropy)
+                {
+                    entropy = line.substr(15U, line.length() - 15U);
+                }
+                else if (line_is_representation_is_nonce)
+                {
+                    nonce = line.substr(8U, line.length() - 8U);
+                }
+                else if (line_is_representation_is_personalization)
+                {
+                    personalization_string = line.substr(24U, line.length() - 24U);
+                }
+                else if (line_is_representation_is_additional_input)
+                {
+                    if (additional_input_1.empty())
+                    {
+                        additional_input_1 = line.substr(18U, line.length() - 18U);
+                    }
+                    else
+                    {
+                        additional_input_2 = line.substr(18U, line.length() - 18U);
+                    }
+                }
+                else if (line_is_representation_is_returned_bits)
+                {
+                    returned_bits = line.substr(15U, line.length() - 15U);
+
+                    // Add the new test object to v.
+                    const test_object_drbg<test_type::drbg_no_reseed> test_obj(entropy, nonce, personalization_string, additional_input_1, additional_input_2, returned_bits);
+
+                    test_vectors_to_get.push_back(test_obj);
+                }
+            }
+
+            in.close();
+
+            result_parse_is_ok = ((!test_vectors_to_get.empty()) && (count == 224U) && result_parse_is_ok);
         }
     }
 
