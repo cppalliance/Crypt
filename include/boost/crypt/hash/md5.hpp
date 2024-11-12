@@ -11,7 +11,6 @@
 
 #include <boost/crypt/hash/detail/hasher_base_512.hpp>
 #include <boost/crypt/utility/state.hpp>
-#include <boost/crypt/hash/hmac.hpp>
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/bit.hpp>
 #include <boost/crypt/utility/byte.hpp>

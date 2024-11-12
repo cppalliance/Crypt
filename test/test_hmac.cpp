@@ -4,7 +4,7 @@
 
 #define BOOST_CRYPT_ENABLE_MD5
 
-#include <boost/crypt/hash/hmac.hpp>
+#include "boost/crypt/mac/hmac.hpp"
 #include <boost/crypt/hash/md5.hpp>
 #include <boost/crypt/hash/sha1.hpp>
 #include <boost/crypt/hash/sha256.hpp>
