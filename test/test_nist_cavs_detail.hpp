@@ -128,10 +128,165 @@ public:
 
 using test_vector_container_type = std::deque<test_object_hash>;
 
-enum class test_type : unsigned
+// Each drbg test has its own data structures
+template <test_type>
+struct test_object_drbg;
+
+template <>
+struct test_object_drbg<test_type::drbg_no_reseed>
 {
-    sha,
-    hmac
+public:
+    using size_type             = std::size_t;
+    using entropy_type          = std::vector<std::uint8_t>;
+    using nonce_type            = std::vector<std::uint8_t>;
+    using additional_input_type = std::vector<std::uint8_t>;
+    using result_type           = std::vector<std::uint8_t>;
+
+    test_object_drbg() = delete;
+
+    // Construct this hash test object by setting the result only.
+    // There is no message and there is no length available for
+    // this hash test object.
+
+    explicit test_object_drbg(const std::string& entropy_input,
+                              const std::string& nonce,
+                              const std::string& returned_bits)
+        : initial_entropy
+          {
+                  [&entropy_input]()
+                  {
+                      const auto byte_data { detail::convert_hex_string_to_byte_container(entropy_input) };
+                      return entropy_type(byte_data.cbegin(),   byte_data.cend());
+                  }()
+          },
+          drbg_nonce
+          {
+                  [&nonce]()
+                  {
+                      const auto byte_data { detail::convert_hex_string_to_byte_container(nonce) };
+                      return nonce_type(byte_data.cbegin(), byte_data.cend());
+                  }()
+          },
+          result
+          {
+                  [&returned_bits]()
+                  {
+                      const auto byte_data { detail::convert_hex_string_to_byte_container(returned_bits) };
+                      return result_type(byte_data.cbegin(), byte_data.cend());
+                  }()
+          }
+    { }
+
+    explicit test_object_drbg(const std::string& entropy_input,
+                              const std::string& nonce,
+                              const std::string& additional_input_first,
+                              const std::string& additional_input_second,
+                              const std::string& returned_bits)
+        : initial_entropy
+          {
+                  [&entropy_input]()
+                  {
+                      const auto byte_data { detail::convert_hex_string_to_byte_container(entropy_input) };
+                      return entropy_type(byte_data.cbegin(),   byte_data.cend());
+                  }()
+          },
+          drbg_nonce
+          {
+                  [&nonce]()
+                  {
+                      const auto byte_data { detail::convert_hex_string_to_byte_container(nonce) };
+                      return nonce_type(byte_data.cbegin(), byte_data.cend());
+                  }()
+          },
+          additional_input_1
+          {
+                  [&additional_input_first]()
+                  {
+                      const auto byte_data { detail::convert_hex_string_to_byte_container(additional_input_first) };
+                      return additional_input_type(byte_data.cbegin(), byte_data.cend());
+                  }()
+          },
+          additional_input_2
+          {
+                  [&additional_input_second]()
+                  {
+                      const auto byte_data { detail::convert_hex_string_to_byte_container(additional_input_second) };
+                      return additional_input_type(byte_data.cbegin(), byte_data.cend());
+                  }()
+          },
+          result
+          {
+                  [&returned_bits]()
+                  {
+                      const auto byte_data { detail::convert_hex_string_to_byte_container(returned_bits) };
+                      return result_type(byte_data.cbegin(), byte_data.cend());
+                  }()
+          }
+    { }
+
+    explicit test_object_drbg(const std::string& entropy_input,
+                              const std::string& nonce,
+                              const std::string& personalization,
+                              const std::string& additional_input_first,
+                              const std::string& additional_input_second,
+                              const std::string& returned_bits)
+    : initial_entropy
+      {
+              [&entropy_input]()
+              {
+                  const auto byte_data { detail::convert_hex_string_to_byte_container(entropy_input) };
+                  return entropy_type(byte_data.cbegin(),   byte_data.cend());
+              }()
+      },
+      drbg_nonce
+      {
+              [&nonce]()
+              {
+                  const auto byte_data { detail::convert_hex_string_to_byte_container(nonce) };
+                  return nonce_type(byte_data.cbegin(), byte_data.cend());
+              }()
+      },
+      personalization_string
+      {
+              [&personalization]()
+              {
+                  const auto byte_data { detail::convert_hex_string_to_byte_container(personalization) };
+                  return additional_input_type(byte_data.cbegin(), byte_data.cend());
+              }()
+      },
+      additional_input_1
+      {
+              [&additional_input_first]()
+              {
+                  const auto byte_data { detail::convert_hex_string_to_byte_container(additional_input_first) };
+                  return additional_input_type(byte_data.cbegin(), byte_data.cend());
+              }()
+      },
+      additional_input_2
+      {
+              [&additional_input_second]()
+              {
+                  const auto byte_data { detail::convert_hex_string_to_byte_container(additional_input_second) };
+                  return additional_input_type(byte_data.cbegin(), byte_data.cend());
+              }()
+      },
+      result
+      {
+              [&returned_bits]()
+              {
+                  const auto byte_data { detail::convert_hex_string_to_byte_container(returned_bits) };
+                  return result_type(byte_data.cbegin(), byte_data.cend());
+              }()
+      }
+    { }
+
+
+    const entropy_type initial_entropy {};
+    const nonce_type drbg_nonce {};
+    const additional_input_type personalization_string {};
+    const additional_input_type additional_input_1 {};
+    const additional_input_type additional_input_2 {};
+    const result_type result {};
 };
 
 auto where_file(const std::string& test_vectors_filename, test_type test) -> std::string
@@ -148,6 +303,10 @@ auto where_file(const std::string& test_vectors_filename, test_type test) -> std
         case test_type::hmac:
             folder_path = "hmac/";
             break;
+        case test_type::drbg_no_reseed:
+        case test_type::drbg_pr_false:
+        case test_type::drbg_pr_true:
+            folder_path = "drbg/";
     }
 
     // Boost-root
