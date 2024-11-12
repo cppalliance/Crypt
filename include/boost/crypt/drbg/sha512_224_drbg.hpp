@@ -2,8 +2,8 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
-#ifndef BOOST_CRYPT_DRBG_SHA1_DRBG_HPP
-#define BOOST_CRYPT_DRBG_SHA1_DRBG_HPP
+#ifndef BOOST_CRYPT_DRBG_SHA512_224_DRBG_HPP
+#define BOOST_CRYPT_DRBG_SHA512_224_DRBG_HPP
 
 #include <boost/crypt/drbg/detail/hmac_drbg.hpp>
 #include <boost/crypt/hash/sha512_224.hpp>
@@ -24,4 +24,4 @@ BOOST_CRYPT_EXPORT using sha512_224_hmac_drbg_pr = drbg::sha512_224_hmac_drbg_t<
 } // namespace crypt
 } // namespace boost
 
-#endif // BOOST_CRYPT_DRBG_SHA1_DRBG_HPP
+#endif // BOOST_CRYPT_DRBG_SHA512_224_DRBG_HPP
