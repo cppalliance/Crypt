@@ -31,5 +31,15 @@ auto main() -> int
         BOOST_TEST(result_is_ok);
     }
 
+    {
+        nist::cavs::test_vector_container_drbg_pr_true test_vectors {};
+
+        BOOST_TEST(nist::cavs::detail::parse_file_drbg<nist::cavs::detail::test_type::drbg_pr_true>("sha1_pr_true.fax", test_vectors));
+
+        result_is_ok = (nist::cavs::test_vectors_drbg_pr_true<boost::crypt::sha1_hmac_drbg_pr>(test_vectors));
+
+        BOOST_TEST(result_is_ok);
+    }
+
     return boost::report_errors();
 }

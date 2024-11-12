@@ -424,8 +424,107 @@ public:
     const result_type result {};
 };
 
+template <>
+struct test_object_drbg<test_type::drbg_pr_true>
+{
+public:
+    using size_type             = std::size_t;
+    using entropy_type          = std::vector<std::uint8_t>;
+    using nonce_type            = std::vector<std::uint8_t>;
+    using additional_input_type = std::vector<std::uint8_t>;
+    using result_type           = std::vector<std::uint8_t>;
+
+    test_object_drbg() = delete;
+
+    explicit test_object_drbg(const std::string& entropy_input,
+                              const std::string& nonce,
+                              const std::string& personalization,
+                              const std::string& additional_input_first,
+                              const std::string& entropy_input_first,
+                              const std::string& additional_input_second,
+                              const std::string& entropy_input_second,
+                              const std::string& returned_bits)
+            : initial_entropy
+                      {
+                              [&entropy_input]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(entropy_input) };
+                                  return entropy_type(byte_data.cbegin(),   byte_data.cend());
+                              }()
+                      },
+              drbg_nonce
+                      {
+                              [&nonce]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(nonce) };
+                                  return nonce_type(byte_data.cbegin(), byte_data.cend());
+                              }()
+                      },
+              personalization_string
+                      {
+                              [&personalization]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(personalization) };
+                                  return additional_input_type(byte_data.cbegin(), byte_data.cend());
+                              }()
+                      },
+              additional_input_1
+                      {
+                              [&additional_input_first]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(additional_input_first) };
+                                  return additional_input_type(byte_data.cbegin(), byte_data.cend());
+                              }()
+                      },
+              additional_entropy_1
+                      {
+                              [&entropy_input_first]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(entropy_input_first) };
+                                  return additional_input_type(byte_data.cbegin(), byte_data.cend());
+                              }()
+                      },
+              additional_input_2
+                      {
+                              [&additional_input_second]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(additional_input_second) };
+                                  return additional_input_type(byte_data.cbegin(), byte_data.cend());
+                              }()
+                      },
+              additional_entropy_2
+                      {
+                              [&entropy_input_second]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(entropy_input_second) };
+                                  return additional_input_type(byte_data.cbegin(), byte_data.cend());
+                              }()
+                      },
+              result
+                      {
+                              [&returned_bits]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(returned_bits) };
+                                  return result_type(byte_data.cbegin(), byte_data.cend());
+                              }()
+                      }
+    { }
+
+
+    const entropy_type initial_entropy {};
+    const nonce_type drbg_nonce {};
+    const additional_input_type personalization_string {};
+    const additional_input_type additional_input_1 {};
+    const additional_input_type additional_entropy_1 {};
+    const additional_input_type additional_input_2 {};
+    const additional_input_type additional_entropy_2 {};
+    const result_type result {};
+};
+
+
 using test_vector_container_drbg_no_reseed = std::deque<test_object_drbg<test_type::drbg_no_reseed>>;
 using test_vector_container_drbg_pr_false = std::deque<test_object_drbg<test_type::drbg_pr_false>>;
+using test_vector_container_drbg_pr_true = std::deque<test_object_drbg<test_type::drbg_pr_true>>;
 
 auto where_file(const std::string& test_vectors_filename, test_type test) -> std::string
 {
@@ -1179,6 +1278,136 @@ auto parse_file_drbg<test_type::drbg_pr_false>(const std::string& test_vectors_f
     return result_parse_is_ok;
 }
 
+template <>
+auto parse_file_drbg<test_type::drbg_pr_true>(const std::string& test_vectors_filename, test_vector_container_drbg_pr_true & test_vectors_to_get) -> bool
+{
+    bool result_parse_is_ok { false };
+
+    const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::drbg_pr_true) };
+
+    const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
+
+    BOOST_TEST(result_filename_plausible_is_ok);
+
+    if(result_filename_plausible_is_ok)
+    {
+        std::string str_result  { };
+
+        // Read the file for creating the test cases.
+        std::ifstream in(test_vectors_filename_relative.c_str());
+
+        const bool file_is_open = in.is_open();
+
+        unsigned count { };
+
+        if(file_is_open)
+        {
+            result_parse_is_ok = true;
+            std::string line {};
+
+            std::string entropy {};
+            std::string nonce {};
+            std::string personalization_string {};
+            std::string additional_input_1 {};
+            std::string additional_entropy_1 {};
+            std::string additional_input_2 {};
+            std::string additional_entropy_2 {};
+            std::string returned_bits {};
+
+            while(getline(in, line))
+            {
+                const auto pos_cnt = line.find("COUNT =", 0U);
+                const auto pos_entropy_input = line.find("EntropyInput =", 0U);
+                const auto pos_nonce = line.find("Nonce =", 0U);
+                const auto pos_personalization_string = line.find("PersonalizationString =", 0U);
+                const auto pos_additional_input = line.find("AdditionalInput =", 0U);
+                const auto pos_additional_entropy = line.find("EntropyInputPR =", 0U);
+                const auto pos_returned_bits = line.find("ReturnedBits =", 0U);
+
+                const bool line_is_representation_is_cnt = (pos_cnt != std::string::npos);
+                const bool line_is_representation_is_entropy = (pos_entropy_input != std::string::npos);
+                const bool line_is_representation_is_nonce  = (pos_nonce  != std::string::npos);
+                const bool line_is_representation_is_personalization = (pos_personalization_string != std::string::npos);
+                const bool line_is_representation_is_additional_input = (pos_additional_input != std::string::npos);
+                const bool line_is_representation_is_additional_entropy = (pos_additional_entropy != std::string::npos);
+                const bool line_is_representation_is_returned_bits = (pos_returned_bits != std::string::npos);
+
+                // Get the next count.
+                if (line_is_representation_is_cnt)
+                {
+                    entropy = "";
+                    nonce = "";
+                    personalization_string = "";
+                    additional_input_1 = "";
+                    additional_entropy_1 = "";
+                    additional_input_2 = "";
+                    additional_entropy_2 = "";
+                    returned_bits = "";
+
+                    ++count;
+                }
+                else if (line_is_representation_is_entropy)
+                {
+                    entropy = line.substr(15U, line.length() - 15U);
+                }
+                else if (line_is_representation_is_nonce)
+                {
+                    nonce = line.substr(8U, line.length() - 8U);
+                }
+                else if (line_is_representation_is_personalization)
+                {
+                    if (line.size() >= 24U)
+                    {
+                        personalization_string = line.substr(24U, line.length() - 24U);
+                    }
+                }
+                else if (line_is_representation_is_additional_input)
+                {
+                    if (line.size() >= 18U)
+                    {
+                        if (additional_input_1.empty())
+                        {
+                            additional_input_1 = line.substr(18U, line.length() - 18U);
+                        }
+                        else
+                        {
+                            additional_input_2 = line.substr(18U, line.length() - 18U);
+                        }
+                    }
+                }
+                else if (line_is_representation_is_additional_entropy)
+                {
+                    if (additional_entropy_1.empty())
+                    {
+                        additional_entropy_1 = line.substr(17U, line.length() - 17U);
+                    }
+                    else
+                    {
+                        additional_entropy_2 = line.substr(17U, line.length() - 17U);
+                    }
+                }
+                else if (line_is_representation_is_returned_bits)
+                {
+                    returned_bits = line.substr(15U, line.length() - 15U);
+
+                    // Add the new test object to v.
+                    const test_object_drbg<test_type::drbg_pr_true> test_obj(entropy, nonce, personalization_string, additional_input_1, additional_entropy_1, additional_input_2, additional_entropy_2, returned_bits);
+
+                    test_vectors_to_get.push_back(test_obj);
+                }
+            }
+
+            in.close();
+
+            result_parse_is_ok = ((!test_vectors_to_get.empty()) && (count == 240U) && result_parse_is_ok);
+        }
+    }
+
+    BOOST_TEST(result_parse_is_ok);
+
+    return result_parse_is_ok;
+}
+
 } // namespace detail
 
 using detail::test_vector_container_type;
@@ -1186,6 +1415,7 @@ using detail::parse_file_vectors;
 using detail::parse_file_monte;
 using detail::test_vector_container_drbg_no_reseed;
 using detail::test_vector_container_drbg_pr_false;
+using detail::test_vector_container_drbg_pr_true;
 
 template<typename HasherType>
 auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> bool
@@ -1657,6 +1887,49 @@ auto test_vectors_drbg_pr_false(const nist::cavs::test_vector_container_drbg_pr_
                      test_vector.additional_input_1.begin(), test_vector.additional_input_1.size());
 
         rng.generate(return_bits.begin(), return_bits.size() * 8U,
+                     test_vector.additional_input_2.begin(), test_vector.additional_input_2.size());
+
+        for (boost::crypt::size_t i {}; i < return_bits.size(); ++i)
+        {
+            if (return_bits[i] != test_vector.result[i])
+            {
+                // LCOV_EXCL_START
+                result_is_ok = false;
+                std::cerr << "Error with vector: " << count << std::endl;
+                break;
+                // LCOV_EXCL_STOP
+            }
+        }
+        ++count;
+    }
+
+    return result_is_ok;
+}
+
+template <typename DRBGType>
+auto test_vectors_drbg_pr_true(const nist::cavs::test_vector_container_drbg_pr_true & test_vectors) -> bool
+{
+    BOOST_TEST(!test_vectors.empty());
+
+    bool result_is_ok { true };
+
+    std::size_t count {};
+    for (const auto& test_vector : test_vectors)
+    {
+        DRBGType rng;
+        rng.init(test_vector.initial_entropy.begin(), test_vector.initial_entropy.size(),
+                 test_vector.drbg_nonce.begin(), test_vector.drbg_nonce.size(),
+                 test_vector.personalization_string.begin(), test_vector.personalization_string.size());
+
+        std::vector<boost::crypt::uint8_t> return_bits {};
+        return_bits.resize(test_vector.result.size());
+
+        rng.generate(return_bits.begin(), return_bits.size() * 8U,
+                     test_vector.additional_entropy_1.begin(), test_vector.additional_entropy_1.size(),
+                     test_vector.additional_input_1.begin(), test_vector.additional_input_1.size());
+
+        rng.generate(return_bits.begin(), return_bits.size() * 8U,
+                     test_vector.additional_entropy_2.begin(), test_vector.additional_entropy_2.size(),
                      test_vector.additional_input_2.begin(), test_vector.additional_input_2.size());
 
         for (boost::crypt::size_t i {}; i < return_bits.size(); ++i)
