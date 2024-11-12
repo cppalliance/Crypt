@@ -19,6 +19,15 @@ namespace nist { namespace cavs {
 
 namespace detail {
 
+enum class test_type : unsigned
+{
+    sha,
+    hmac,
+    drbg_no_reseed,
+    drbg_pr_false,
+    drbg_pr_true,
+};
+
 inline auto convert_hex_string_to_byte_container(const std::string& str_in) -> std::deque<std::uint8_t>
 {
   std::deque<std::uint8_t> container_out { };
