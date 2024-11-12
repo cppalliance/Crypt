@@ -327,6 +327,8 @@ public:
     const result_type result {};
 };
 
+using test_vector_container_drbg_no_reseed = std::deque<test_object_drbg<test_type::drbg_no_reseed>>;
+
 auto where_file(const std::string& test_vectors_filename, test_type test) -> std::string
 {
   // Try to open the file in each of the known relative paths
@@ -835,7 +837,7 @@ template <test_type test>
 auto parse_file_drbg(const std::string& test_vectors_filename, std::deque<test_object_drbg<test>>& test_vectors_to_get) -> bool;
 
 template <>
-auto parse_file_drbg<test_type::drbg_no_reseed>(const std::string& test_vectors_filename, std::deque<test_object_drbg<test_type::drbg_no_reseed>>& test_vectors_to_get) -> bool
+auto parse_file_drbg<test_type::drbg_no_reseed>(const std::string& test_vectors_filename, test_vector_container_drbg_no_reseed& test_vectors_to_get) -> bool
 {
     bool result_parse_is_ok { false };
 
@@ -906,17 +908,23 @@ auto parse_file_drbg<test_type::drbg_no_reseed>(const std::string& test_vectors_
                 }
                 else if (line_is_representation_is_personalization)
                 {
-                    personalization_string = line.substr(24U, line.length() - 24U);
+                    if (line.size() >= 24U)
+                    {
+                        personalization_string = line.substr(24U, line.length() - 24U);
+                    }
                 }
                 else if (line_is_representation_is_additional_input)
                 {
-                    if (additional_input_1.empty())
+                    if (line.size() >= 18U)
                     {
-                        additional_input_1 = line.substr(18U, line.length() - 18U);
-                    }
-                    else
-                    {
-                        additional_input_2 = line.substr(18U, line.length() - 18U);
+                        if (additional_input_1.empty())
+                        {
+                            additional_input_1 = line.substr(18U, line.length() - 18U);
+                        }
+                        else
+                        {
+                            additional_input_2 = line.substr(18U, line.length() - 18U);
+                        }
                     }
                 }
                 else if (line_is_representation_is_returned_bits)
@@ -932,7 +940,7 @@ auto parse_file_drbg<test_type::drbg_no_reseed>(const std::string& test_vectors_
 
             in.close();
 
-            result_parse_is_ok = ((!test_vectors_to_get.empty()) && (count == 224U) && result_parse_is_ok);
+            result_parse_is_ok = ((!test_vectors_to_get.empty()) && (count == 240U) && result_parse_is_ok);
         }
     }
 
@@ -946,6 +954,7 @@ auto parse_file_drbg<test_type::drbg_no_reseed>(const std::string& test_vectors_
 using detail::test_vector_container_type;
 using detail::parse_file_vectors;
 using detail::parse_file_monte;
+using detail::test_vector_container_drbg_no_reseed;
 
 template<typename HasherType>
 auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> bool
@@ -1346,6 +1355,47 @@ auto test_vectors_hmac(const nist::cavs::test_vector_container_type& test_vector
         const bool result_hash_is_ok = (result_hash_01_is_ok && result_hash_02_is_ok);
 
         result_is_ok = (result_hash_is_ok && result_is_ok);
+    }
+
+    return result_is_ok;
+}
+
+template <typename DRBGType>
+auto test_vectors_drbg_no_reseed(const nist::cavs::test_vector_container_drbg_no_reseed& test_vectors) -> bool
+{
+    BOOST_TEST(!test_vectors.empty());
+
+    bool result_is_ok { true };
+
+    std::size_t count {};
+    for (const auto& test_vector : test_vectors)
+    {
+        DRBGType rng;
+        rng.init(test_vector.initial_entropy.begin(), test_vector.initial_entropy.size(),
+                 test_vector.drbg_nonce.begin(), test_vector.drbg_nonce.size(),
+                 test_vector.personalization_string.begin(), test_vector.personalization_string.size());
+
+        std::vector<boost::crypt::uint8_t> return_bits {};
+        return_bits.resize(test_vector.result.size());
+
+        rng.generate(return_bits.begin(), return_bits.size() * 8U,
+                     test_vector.additional_input_1.begin(), test_vector.additional_input_1.size());
+
+        rng.generate(return_bits.begin(), return_bits.size() * 8U,
+                     test_vector.additional_input_2.begin(), test_vector.additional_input_2.size());
+
+        for (boost::crypt::size_t i {}; i < return_bits.size(); ++i)
+        {
+            if (return_bits[i] != test_vector.result[i])
+            {
+                // LCOV_EXCL_START
+                result_is_ok = false;
+                std::cerr << "Error with vector: " << count << std::endl;
+                break;
+                // LCOV_EXCL_STOP
+            }
+        }
+        ++count;
     }
 
     return result_is_ok;
