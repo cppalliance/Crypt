@@ -7,7 +7,7 @@
 #define BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP
 
 #include <boost/core/lightweight_test.hpp>
-#include <boost/crypt/hash/hmac.hpp>
+#include "boost/crypt/mac/hmac.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <deque>

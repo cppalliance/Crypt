@@ -6,7 +6,7 @@
 #define BOOST_CRYPT_DRBG_HMAC_DRBG_HPP
 
 #include <boost/crypt/fwd.hpp>
-#include <boost/crypt/hash/hmac.hpp>
+#include <boost/crypt/mac/hmac.hpp>
 #include <boost/crypt/utility/state.hpp>
 #include <boost/crypt/utility/cstdint.hpp>
 #include <boost/crypt/utility/cstddef.hpp>
@@ -605,9 +605,6 @@ template <bool prediction_resistance>
 BOOST_CRYPT_EXPORT using sha1_hmac_drbg_t = drbg::hmac_drbg<hmac<sha1_hasher>, 128U, 160U, prediction_resistance>;
 
 } // namespace drbg
-
-BOOST_CRYPT_EXPORT using sha1_hmac_drbg = drbg::sha1_hmac_drbg_t<false>;
-BOOST_CRYPT_EXPORT using sha1_hmac_drbg_pr = drbg::sha1_hmac_drbg_t<true>;
 
 } // namespace crypt
 } // namespace boost
