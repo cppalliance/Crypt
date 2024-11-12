@@ -370,7 +370,7 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
 
         if (update_return != state::success)
         {
-            return update_return;
+            return update_return; // LCOV_EXCL_LINE
         }
     }
 
@@ -434,12 +434,12 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::re
         const auto update_result {update(seed_material, seed_material_size)};
         if (update_result != state::success)
         {
-            return update_result;
+            return update_result; // LCOV_EXCL_LINE
         }
     }
     else if (entropy_size > max_length || additional_input_size > max_length)
     {
-        return state::input_too_long;
+        return state::input_too_long; // LCOV_EXCL_LINE
     }
     else
     {
@@ -489,7 +489,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::re
 
         if (update_return != state::success)
         {
-            return update_return;
+            return update_return; // LCOV_EXCL_LINE
         }
     }
 
