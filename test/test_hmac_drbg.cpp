@@ -177,6 +177,10 @@ void sha1_pr()
             // LCOV_EXCL_STOP
         }
     }
+
+    BOOST_TEST(rng.init(entropy, nonce, nonce) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy, nonce) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy) == boost::crypt::state::success);
 }
 
 int main()

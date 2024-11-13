@@ -85,6 +85,18 @@ public:
                                              ForwardIter2 nonce = nullptr, boost::crypt::size_t nonce_size = 0,
                                              ForwardIter3 personalization = nullptr, boost::crypt::size_t personalization_size = 0) noexcept -> state;
 
+    template <typename Container1, typename Container2, typename Container3>
+    BOOST_CRYPT_GPU_ENABLED inline auto init(const Container1& entropy,
+                                             const Container2& nonce,
+                                             const Container3& personalization) noexcept -> state;
+
+    template <typename Container1, typename Container2>
+    BOOST_CRYPT_GPU_ENABLED inline auto init(const Container1& entropy,
+                                             const Container2& nonce) noexcept -> state;
+
+    template <typename Container1>
+    BOOST_CRYPT_GPU_ENABLED inline auto init(const Container1& entropy) noexcept -> state;
+
     template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED inline auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
                                                ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> state;
@@ -376,6 +388,30 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
     reseed_counter_ = 1U;
     initialized_ = true;
     return state::success;
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1, typename Container2, typename Container3>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(const Container1& entropy,
+                                                                                   const Container2& nonce,
+                                                                                   const Container3& personalization) noexcept -> state
+{
+    return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size());
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1, typename Container2>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(const Container1& entropy,
+                                                                                   const Container2& nonce) noexcept -> state
+{
+    return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(const Container1& entropy) noexcept -> state
+{
+    return init(entropy.begin(), static_cast<boost::crypt::size_t>(entropy.size()), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
