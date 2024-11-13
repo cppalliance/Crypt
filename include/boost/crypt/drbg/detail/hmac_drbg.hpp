@@ -5,7 +5,6 @@
 #ifndef BOOST_CRYPT_DRBG_HMAC_DRBG_HPP
 #define BOOST_CRYPT_DRBG_HMAC_DRBG_HPP
 
-#include <boost/crypt/fwd.hpp>
 #include <boost/crypt/mac/hmac.hpp>
 #include <boost/crypt/utility/state.hpp>
 #include <boost/crypt/utility/cstdint.hpp>
