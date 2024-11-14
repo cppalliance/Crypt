@@ -118,6 +118,26 @@ public:
     BOOST_CRYPT_GPU_ENABLED inline auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
                                                ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> state;
 
+    template <typename Container1>
+    BOOST_CRYPT_GPU_ENABLED inline auto reseed(const Container1& entropy) noexcept -> state;
+
+    template <typename Container1, typename Container2>
+    BOOST_CRYPT_GPU_ENABLED inline auto reseed(const Container1& entropy,
+                                               const Container2& additional_input) noexcept -> state;
+
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    inline auto reseed(std::string_view entropy) noexcept -> state { return reseed(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+    inline auto reseed(std::string_view entropy, std::string_view additional_input) noexcept -> state { return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size()); }
+    #endif
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+    template <typename T, std::size_t extent>
+    inline auto reseed(std::span<T, extent> entropy) noexcept -> state { return reseed(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+
+    template <typename T, std::size_t extent>
+    inline auto reseed(std::span<T, extent> entropy, std::span<T, extent> additional_input) noexcept -> state { return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size()); }
+    #endif
+
     template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*, typename ForwardIter3 = const boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED inline auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
                                                  ForwardIter2 additional_data_1 = nullptr, boost::crypt::size_t additional_data_1_size = 0,
@@ -547,6 +567,21 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::re
 
     reseed_counter_ = 1U;
     return state::success;
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::reseed(const Container1& entropy) noexcept -> state
+{
+    return reseed(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1, typename Container2>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::reseed(
+        const Container1& entropy, const Container2& additional_input) noexcept -> state
+{
+    return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size());
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>

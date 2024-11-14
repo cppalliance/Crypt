@@ -5,6 +5,7 @@
 #include <boost/crypt/drbg/sha1_drbg.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include <iostream>
+#include <string>
 #include <cstring>
 
 void sha1_basic_correctness()
@@ -71,6 +72,16 @@ void sha1_basic_correctness()
 
     BOOST_TEST(rng.generate(return_bits.begin(), 640U, big_additional_input, std::strlen(big_additional_input)) == boost::crypt::state::success);
     BOOST_TEST(rng.reseed(big_additional_input, std::strlen(big_additional_input), big_additional_input, std::strlen(big_additional_input)) == boost::crypt::state::success);
+
+    std::string str_additional_input {big_additional_input};
+    BOOST_TEST(rng.reseed(str_additional_input) == boost::crypt::state::success);
+    BOOST_TEST(rng.reseed(str_additional_input, str_additional_input) == boost::crypt::state::success);
+
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    std::string_view str_view {str_additional_input};
+    BOOST_TEST(rng.reseed(str_view) == boost::crypt::state::success);
+    BOOST_TEST(rng.reseed(str_view, str_view) == boost::crypt::state::success);
+    #endif
 }
 
 void sha1_additional_input()
