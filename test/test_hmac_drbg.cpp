@@ -181,6 +181,14 @@ void sha1_pr()
     BOOST_TEST(rng.init(entropy, nonce, nonce) == boost::crypt::state::success);
     BOOST_TEST(rng.init(entropy, nonce) == boost::crypt::state::success);
     BOOST_TEST(rng.init(entropy) == boost::crypt::state::success);
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+    std::span entropy_span {entropy};
+    std::span nonce_span {nonce};
+    BOOST_TEST(rng.init(entropy_span, nonce_span, nonce_span) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy_span, nonce_span) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy_span) == boost::crypt::state::success);
+    #endif
 }
 
 int main()
