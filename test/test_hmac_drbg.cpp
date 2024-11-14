@@ -194,11 +194,17 @@ void sha1_pr()
     BOOST_TEST(rng.init(entropy) == boost::crypt::state::success);
 
     #ifdef BOOST_CRYPT_HAS_SPAN
+    // Clang 14 with libc++ can't deduce the span
+    // Clang 15+ has no issues according to CI
+    #if !defined(__clang__) || (__clang_major__ > 14)
+
     std::span entropy_span {entropy};
     std::span nonce_span {nonce};
     BOOST_TEST(rng.init(entropy_span, nonce_span, nonce_span) == boost::crypt::state::success);
     BOOST_TEST(rng.init(entropy_span, nonce_span) == boost::crypt::state::success);
     BOOST_TEST(rng.init(entropy_span) == boost::crypt::state::success);
+
+    #endif
     #endif
 }
 
