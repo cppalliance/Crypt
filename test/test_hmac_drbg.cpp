@@ -5,6 +5,7 @@
 #include <boost/crypt/drbg/sha1_drbg.hpp>
 #include <boost/core/lightweight_test.hpp>
 #include <iostream>
+#include <string>
 #include <cstring>
 
 void sha1_basic_correctness()
@@ -71,6 +72,16 @@ void sha1_basic_correctness()
 
     BOOST_TEST(rng.generate(return_bits.begin(), 640U, big_additional_input, std::strlen(big_additional_input)) == boost::crypt::state::success);
     BOOST_TEST(rng.reseed(big_additional_input, std::strlen(big_additional_input), big_additional_input, std::strlen(big_additional_input)) == boost::crypt::state::success);
+
+    std::string str_additional_input {big_additional_input};
+    BOOST_TEST(rng.reseed(str_additional_input) == boost::crypt::state::success);
+    BOOST_TEST(rng.reseed(str_additional_input, str_additional_input) == boost::crypt::state::success);
+
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    std::string_view str_view {str_additional_input};
+    BOOST_TEST(rng.reseed(str_view) == boost::crypt::state::success);
+    BOOST_TEST(rng.reseed(str_view, str_view) == boost::crypt::state::success);
+    #endif
 }
 
 void sha1_additional_input()
@@ -100,7 +111,7 @@ void sha1_additional_input()
     //	V   = 5b1508d16daad5aff52273cd549ce6bd9e259b0d
     //	Key = b7e28116a16856b9e81bda776d421bb56e8f902f
 
-    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::state::success);
+    BOOST_TEST(rng.generate(return_bits) == boost::crypt::state::success);
     // ** GENERATE (SECOND CALL):
     //	V   = 71fa823bc53bfd307d6438edd7e5c581fffc27cc
     //	Key = cfccf80b126cea770b468fb8652abbd5eeea2a5e
@@ -177,6 +188,24 @@ void sha1_pr()
             // LCOV_EXCL_STOP
         }
     }
+
+    BOOST_TEST(rng.init(entropy, nonce, nonce) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy, nonce) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy) == boost::crypt::state::success);
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+    // Clang 14 with libc++ can't deduce the span
+    // Clang 15+ has no issues according to CI
+    #if !defined(__clang__) || (__clang_major__ > 14)
+
+    std::span entropy_span {entropy};
+    std::span nonce_span {nonce};
+    BOOST_TEST(rng.init(entropy_span, nonce_span, nonce_span) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy_span, nonce_span) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy_span) == boost::crypt::state::success);
+
+    #endif
+    #endif
 }
 
 int main()
