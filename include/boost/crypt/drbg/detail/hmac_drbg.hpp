@@ -143,6 +143,15 @@ public:
                                                  ForwardIter2 additional_data_1 = nullptr, boost::crypt::size_t additional_data_1_size = 0,
                                                  ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0) noexcept -> state;
 
+    template <typename Container1>
+    BOOST_CRYPT_GPU_ENABLED inline auto generate(Container1& data) noexcept -> state;
+
+    template <typename Container1, typename Container2>
+    BOOST_CRYPT_GPU_ENABLED inline auto generate(Container1& data, const Container2& additional_data_1) noexcept -> state;
+
+    template <typename Container1, typename Container2, typename Container3>
+    BOOST_CRYPT_GPU_ENABLED inline auto generate(Container1& data, const Container2& additional_data_1, const Container3& additional_data_2) noexcept -> state;
+
 };
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
@@ -686,6 +695,30 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::ge
     }
 
     return generate_impl(boost::crypt::false_type(), data, requested_bits);
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(Container1& data) noexcept -> state
+{
+    return generate(data.begin(), data.size() * 8U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1, typename Container2>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(Container1& data,
+                                                                                       const Container2& additional_data_1) noexcept -> state
+{
+    return generate(data.begin(), data.size() * 8U, additional_data_1.begin(), additional_data_1.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
+}
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1, typename Container2, typename Container3>
+auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(Container1& data,
+                                                                                       const Container2& additional_data_1,
+                                                                                       const Container3& additional_data_2) noexcept -> state
+{
+    return generate(data.begin(), data.size() * 8U, additional_data_1.begin(), additional_data_1.size(), additional_data_2.begin(), additional_data_2.size());
 }
 
 } // namespace drbg

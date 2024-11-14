@@ -111,7 +111,7 @@ void sha1_additional_input()
     //	V   = 5b1508d16daad5aff52273cd549ce6bd9e259b0d
     //	Key = b7e28116a16856b9e81bda776d421bb56e8f902f
 
-    BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::state::success);
+    BOOST_TEST(rng.generate(return_bits) == boost::crypt::state::success);
     // ** GENERATE (SECOND CALL):
     //	V   = 71fa823bc53bfd307d6438edd7e5c581fffc27cc
     //	Key = cfccf80b126cea770b468fb8652abbd5eeea2a5e
