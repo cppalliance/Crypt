@@ -97,6 +97,23 @@ public:
     template <typename Container1>
     BOOST_CRYPT_GPU_ENABLED inline auto init(const Container1& entropy) noexcept -> state;
 
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    inline auto init(std::string_view entropy) noexcept -> state { return init(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+    inline auto init(std::string_view entropy, std::string_view nonce) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+    inline auto init(std::string_view entropy, std::string_view nonce, std::string_view personalization) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size()); }
+    #endif
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+    template <typename T, std::size_t extent>
+    inline auto init(std::span<T, extent> entropy) noexcept -> state { return init(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+
+    template <typename T, std::size_t extent>
+    inline auto init(std::span<T, extent> entropy, std::span<T, extent> nonce) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+
+    template <typename T, std::size_t extent>
+    inline auto init(std::span<T, extent> entropy, std::span<T, extent> nonce, std::span<T, extent> personalization) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size()); }
+    #endif
+
     template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED inline auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
                                                ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> state;
