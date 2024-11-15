@@ -172,4 +172,17 @@ class tuple_size<boost::crypt::array<T, N>> : public boost::crypt::integral_cons
 } // namespace crypt
 } // namespace boost
 
+namespace std {
+
+template<typename T, std::size_t N>
+struct iterator_traits<boost::crypt::array<T, N>>
+{
+    using value_type = typename boost::crypt::array<T, N>::value_type;
+    using pointer = typename boost::crypt::array<T, N>::pointer;
+    using reference = typename boost::crypt::array<T, N>::reference;
+    using difference_type = typename boost::crypt::array<T, N>::difference_type;
+};
+
+} // namespace std
+
 #endif // BOOST_CRYPT_UTILITIES_ARRAY_HPP
