@@ -57,19 +57,19 @@ private:
     bool initialized_ {};
 
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*, typename ForwardIter3 = boost::crypt::uint8_t*>
-    BOOST_CRYPT_GPU_ENABLED inline auto update(ForwardIter1 provided_data_1, boost::crypt::size_t provided_data_size_1,
-                                               ForwardIter2 provided_data_2 = nullptr, boost::crypt::size_t provided_data_size_2 = 0U,
-                                               ForwardIter3 provided_data_3 = nullptr, boost::crypt::size_t provided_data_size_3 = 0U) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto update(ForwardIter1 provided_data_1, boost::crypt::size_t provided_data_size_1,
+                                                  ForwardIter2 provided_data_2 = nullptr, boost::crypt::size_t provided_data_size_2 = 0U,
+                                                  ForwardIter3 provided_data_3 = nullptr, boost::crypt::size_t provided_data_size_3 = 0U) noexcept -> state;
 
     template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*, typename ForwardIter3 = const boost::crypt::uint8_t*>
-    BOOST_CRYPT_GPU_ENABLED inline auto generate_impl(const boost::crypt::false_type&,
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate_impl(const boost::crypt::false_type&,
                                                       ForwardIter1 data, boost::crypt::size_t requested_bits,
                                                       ForwardIter2 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0,
                                                       ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0) noexcept -> state;
 
     // Provides prediction resistance
     template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = const boost::crypt::uint8_t*>
-    BOOST_CRYPT_GPU_ENABLED inline auto generate_impl(const boost::crypt::true_type&,
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate_impl(const boost::crypt::true_type&,
                                                       ForwardIter1 data, boost::crypt::size_t requested_bits,
                                                       ForwardIter2 entropy, boost::crypt::size_t entropy_size,
                                                       ForwardIter3 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0) noexcept -> state;
@@ -79,82 +79,82 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr hmac_drbg() = default;
 
     template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = const boost::crypt::uint8_t*>
-    BOOST_CRYPT_GPU_ENABLED inline auto init(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
-                                             ForwardIter2 nonce = nullptr, boost::crypt::size_t nonce_size = 0,
-                                             ForwardIter3 personalization = nullptr, boost::crypt::size_t personalization_size = 0) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+                                                ForwardIter2 nonce = nullptr, boost::crypt::size_t nonce_size = 0,
+                                                ForwardIter3 personalization = nullptr, boost::crypt::size_t personalization_size = 0) noexcept -> state;
 
     template <typename Container1, typename Container2, typename Container3>
-    BOOST_CRYPT_GPU_ENABLED inline auto init(const Container1& entropy,
-                                             const Container2& nonce,
-                                             const Container3& personalization) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container1& entropy,
+                                                const Container2& nonce,
+                                                const Container3& personalization) noexcept -> state;
 
     template <typename Container1, typename Container2>
-    BOOST_CRYPT_GPU_ENABLED inline auto init(const Container1& entropy,
-                                             const Container2& nonce) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container1& entropy,
+                                                const Container2& nonce) noexcept -> state;
 
     template <typename Container1>
-    BOOST_CRYPT_GPU_ENABLED inline auto init(const Container1& entropy) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container1& entropy) noexcept -> state;
 
     #ifdef BOOST_CRYPT_HAS_STRING_VIEW
-    inline auto init(std::string_view entropy) noexcept -> state { return init(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
-    inline auto init(std::string_view entropy, std::string_view nonce) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
-    inline auto init(std::string_view entropy, std::string_view nonce, std::string_view personalization) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size()); }
+    constexpr auto init(std::string_view entropy) noexcept -> state { return init(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+    constexpr auto init(std::string_view entropy, std::string_view nonce) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+    constexpr auto init(std::string_view entropy, std::string_view nonce, std::string_view personalization) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size()); }
     #endif
 
     #ifdef BOOST_CRYPT_HAS_SPAN
     template <typename T, std::size_t extent>
-    inline auto init(std::span<T, extent> entropy) noexcept -> state { return init(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+    constexpr auto init(std::span<T, extent> entropy) noexcept -> state { return init(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
 
     template <typename T, std::size_t extent>
-    inline auto init(std::span<T, extent> entropy, std::span<T, extent> nonce) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+    constexpr auto init(std::span<T, extent> entropy, std::span<T, extent> nonce) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
 
     template <typename T, std::size_t extent>
-    inline auto init(std::span<T, extent> entropy, std::span<T, extent> nonce, std::span<T, extent> personalization) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size()); }
+    constexpr auto init(std::span<T, extent> entropy, std::span<T, extent> nonce, std::span<T, extent> personalization) noexcept -> state { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size()); }
     #endif
 
     template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*>
-    BOOST_CRYPT_GPU_ENABLED inline auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
-                                               ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+                                                  ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> state;
 
     template <typename Container1>
-    BOOST_CRYPT_GPU_ENABLED inline auto reseed(const Container1& entropy) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(const Container1& entropy) noexcept -> state;
 
     template <typename Container1, typename Container2>
-    BOOST_CRYPT_GPU_ENABLED inline auto reseed(const Container1& entropy,
-                                               const Container2& additional_input) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(const Container1& entropy,
+                                                  const Container2& additional_input) noexcept -> state;
 
     #ifdef BOOST_CRYPT_HAS_STRING_VIEW
-    inline auto reseed(std::string_view entropy) noexcept -> state { return reseed(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
-    inline auto reseed(std::string_view entropy, std::string_view additional_input) noexcept -> state { return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size()); }
+    constexpr auto reseed(std::string_view entropy) noexcept -> state { return reseed(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+    constexpr auto reseed(std::string_view entropy, std::string_view additional_input) noexcept -> state { return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size()); }
     #endif
 
     #ifdef BOOST_CRYPT_HAS_SPAN
     template <typename T, std::size_t extent>
-    inline auto reseed(std::span<T, extent> entropy) noexcept -> state { return reseed(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+    constexpr auto reseed(std::span<T, extent> entropy) noexcept -> state { return reseed(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
 
     template <typename T, std::size_t extent>
-    inline auto reseed(std::span<T, extent> entropy, std::span<T, extent> additional_input) noexcept -> state { return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size()); }
+    constexpr auto reseed(std::span<T, extent> entropy, std::span<T, extent> additional_input) noexcept -> state { return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size()); }
     #endif
 
     template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*, typename ForwardIter3 = const boost::crypt::uint8_t*>
-    BOOST_CRYPT_GPU_ENABLED inline auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
-                                                 ForwardIter2 additional_data_1 = nullptr, boost::crypt::size_t additional_data_1_size = 0,
-                                                 ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
+                                                    ForwardIter2 additional_data_1 = nullptr, boost::crypt::size_t additional_data_1_size = 0,
+                                                    ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0) noexcept -> state;
 
     template <typename Container1>
-    BOOST_CRYPT_GPU_ENABLED inline auto generate(Container1& data) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate(Container1& data) noexcept -> state;
 
     template <typename Container1, typename Container2>
-    BOOST_CRYPT_GPU_ENABLED inline auto generate(Container1& data, const Container2& additional_data_1) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate(Container1& data, const Container2& additional_data_1) noexcept -> state;
 
     template <typename Container1, typename Container2, typename Container3>
-    BOOST_CRYPT_GPU_ENABLED inline auto generate(Container1& data, const Container2& additional_data_1, const Container3& additional_data_2) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate(Container1& data, const Container2& additional_data_1, const Container3& additional_data_2) noexcept -> state;
 
 };
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(
         ForwardIter1 data, boost::crypt::size_t requested_bits,
         ForwardIter2 additional_data_1, boost::crypt::size_t additional_data_1_size,
         ForwardIter3 additional_data_2, boost::crypt::size_t additional_data_2_size) noexcept -> state
@@ -165,7 +165,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::ge
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::update(
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::update(
         ForwardIter1 provided_data_1, boost::crypt::size_t provided_data_size_1,
         ForwardIter2 provided_data_2, boost::crypt::size_t provided_data_size_2,
         ForwardIter3 provided_data_3, boost::crypt::size_t provided_data_size_3) noexcept -> state
@@ -206,7 +206,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::up
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
-inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(
         ForwardIter1 entropy, boost::crypt::size_t entropy_size,
         ForwardIter2 nonce, boost::crypt::size_t nonce_size,
         ForwardIter3 personalization, boost::crypt::size_t personalization_size) noexcept -> state
@@ -252,31 +252,33 @@ inline auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistan
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1, typename Container2, typename Container3>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(const Container1& entropy,
-                                                                                   const Container2& nonce,
-                                                                                   const Container3& personalization) noexcept -> state
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(
+        const Container1& entropy,
+        const Container2& nonce,
+        const Container3& personalization) noexcept -> state
 {
     return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size());
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1, typename Container2>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(const Container1& entropy,
-                                                                                   const Container2& nonce) noexcept -> state
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(
+        const Container1& entropy,
+        const Container2& nonce) noexcept -> state
 {
     return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(const Container1& entropy) noexcept -> state
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::init(const Container1& entropy) noexcept -> state
 {
     return init(entropy.begin(), static_cast<boost::crypt::size_t>(entropy.size()), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::reseed(
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::reseed(
         ForwardIter1 entropy, boost::crypt::size_t entropy_size,
         ForwardIter2 additional_input, boost::crypt::size_t additional_input_size) noexcept -> state
 {
@@ -302,14 +304,14 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::re
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::reseed(const Container1& entropy) noexcept -> state
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::reseed(const Container1& entropy) noexcept -> state
 {
     return reseed(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1, typename Container2>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::reseed(
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::reseed(
         const Container1& entropy, const Container2& additional_input) noexcept -> state
 {
     return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size());
@@ -317,7 +319,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::re
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
         const boost::crypt::false_type&,
         ForwardIter1 data, boost::crypt::size_t requested_bits,
         ForwardIter2 additional_data, boost::crypt::size_t additional_data_size,
@@ -390,7 +392,7 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::ge
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
         const boost::crypt::true_type&,
         ForwardIter1 data, boost::crypt::size_t requested_bits,
         ForwardIter2 entropy, boost::crypt::size_t entropy_size,
@@ -421,24 +423,26 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::ge
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(Container1& data) noexcept -> state
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(Container1& data) noexcept -> state
 {
     return generate(data.begin(), data.size() * 8U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1, typename Container2>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(Container1& data,
-                                                                                       const Container2& additional_data_1) noexcept -> state
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(
+        Container1& data,
+        const Container2& additional_data_1) noexcept -> state
 {
     return generate(data.begin(), data.size() * 8U, additional_data_1.begin(), additional_data_1.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
 }
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1, typename Container2, typename Container3>
-auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(Container1& data,
-                                                                                       const Container2& additional_data_1,
-                                                                                       const Container3& additional_data_2) noexcept -> state
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::generate(
+        Container1& data,
+        const Container2& additional_data_1,
+        const Container3& additional_data_2) noexcept -> state
 {
     return generate(data.begin(), data.size() * 8U, additional_data_1.begin(), additional_data_1.size(), additional_data_2.begin(), additional_data_2.size());
 }
