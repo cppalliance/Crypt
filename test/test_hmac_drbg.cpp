@@ -143,10 +143,10 @@ void sha1_additional_input()
 void sha1_pr()
 {
     boost::crypt::sha1_hmac_drbg_pr rng;
-    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> entropy = {
+    constexpr std::array<boost::crypt::uint8_t, 16> entropy = {
         0xa0, 0xc9, 0xab, 0x58, 0xf1, 0xe2, 0xe5, 0xa4, 0xde, 0x3e, 0xbd, 0x4f, 0xf7, 0x3e, 0x9c, 0x5b
     };
-    constexpr boost::crypt::array<boost::crypt::uint8_t, 8> nonce = {
+    constexpr std::array<boost::crypt::uint8_t, 8> nonce = {
         0x64, 0xef, 0xd8, 0xca, 0x02, 0x8c, 0xf8, 0x11
     };
 
@@ -171,7 +171,7 @@ void sha1_pr()
 
     boost::crypt::array<boost::crypt::uint8_t, 80> return_bits {};
 
-    BOOST_TEST(rng.init(entropy, entropy.size(), nonce, nonce.size()) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size()) == boost::crypt::state::success);
 
     BOOST_TEST(rng.generate(return_bits.begin(), 640U, entropy_gen_1.begin(), entropy_gen_1.size()) == boost::crypt::state::success);
 
