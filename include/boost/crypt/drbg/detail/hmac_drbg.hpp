@@ -169,43 +169,14 @@ template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::cr
 template <typename ForwardIter1, typename ForwardIter2>
 auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::update_impl(
         ForwardIter1 provided_data, boost::crypt::size_t provided_data_size,
-        ForwardIter2 storage, boost::crypt::size_t storage_size) noexcept -> state
+        ForwardIter2 , boost::crypt::size_t ) noexcept -> state
 {
-    BOOST_CRYPT_ASSERT(value_.size() + 1U + provided_data_size <= storage_size);
-    static_cast<void>(storage_size);
-
-    // GCC optimizes this to memcpy (like it should),
-    // but then complains about theoretical array boundaries (provided_data_size can be 0)
-    #ifdef __clang__
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wsign-conversion"
-    #elif defined(__GNUC__) && __GNUC__ >= 5
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Warray-bounds="
-    #pragma GCC diagnostic ignored "-Wrestrict"
-    #pragma GCC diagnostic ignored "-Wsign-conversion"
-    #endif
-
     // Step 1: V || 0x00 || provided data
-    boost::crypt::size_t offset {};
-    for (boost::crypt::size_t i {}; i < value_.size(); ++i)
-    {
-        storage[offset++] = static_cast<boost::crypt::uint8_t>(value_[i]);
-    }
-    storage[offset++] = static_cast<boost::crypt::uint8_t>(0x00);
-    for (boost::crypt::size_t i {}; i < provided_data_size; ++i)
-    {
-        storage[offset++] = static_cast<boost::crypt::uint8_t>(provided_data[i]);
-    }
-
-    #ifdef __clang__
-    #pragma clang diagnostic pop
-    #elif defined(__GNUC__) && __GNUC__ >= 5
-    #pragma GCC diagnostic pop
-    #endif
-
+    boost::crypt::array<boost::crypt::uint8_t, 1> storage_gap {0x00};
     HMACType hmac(key_);
-    hmac.process_bytes(storage, offset);
+    hmac.process_bytes(value_.begin(), value_.size());
+    hmac.process_bytes(storage_gap.begin(), storage_gap.size());
+    hmac.process_bytes(provided_data, provided_data_size);
     key_ = hmac.get_digest();
     hmac.init(key_);
     hmac.process_bytes(value_);
@@ -213,16 +184,12 @@ auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::up
 
     if (provided_data_size != 0U)
     {
-        // Need to overwrite the value of V
-        // The provided data remains the same
-        for (boost::crypt::size_t i {}; i < value_.size(); ++i)
-        {
-            storage[i] = static_cast<boost::crypt::uint8_t>(value_[i]);
-        }
-        storage[value_.size()] = static_cast<boost::crypt::uint8_t>(0x01);
-
+        // Step 2: V || 0x01 || provided data
+        storage_gap[0] = static_cast<boost::crypt::uint8_t>(0x01);
         hmac.init(key_);
-        hmac.process_bytes(storage, offset);
+        hmac.process_bytes(value_.begin(), value_.size());
+        hmac.process_bytes(storage_gap.begin(), storage_gap.size());
+        hmac.process_bytes(provided_data, provided_data_size);
         key_ = hmac.get_digest();
         hmac.init(key_);
         hmac.process_bytes(value_);
