@@ -30,6 +30,7 @@ public:
         using pointer = T*;
         using reference = T&;
         using difference_type = boost::crypt::ptrdiff_t;
+        using iterator_category = std::random_access_iterator_tag;
 
         BOOST_CRYPT_GPU_ENABLED constexpr iterator() noexcept : ptr_(nullptr) {}
         BOOST_CRYPT_GPU_ENABLED constexpr explicit iterator(pointer ptr) noexcept : ptr_(ptr) {}
@@ -73,6 +74,7 @@ public:
         using pointer = const T*;
         using reference = const T&;
         using difference_type = boost::crypt::ptrdiff_t;
+        using iterator_category = std::random_access_iterator_tag;
 
         BOOST_CRYPT_GPU_ENABLED constexpr const_iterator() noexcept : ptr_(nullptr) {}
         BOOST_CRYPT_GPU_ENABLED constexpr explicit const_iterator(pointer ptr) noexcept : ptr_(ptr) {}
@@ -270,13 +272,14 @@ class tuple_size<boost::crypt::array<T, N>> : public boost::crypt::integral_cons
 
 namespace std {
 
-template<typename T, std::size_t N>
+template <typename T, std::size_t N>
 struct iterator_traits<boost::crypt::array<T, N>>
 {
     using value_type = typename boost::crypt::array<T, N>::value_type;
     using pointer = typename boost::crypt::array<T, N>::pointer;
     using reference = typename boost::crypt::array<T, N>::reference;
     using difference_type = typename boost::crypt::array<T, N>::difference_type;
+    using iterator_category = std::random_access_iterator_tag;
 };
 
 } // namespace std
