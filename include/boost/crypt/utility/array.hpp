@@ -280,7 +280,7 @@ class tuple_size<boost::crypt::array<T, N>> : public boost::crypt::integral_cons
 
 namespace std {
 
-template <typename T, std::size_t N>
+template <typename T, boost::crypt::size_t N>
 struct iterator_traits<boost::crypt::array<T, N>>
 {
     using value_type = typename boost::crypt::array<T, N>::value_type;
