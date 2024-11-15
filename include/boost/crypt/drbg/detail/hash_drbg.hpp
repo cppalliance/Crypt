@@ -67,7 +67,40 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr hash_drbg() = default;
 
+    template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*, typename ForwardIter3 = boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+                                                ForwardIter2 nonce = nullptr, boost::crypt::size_t nonce_size = 0U,
+                                                ForwardIter3 personalization = nullptr, boost::crypt::size_t personalization_size = 0U) noexcept -> state;
+
 };
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
+constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::init(
+        ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+        ForwardIter2 nonce, boost::crypt::size_t nonce_size,
+        ForwardIter3 personalization, boost::crypt::size_t personalization_size) noexcept -> state
+{
+    auto seed_status {hash_df(seedlen, value_.begin(), value_.size(), entropy, entropy_size, nonce, nonce_size, personalization, personalization_size)};
+
+    if (BOOST_CRYPT_UNLIKELY(seed_status != state::success))
+    {
+        return seed_status;
+    }
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 1U> offset_array = { 0x00 };
+    seed_status = hash_df(seedlen, constant_.begin(), constant_.size(), offset_array.begin(), offset_array.size(), value_.begin(), value_.size());
+
+    if (BOOST_CRYPT_UNLIKELY(seed_status != state::success))
+    {
+        return seed_status;
+    }
+
+    initialized_ = true;
+    reseed_counter_ = 1U;
+
+    return state::success;
+}
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3, typename ForwardIter4>
