@@ -281,6 +281,8 @@ class tuple_size<boost::crypt::array<T, N>> : public boost::crypt::integral_cons
 } // namespace crypt
 } // namespace boost
 
+#ifndef BOOST_CRYPT_HAS_CUDA
+
 namespace std {
 
 template <typename T, boost::crypt::size_t N>
@@ -298,5 +300,7 @@ struct iterator_traits<boost::crypt::array<T, N>>
 };
 
 } // namespace std
+
+#endif // BOOST_CRYPT_HAS_CUDA
 
 #endif // BOOST_CRYPT_UTILITIES_ARRAY_HPP
