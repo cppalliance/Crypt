@@ -41,8 +41,11 @@ public:
 
         // Iterator operations
         BOOST_CRYPT_GPU_ENABLED constexpr auto operator*() noexcept -> reference { return *ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator*() const noexcept -> reference { return *ptr_; }
         BOOST_CRYPT_GPU_ENABLED constexpr auto operator->() noexcept -> pointer { return ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator->() const noexcept -> pointer { return ptr_; }
         BOOST_CRYPT_GPU_ENABLED constexpr auto operator[](difference_type n) noexcept -> reference { return ptr_[n]; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator[](difference_type n) const noexcept -> reference { return ptr_[n]; }
 
         // Increment/Decrement
         BOOST_CRYPT_GPU_ENABLED constexpr auto operator++() noexcept -> iterator& { ++ptr_; return *this; }
