@@ -81,6 +81,18 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         ForwardIter2 nonce, boost::crypt::size_t nonce_size,
         ForwardIter3 personalization, boost::crypt::size_t personalization_size) noexcept -> state
 {
+    // Nonce is to be at least >= 0.5 * max_hasher_security
+    // Unless entropy + nonce >= 1.5 * max_hasher_security
+    if (utility::is_null(entropy) || entropy_size == 0U)
+    {
+        return state::null;
+    }
+
+    if (entropy_size + nonce_size < min_entropy)
+    {
+        return state::insufficient_entropy;
+    }
+
     auto seed_status {hash_df(seedlen, value_.begin(), value_.size(), entropy, entropy_size, nonce, nonce_size, personalization, personalization_size)};
 
     if (BOOST_CRYPT_UNLIKELY(seed_status != state::success))
