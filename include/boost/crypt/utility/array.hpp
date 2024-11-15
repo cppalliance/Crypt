@@ -23,10 +23,95 @@ template <typename T, boost::crypt::size_t N>
 class array
 {
 public:
+
+    class iterator {
+    public:
+        using value_type = T;
+        using pointer = T*;
+        using reference = T&;
+        using difference_type = boost::crypt::ptrdiff_t;
+
+        BOOST_CRYPT_GPU_ENABLED constexpr iterator() noexcept : ptr_(nullptr) {}
+        BOOST_CRYPT_GPU_ENABLED constexpr explicit iterator(pointer ptr) noexcept : ptr_(ptr) {}
+
+        // Iterator operations
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator*() noexcept -> reference { return *ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator->() noexcept -> pointer { return ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator[](difference_type n) noexcept -> reference { return ptr_[n]; }
+
+        // Increment/Decrement
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator++() noexcept -> iterator& { ++ptr_; return *this; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator++(int) noexcept -> iterator { iterator tmp(*this); ++ptr_; return tmp; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator--() noexcept -> iterator& { --ptr_; return *this; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator--(int) noexcept -> iterator { iterator tmp(*this); --ptr_; return tmp; }
+
+        // Arithmetic operations
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator+=(difference_type n) noexcept -> iterator& { ptr_ += n; return *this; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator-=(difference_type n) noexcept -> iterator& { ptr_ -= n; return *this; }
+
+        // Comparison operators
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator==(const iterator& other) const noexcept -> bool { return ptr_ == other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator!=(const iterator& other) const noexcept -> bool { return ptr_ != other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator<(const iterator& other) const noexcept -> bool { return ptr_ < other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator>(const iterator& other) const noexcept -> bool { return ptr_ > other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator<=(const iterator& other) const noexcept -> bool { return ptr_ <= other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator>=(const iterator& other) const noexcept -> bool { return ptr_ >= other.ptr_; }
+
+        BOOST_CRYPT_GPU_ENABLED friend constexpr auto operator+(iterator it, difference_type n) noexcept -> iterator { return it += n; }
+        BOOST_CRYPT_GPU_ENABLED friend constexpr auto operator+(difference_type n, iterator it) noexcept -> iterator { return it += n; }
+        BOOST_CRYPT_GPU_ENABLED friend constexpr auto operator-(iterator it, difference_type n) noexcept -> iterator { return it -= n; }
+        BOOST_CRYPT_GPU_ENABLED friend constexpr auto operator-(const iterator& lhs, const iterator& rhs) noexcept -> difference_type
+        { return lhs.operator->() - rhs.operator->(); }
+
+    private:
+        pointer ptr_;
+    };
+
+    class const_iterator {
+    public:
+        using value_type = const T;
+        using pointer = const T*;
+        using reference = const T&;
+        using difference_type = boost::crypt::ptrdiff_t;
+
+        BOOST_CRYPT_GPU_ENABLED constexpr const_iterator() noexcept : ptr_(nullptr) {}
+        BOOST_CRYPT_GPU_ENABLED constexpr explicit const_iterator(pointer ptr) noexcept : ptr_(ptr) {}
+
+        // Iterator operations
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator*() const noexcept -> reference { return *ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator->() const noexcept -> pointer { return ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator[](difference_type n) const noexcept -> reference { return ptr_[n]; }
+
+        // Increment/Decrement
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator++() noexcept -> const_iterator& { ++ptr_; return *this; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator++(int) noexcept -> const_iterator { const_iterator tmp(*this); ++ptr_; return tmp; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator--() noexcept -> const_iterator& { --ptr_; return *this; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator--(int) noexcept -> const_iterator { const_iterator tmp(*this); --ptr_; return tmp; }
+
+        // Arithmetic operations
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator+=(difference_type n) noexcept -> const_iterator& { ptr_ += n; return *this; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator-=(difference_type n) noexcept -> const_iterator& { ptr_ -= n; return *this; }
+
+        // Comparison operators
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator==(const const_iterator& other) const noexcept -> bool { return ptr_ == other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator!=(const const_iterator& other) const noexcept -> bool { return ptr_ != other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator<(const const_iterator& other) const noexcept -> bool { return ptr_ < other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator>(const const_iterator& other) const noexcept -> bool { return ptr_ > other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator<=(const const_iterator& other) const noexcept -> bool { return ptr_ <= other.ptr_; }
+        BOOST_CRYPT_GPU_ENABLED constexpr auto operator>=(const const_iterator& other) const noexcept -> bool { return ptr_ >= other.ptr_; }
+
+        BOOST_CRYPT_GPU_ENABLED friend constexpr auto operator+(const_iterator it, difference_type n) noexcept -> const_iterator { return it += n; }
+        BOOST_CRYPT_GPU_ENABLED friend constexpr auto operator+(difference_type n, const_iterator it) noexcept -> const_iterator { return it += n; }
+        BOOST_CRYPT_GPU_ENABLED friend constexpr auto operator-(const_iterator it, difference_type n) noexcept -> const_iterator { return it -= n; }
+        BOOST_CRYPT_GPU_ENABLED friend constexpr auto operator-(const const_iterator& lhs, const const_iterator& rhs) noexcept -> difference_type
+        { return lhs.operator->() - rhs.operator->(); }
+
+    private:
+        pointer ptr_;
+    };
+
     using reference = T&;
     using const_reference = const T&;
-    using iterator = T*;
-    using const_iterator = const T*;
     using size_type = boost::crypt::size_t;
     using difference_type = boost::crypt::ptrdiff_t;
     using value_type = T;
@@ -36,12 +121,12 @@ public:
     T elements[N];
 
     // Iterators
-    BOOST_CRYPT_GPU_ENABLED constexpr auto begin() noexcept -> iterator { return elements; }
-    BOOST_CRYPT_GPU_ENABLED constexpr auto begin() const noexcept -> const_iterator { return elements; }
-    BOOST_CRYPT_GPU_ENABLED constexpr auto cbegin() const noexcept -> const_iterator { return elements; }
-    BOOST_CRYPT_GPU_ENABLED constexpr auto end() noexcept -> iterator { return elements + N; }
-    BOOST_CRYPT_GPU_ENABLED constexpr auto end() const noexcept -> const_iterator { return elements + N; }
-    BOOST_CRYPT_GPU_ENABLED constexpr auto cend() const noexcept -> const_iterator { return elements + N; }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto begin() noexcept -> iterator { return iterator{elements}; }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto begin() const noexcept -> const_iterator { return const_iterator{elements}; }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto cbegin() const noexcept -> const_iterator { return const_iterator{elements}; }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto end() noexcept -> iterator { return iterator{elements + N}; }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto end() const noexcept -> const_iterator { return const_iterator{elements + N}; }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto cend() const noexcept -> const_iterator { return const_iterator{elements + N}; }
 
     // Sizing
     BOOST_CRYPT_GPU_ENABLED constexpr auto size() const noexcept -> size_type { return N; }
