@@ -293,9 +293,19 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hasher_base_512<digest_size, intermediate
         return state::state_error;
     }
 
-    while (size--)
+    #ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wsign-conversion"
+    #elif defined(__GNUC__) && __GNUC__ >= 5
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Warray-bounds="
+    #pragma GCC diagnostic ignored "-Wrestrict"
+    #pragma GCC diagnostic ignored "-Wsign-conversion"
+    #endif
+
+    for (boost::crypt::size_t i {}; i < size; ++i)
     {
-        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(static_cast<boost::crypt::uint8_t>(*data) &
+        buffer_[buffer_index_++] = static_cast<boost::crypt::uint8_t>(static_cast<boost::crypt::uint8_t>(data[i]) &
                                                                       static_cast<boost::crypt::uint8_t>(0xFF));
         low_ += 8U;
 
@@ -316,9 +326,13 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hasher_base_512<digest_size, intermediate
         {
             process_message_block();
         }
-
-        ++data;
     }
+
+    #ifdef __clang__
+    #pragma clang diagnostic pop
+    #elif defined(__GNUC__) && __GNUC__ >= 5
+    #pragma GCC diagnostic pop
+    #endif
 
     return state::success;
 }

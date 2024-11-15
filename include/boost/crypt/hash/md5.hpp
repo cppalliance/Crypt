@@ -234,14 +234,14 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto md5_hasher::get_digest() noexcept -> retu
 
     if (available < 8U)
     {
-        fill_array(buffer_.begin() + used, buffer_.end(), static_cast<boost::crypt::uint8_t>(0));
+        fill_array(buffer_.begin() + static_cast<boost::crypt::ptrdiff_t>(used), buffer_.end(), static_cast<boost::crypt::uint8_t>(0));
         process_message_block();
         used = 0;
         buffer_.fill(0);
     }
     else
     {
-        fill_array(buffer_.begin() + used, buffer_.end() - 8, static_cast<boost::crypt::uint8_t>(0));
+        fill_array(buffer_.begin() + static_cast<boost::crypt::ptrdiff_t>(used), buffer_.end() - 8, static_cast<boost::crypt::uint8_t>(0));
     }
 
     const auto total_bits {(static_cast<uint64_t>(high_) << 32) | low_};
