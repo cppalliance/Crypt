@@ -171,7 +171,7 @@ void sha1_pr()
 
     boost::crypt::array<boost::crypt::uint8_t, 80> return_bits {};
 
-    BOOST_TEST(rng.init(entropy, entropy.size(), nonce, nonce.size()) == boost::crypt::state::success);
+    BOOST_TEST(rng.init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size()) == boost::crypt::state::success);
 
     BOOST_TEST(rng.generate(return_bits.begin(), 640U, entropy_gen_1.begin(), entropy_gen_1.size()) == boost::crypt::state::success);
 
