@@ -72,7 +72,71 @@ public:
                                                 ForwardIter2 nonce = nullptr, boost::crypt::size_t nonce_size = 0U,
                                                 ForwardIter3 personalization = nullptr, boost::crypt::size_t personalization_size = 0U) noexcept -> state;
 
+    template <typename Container1>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container1& entropy) noexcept -> state;
+
+    template <typename Container1, typename Container2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container1& entropy,
+                                                const Container2& nonce) noexcept -> state;
+
+    template <typename Container1, typename Container2, typename Container3>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container1& entropy,
+                                                const Container2& nonce,
+                                                const Container3& personalization) noexcept -> state;
+
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    constexpr auto init(std::string_view entropy) noexcept -> state
+    { return init(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+
+    constexpr auto init(std::string_view entropy, std::string_view nonce) noexcept -> state
+    { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+
+    constexpr auto init(std::string_view entropy, std::string_view nonce, std::string_view personalization) noexcept -> state
+    { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size()); }
+    #endif
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+    template <typename T, std::size_t extent>
+    constexpr auto init(std::span<T, extent> entropy) noexcept -> state
+    { return init(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+
+    template <typename T, std::size_t extent>
+    constexpr auto init(std::span<T, extent> entropy, std::span<T, extent> nonce) noexcept -> state
+    { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U); }
+
+    template <typename T, std::size_t extent>
+    constexpr auto init(std::span<T, extent> entropy, std::span<T, extent> nonce, std::span<T, extent> personalization) noexcept -> state
+    { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size()); }
+    #endif
+
 };
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1, typename Container2, typename Container3>
+constexpr auto
+hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::init(const Container1 &entropy,
+                                                                                const Container2 &nonce,
+                                                                                const Container3 &personalization) noexcept -> state
+{
+    return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size());
+}
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1, typename Container2>
+constexpr auto
+hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::init(const Container1 &entropy,
+                                                                                const Container2 &nonce) noexcept -> state
+{
+    return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
+}
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1>
+constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::init(
+        const Container1 &entropy) noexcept -> state
+{
+    return init(entropy.begin(), entropy.size(), static_cast<boost::crypt::uint8_t*>(nullptr), 0U, static_cast<boost::crypt::uint8_t*>(nullptr), 0U);
+}
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
