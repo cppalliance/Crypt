@@ -200,6 +200,17 @@ public:
 
         return new_array;
     }
+
+    constexpr operator std::array<T, N>() const noexcept
+    {
+        std::array<T, N> new_array{};
+        for (boost::crypt::size_t i {}; i < N; ++i)
+        {
+            new_array[i] = elements[i];
+        }
+
+        return new_array;
+    }
     #endif
 };
 
