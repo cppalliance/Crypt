@@ -14,13 +14,6 @@
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/null.hpp>
 
-#if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
-#include <memory>
-#include <string>
-#include <cstdint>
-#include <cstring>
-#endif
-
 namespace boost {
 namespace crypt {
 namespace drbg {
