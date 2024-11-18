@@ -323,6 +323,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         carry = result / 0xFF;
         result %= 0xFF;
 
+        value_[offset] = static_cast<boost::crypt::uint8_t>(result);
+
         ++offset;
     }
     if (value_.size() < h.size())
@@ -335,6 +337,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                                            carry};
             carry = result / 0xFF;
             result %= 0xFF;
+
+            value_[offset] = static_cast<boost::crypt::uint8_t>(result);
 
             ++offset;
         }
@@ -350,6 +354,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
             carry = result / 0xFF;
             result %= 0xFF;
 
+            value_[offset] = static_cast<boost::crypt::uint8_t>(result);
+
             ++offset;
         }
         while (offset < value_.size())
@@ -359,6 +365,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                                            carry};
             carry = result / 0xFF;
             result %= 0xFF;
+
+            value_[offset] = static_cast<boost::crypt::uint8_t>(result);
 
             ++offset;
         }
