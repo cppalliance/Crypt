@@ -121,6 +121,23 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(const Container1& entropy,
                                                   const Container2& additional_input) noexcept -> state;
 
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    constexpr auto reseed(const std::string_view entropy) noexcept -> state
+    { return reseed(entropy.begin(), entropy.size()); }
+
+    constexpr auto reseed(const std::string_view entropy, const std::string_view additional_input) noexcept -> state
+    { return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size()); }
+    #endif  // BOOST_CRYPT_HAS_STRING_VIEW
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+    template <typename T, std::size_t extent>
+    constexpr auto reseed(std::span<T, extent> entropy) noexcept -> state
+    { return reseed(entropy.begin(), entropy.size()); }
+
+    template <typename T, std::size_t extent>
+    constexpr auto reseed(std::span<T, extent> entropy, std::span<T, extent> additional_input) noexcept -> state
+    { return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size()); }
+    #endif // BOOST_CRYPT_HAS_SPAN
 };
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
