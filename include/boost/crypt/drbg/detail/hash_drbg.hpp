@@ -46,8 +46,8 @@ private:
     static constexpr boost::crypt::uint64_t max_length {4294967296ULL}; // 2^35 / 8
     static constexpr boost::crypt::uint64_t reseed_interval {281474976710656ULL}; // 2^48
 
-    boost::crypt::array<boost::crypt::size_t, seedlen_bytes> constant_ {};
-    boost::crypt::array<boost::crypt::size_t, seedlen_bytes> value_ {};
+    boost::crypt::array<boost::crypt::uint8_t, seedlen_bytes> constant_ {};
+    boost::crypt::array<boost::crypt::uint8_t, seedlen_bytes> value_ {};
 
     boost::crypt::uint64_t reseed_counter_ {};
     bool initialized_ {};
@@ -172,6 +172,11 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
             return hasher_return;
         }
 
+        #ifdef __clang__
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wsign-conversion"
+        #endif
+        
         const auto w {hasher.get_digest()};
         if (offset + w.size() < requested_number_of_bytes)
         {
@@ -187,6 +192,11 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                 returned_bits[offset++] = w[i];
             }
         }
+
+        #ifdef __clang__
+        #pragma clang diagnostic pop
+        #pragma clang diagnostic ignored "-Wsign-conversion"
+        #endif
 
         // data = data + 1 mod 2^seedlen
         // We really skip the modulo here because once we hit the bounds check it's effectively the mod
@@ -260,7 +270,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         HasherType hasher {};
         hasher.process_byte(static_cast<boost::crypt::uint8_t>(0x02));
         hasher.process_bytes(value_.begin(), value_.size());
-        hasher.process_bytes(additional_data.begin(), additional_data_size);
+        hasher.process_bytes(additional_data, additional_data_size);
         const auto w {hasher.get_digest()};
 
         // V = (v + w) mod 2^seedlen
@@ -268,9 +278,9 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         auto v_iter {value_.begin()};
 
         // Since the size of V depends on the size of w we will never have an overflow situation
-        for (; w_iter != w_iter.end(); ++w_iter, ++v_iter)
+        for (; w_iter != w.cend(); ++w_iter, ++v_iter)
         {
-            const auto sum_val {static_cast<boost::crypt::uint16_t>(*w_iter) + static_cast<boost::crypt::uint16_t>(*v_iter)};
+            const auto sum_val {static_cast<boost::crypt::uint16_t>(static_cast<boost::crypt::uint16_t>(*w_iter) + static_cast<boost::crypt::uint16_t>(*v_iter))};
             const auto new_val {static_cast<boost::crypt::uint8_t>(sum_val & 0xFFU)};
             *v_iter = new_val;
 
