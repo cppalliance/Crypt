@@ -56,12 +56,13 @@ private:
     boost::crypt::size_t reseed_counter_ {};
     bool initialized_ {};
 
-    template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = boost::crypt::uint8_t*, typename ForwardIter4 = boost::crypt::uint8_t*>
+    template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = boost::crypt::uint8_t*, typename ForwardIter4 = boost::crypt::uint8_t*, typename ForwardIter5 = boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto hash_df(boost::crypt::uint32_t no_of_bits_to_return,
                                                    ForwardIter1 return_container, boost::crypt::size_t return_container_size,
                                                    ForwardIter2 provided_data_1, boost::crypt::size_t provided_data_size_1,
                                                    ForwardIter3 provided_data_2 = nullptr, boost::crypt::size_t provided_data_size_2 = 0U,
-                                                   ForwardIter4 provided_data_3 = nullptr, boost::crypt::size_t provided_data_size_3 = 0U) noexcept -> state;
+                                                   ForwardIter4 provided_data_3 = nullptr, boost::crypt::size_t provided_data_size_3 = 0U,
+                                                   ForwardIter5 provided_data_4 = nullptr, boost::crypt::size_t provided_data_size_4 = 0U) noexcept -> state;
 
 public:
 
@@ -179,17 +180,19 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
 }
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
-template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3, typename ForwardIter4>
+template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3, typename ForwardIter4, typename ForwardIter5>
 constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::hash_df(
         boost::crypt::uint32_t no_of_bits_to_return,
         ForwardIter1 return_container, boost::crypt::size_t return_container_size,
         ForwardIter2 provided_data_1,  boost::crypt::size_t provided_data_size_1,
         ForwardIter3 provided_data_2,  boost::crypt::size_t provided_data_size_2,
-        ForwardIter4 provided_data_3,  boost::crypt::size_t provided_data_size_3) noexcept -> state
+        ForwardIter4 provided_data_3,  boost::crypt::size_t provided_data_size_3,
+        ForwardIter5 provided_data_4,  boost::crypt::size_t provided_data_size_4) noexcept -> state
 {
     boost::crypt::array<boost::crypt::uint8_t, seedlen_bytes / outlen_bytes + 1> temp {};
     const auto no_of_bytes_to_return {no_of_bits_to_return / 8U};
     const auto len {(no_of_bytes_to_return + 7U) / outlen_bytes};
+    BOOST_CRYPT_ASSERT(len <= temp.size());
 
     if (BOOST_CRYPT_UNLIKELY(len > 255))
     {
@@ -215,6 +218,7 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         hasher.process_bytes(provided_data_1, provided_data_size_1);
         hasher.process_bytes(provided_data_2, provided_data_size_2);
         hasher.process_bytes(provided_data_3, provided_data_size_3);
+        hasher.process_bytes(provided_data_4, provided_data_size_4);
         const auto return_val {hasher.get_digest()};
 
         if (BOOST_CRYPT_UNLIKELY(offset + return_val.size() <= temp.size()))
