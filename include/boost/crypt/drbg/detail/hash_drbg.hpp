@@ -110,7 +110,75 @@ public:
     { return init(entropy.begin(), entropy.size(), nonce.begin(), nonce.size(), personalization.begin(), personalization.size()); }
     #endif
 
+    template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+                                                  ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0U) noexcept -> state;
+
+    template <typename Container1>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(const Container1& entropy) noexcept -> state;
+
+    template <typename Container1, typename Container2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(const Container1& entropy,
+                                                  const Container2& additional_input) noexcept -> state;
+
 };
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1, typename Container2>
+constexpr auto
+hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::reseed(const Container1& entropy,
+                                                                                  const Container2& additional_input) noexcept -> state
+{
+    return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size());
+}
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename Container1>
+constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::reseed(
+        const Container1& entropy) noexcept -> state
+{
+    return reseed(entropy.begin(), entropy.size());
+}
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::reseed(
+        ForwardIter1 entropy, boost::crypt::size_t entropy_size,
+        ForwardIter2 additional_input, boost::crypt::size_t additional_input_size) noexcept -> state
+{
+    constexpr auto min_reseed_entropy {max_hasher_security / 8U};
+    if (utility::is_null(entropy) || entropy_size == 0U)
+    {
+        return state::null;
+    }
+    if (entropy_size < min_reseed_entropy)
+    {
+        return state::insufficient_entropy;
+    }
+    if (utility::is_null(additional_input))
+    {
+        additional_input_size = 0U;
+    }
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 1U> offset_array = { 0x01 };
+    auto seed_status = hash_df(seedlen, value_.begin(), value_.size(), offset_array.begin(), offset_array.size(), value_.begin(), value_.end(), entropy, entropy_size, additional_input, additional_input_size);
+
+    if (BOOST_CRYPT_UNLIKELY(seed_status != state::success))
+    {
+        return seed_status;
+    }
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 1U> c_offset_array = { 0x00 };
+    seed_status = hash_df(seedlen, constant_.begin(), constant_.size(), c_offset_array.begin(), c_offset_array.size(), value_.begin(), value_.size());
+
+    if (BOOST_CRYPT_UNLIKELY(seed_status != state::success))
+    {
+        return seed_status;
+    }
+
+    reseed_counter_ = 1U;
+    return state::success;
+}
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1, typename Container2, typename Container3>
