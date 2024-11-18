@@ -69,6 +69,12 @@ private:
                                                          ForwardIter2 additional_data, boost::crypt::size_t additional_data_size,
                                                          ForwardIter3, boost::crypt::size_t) noexcept -> state;
 
+    template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate_impl(const boost::crypt::true_type&,
+                                                         ForwardIter1 data, boost::crypt::size_t requested_bits,
+                                                         ForwardIter2 entropy, boost::crypt::size_t entropy_size,
+                                                         ForwardIter3 additional_data, boost::crypt::size_t additional_data_size) noexcept -> state;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr hash_drbg() = default;
@@ -376,6 +382,37 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
 
     ++reseed_counter_;
     return state::success;
+}
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = boost::crypt::uint8_t*>
+BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
+        const boost::crypt::true_type&,
+        ForwardIter1 data, boost::crypt::size_t requested_bits,
+        ForwardIter2 entropy, boost::crypt::size_t entropy_size,
+        ForwardIter3 additional_data, boost::crypt::size_t additional_data_size) noexcept -> state
+{
+    if (reseed_counter_ > reseed_interval)
+    {
+        return state::requires_reseed;
+    }
+    if (utility::is_null(data) || utility::is_null(entropy))
+    {
+        return state::null;
+    }
+    if (!initialized_)
+    {
+        return state::uninitialized;
+    }
+
+    // 9.3.3 Reseed using the entropy and the additional data, then set additional data to NULL
+    const auto reseed_return {reseed(entropy, entropy_size, additional_data, additional_data_size)};
+    if (reseed_return != state::success)
+    {
+        return reseed_return;
+    }
+
+    return generate_impl(boost::crypt::false_type(), data, requested_bits);
 }
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
