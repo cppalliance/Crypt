@@ -320,12 +320,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                                         static_cast<boost::crypt::uint16_t>(constant_[offset]) +
                                         static_cast<boost::crypt::uint16_t>(reseed_counter_bytes[offset]) +
                                         carry};
-        carry = 0U;
-        while (result > static_cast<boost::crypt::uint16_t>(0xFFU))
-        {
-            result -= 0xFFU;
-            ++carry;
-        }
+        carry = result / 0xFF;
+        result %= 0xFF;
 
         ++offset;
     }
@@ -337,12 +333,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                                            static_cast<boost::crypt::uint16_t>(h[offset]) +
                                            static_cast<boost::crypt::uint16_t>(constant_[offset]) +
                                            carry};
-            carry = 0U;
-            while (result > static_cast<boost::crypt::uint16_t>(0xFFU))
-            {
-                result -= 0xFFU;
-                ++carry;
-            }
+            carry = result / 0xFF;
+            result %= 0xFF;
 
             ++offset;
         }
@@ -355,12 +347,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                                            static_cast<boost::crypt::uint16_t>(h[offset]) +
                                            static_cast<boost::crypt::uint16_t>(constant_[offset]) +
                                            carry};
-            carry = 0U;
-            while (result > static_cast<boost::crypt::uint16_t>(0xFFU))
-            {
-                result -= 0xFFU;
-                ++carry;
-            }
+            carry = result / 0xFF;
+            result %= 0xFF;
 
             ++offset;
         }
@@ -369,12 +357,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
             boost::crypt::uint16_t result {static_cast<boost::crypt::uint16_t>(value_[offset]) +
                                            static_cast<boost::crypt::uint16_t>(constant_[offset]) +
                                            carry};
-            carry = 0U;
-            while (result > static_cast<boost::crypt::uint16_t>(0xFFU))
-            {
-                result -= 0xFFU;
-                ++carry;
-            }
+            carry = result / 0xFF;
+            result %= 0xFF;
 
             ++offset;
         }
