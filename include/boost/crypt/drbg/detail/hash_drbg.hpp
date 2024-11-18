@@ -216,11 +216,11 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         }
     }
 
-    return state::success();
+    return state::success;
 }
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
-template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*, typename ForwardIter3 = boost::crypt::uint8_t*>
+template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
 BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
         const boost::crypt::false_type&,
         ForwardIter1 data, boost::crypt::size_t requested_bits,
@@ -315,11 +315,15 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
     boost::crypt::uint16_t carry {};
     while (offset < reseed_counter_bytes.size())
     {
-         boost::crypt::uint16_t result {static_cast<boost::crypt::uint16_t>(value_[offset]) +
-                                        static_cast<boost::crypt::uint16_t>(h[offset]) +
-                                        static_cast<boost::crypt::uint16_t>(constant_[offset]) +
-                                        static_cast<boost::crypt::uint16_t>(reseed_counter_bytes[offset]) +
-                                        carry};
+         boost::crypt::uint16_t result {
+            static_cast<boost::crypt::uint16_t>(
+                static_cast<boost::crypt::uint16_t>(value_[offset]) +
+                static_cast<boost::crypt::uint16_t>(h[offset]) +
+                static_cast<boost::crypt::uint16_t>(constant_[offset]) +
+                static_cast<boost::crypt::uint16_t>(reseed_counter_bytes[offset]) +
+                carry
+            )};
+
         carry = result / 0xFF;
         result %= 0xFF;
 
@@ -331,10 +335,14 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
     {
         while (offset < value_.size())
         {
-            boost::crypt::uint16_t result {static_cast<boost::crypt::uint16_t>(value_[offset]) +
-                                           static_cast<boost::crypt::uint16_t>(h[offset]) +
-                                           static_cast<boost::crypt::uint16_t>(constant_[offset]) +
-                                           carry};
+            boost::crypt::uint16_t result {
+                static_cast<boost::crypt::uint16_t>(
+                    static_cast<boost::crypt::uint16_t>(value_[offset]) +
+                    static_cast<boost::crypt::uint16_t>(h[offset]) +
+                    static_cast<boost::crypt::uint16_t>(constant_[offset]) +
+                    carry
+                )};
+
             carry = result / 0xFF;
             result %= 0xFF;
 
@@ -347,10 +355,13 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
     {
         while (offset < h.size())
         {
-            boost::crypt::uint16_t result {static_cast<boost::crypt::uint16_t>(value_[offset]) +
-                                           static_cast<boost::crypt::uint16_t>(h[offset]) +
-                                           static_cast<boost::crypt::uint16_t>(constant_[offset]) +
-                                           carry};
+            boost::crypt::uint16_t result {
+                static_cast<boost::crypt::uint16_t>(
+                    static_cast<boost::crypt::uint16_t>(value_[offset]) +
+                    static_cast<boost::crypt::uint16_t>(h[offset]) +
+                    static_cast<boost::crypt::uint16_t>(constant_[offset]) +
+                    carry
+                )};
             carry = result / 0xFF;
             result %= 0xFF;
 
@@ -360,9 +371,12 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         }
         while (offset < value_.size())
         {
-            boost::crypt::uint16_t result {static_cast<boost::crypt::uint16_t>(value_[offset]) +
-                                           static_cast<boost::crypt::uint16_t>(constant_[offset]) +
-                                           carry};
+            boost::crypt::uint16_t result {
+                static_cast<boost::crypt::uint16_t>(
+                        static_cast<boost::crypt::uint16_t>(value_[offset]) +
+                        static_cast<boost::crypt::uint16_t>(constant_[offset]) +
+                        carry
+                )};
             carry = result / 0xFF;
             result %= 0xFF;
 
@@ -377,7 +391,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
 }
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
-template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = boost::crypt::uint8_t*>
+template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
 BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
         const boost::crypt::true_type&,
         ForwardIter1 data, boost::crypt::size_t requested_bits,
