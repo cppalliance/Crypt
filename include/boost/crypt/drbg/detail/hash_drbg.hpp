@@ -612,10 +612,20 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         return state::out_of_memory;
     }
 
+    // We ignore this since we allow both containers and pointers
+    #ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wsign-conversion"
+    #endif
+
     for (boost::crypt::size_t i {}; i < no_of_bytes_to_return; ++i)
     {
         return_container[i] = temp[i];
     }
+
+    #ifdef __clang__
+    #pragma clang diagnostic pop
+    #endif
 
     return state::success;
 }
