@@ -49,7 +49,7 @@ private:
     boost::crypt::array<boost::crypt::size_t, seedlen_bytes> constant_ {};
     boost::crypt::array<boost::crypt::size_t, seedlen_bytes> value_ {};
 
-    boost::crypt::size_t reseed_counter_ {};
+    boost::crypt::uint64_t reseed_counter_ {};
     bool initialized_ {};
 
     template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = boost::crypt::uint8_t*, typename ForwardIter4 = boost::crypt::uint8_t*, typename ForwardIter5 = boost::crypt::uint8_t*>
@@ -184,7 +184,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
 
         // data = data + 1 mod 2^seedlen
         // We really skip the modulo here because once we hit the bounds check it's effectively the mod
-        if (BOOST_CRYPT_LIKELY(data[0] < 0xFFU))
+        if (BOOST_CRYPT_LIKELY(data[0] < static_cast<boost::crypt::uint8_t>(0xFFU)))
         {
             data[0] = data[0] + static_cast<boost::crypt::uint8_t>(1U);
         }
@@ -194,7 +194,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
             boost::crypt::size_t i {};
             while (i + 1U < data.size() && continue_rounding)
             {
-                if (data[i] == 0xFFU)
+                if (data[i] == static_cast<boost::crypt::uint8_t>(0xFFU))
                 {
                     data[i] = static_cast<boost::crypt::uint8_t>(0U);
                     continue_rounding = true;
@@ -246,6 +246,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
     }
     if (additional_data_size != 0U)
     {
+        // Step 2.1 and 2.2
         if (BOOST_CRYPT_UNLIKELY(additional_data_size > max_length))
         {
             return state::input_too_long; // LCOV_EXCL_LINE
@@ -275,14 +276,105 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         }
     }
 
+    // Step 3: Fill the buffer with the bytes to return to the user
     const auto hashgen_return {hashgen(data, requested_bytes)};
     if (BOOST_CRYPT_UNLIKELY(hashgen_return != state::success))
     {
         return hashgen_return;
     }
 
-    // Step 5: v = (v + h + c + reseed counter) mod 2^seedlen
+    // Step 4: H = Hash(0x03 || V)
+    HasherType hasher {};
+    hasher.process_byte(static_cast<boost::crypt::uint8_t>(0x03));
+    hasher.process_bytes(value_.begin(), value_.size());
+    const auto h {hasher.get_digest()};
 
+    // Step 5: v = (v + h + c + reseed counter) mod 2^seedlen
+    // Rather than converting V, H, C and reseed to bignums and applying big num modular arithmetic
+    // we add all bytes of the same offset at once and have an integer rather than boolean carry
+    // we also terminate the calculation at mod 2^seedlen since anything past that is irrelevant
+    // It just so happens that value_ is 2^seedlen long
+    const boost::crypt::array<boost::crypt::uint8_t, 64U / 8U> reseed_counter_bytes = {
+        static_cast<boost::crypt::uint8_t>(reseed_counter_ & 0xFFU),
+        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 8U),
+        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 16U),
+        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 24U),
+        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 32U),
+        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 40U),
+        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 48U),
+        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 56U),
+    };
+
+    boost::crypt::size_t offset {};
+    boost::crypt::uint16_t carry {};
+    while (offset < reseed_counter_bytes.size())
+    {
+         boost::crypt::uint16_t result {static_cast<boost::crypt::uint16_t>(value_[offset]) +
+                                        static_cast<boost::crypt::uint16_t>(h[offset]) +
+                                        static_cast<boost::crypt::uint16_t>(constant_[offset]) +
+                                        static_cast<boost::crypt::uint16_t>(reseed_counter_bytes[offset]) +
+                                        carry};
+        carry = 0U;
+        while (result > static_cast<boost::crypt::uint16_t>(0xFFU))
+        {
+            result -= 0xFFU;
+            ++carry;
+        }
+
+        ++offset;
+    }
+    if (value_.size() < h.size())
+    {
+        while (offset < value_.size())
+        {
+            boost::crypt::uint16_t result {static_cast<boost::crypt::uint16_t>(value_[offset]) +
+                                           static_cast<boost::crypt::uint16_t>(h[offset]) +
+                                           static_cast<boost::crypt::uint16_t>(constant_[offset]) +
+                                           carry};
+            carry = 0U;
+            while (result > static_cast<boost::crypt::uint16_t>(0xFFU))
+            {
+                result -= 0xFFU;
+                ++carry;
+            }
+
+            ++offset;
+        }
+    }
+    else
+    {
+        while (offset < h.size())
+        {
+            boost::crypt::uint16_t result {static_cast<boost::crypt::uint16_t>(value_[offset]) +
+                                           static_cast<boost::crypt::uint16_t>(h[offset]) +
+                                           static_cast<boost::crypt::uint16_t>(constant_[offset]) +
+                                           carry};
+            carry = 0U;
+            while (result > static_cast<boost::crypt::uint16_t>(0xFFU))
+            {
+                result -= 0xFFU;
+                ++carry;
+            }
+
+            ++offset;
+        }
+        while (offset < value_.size())
+        {
+            boost::crypt::uint16_t result {static_cast<boost::crypt::uint16_t>(value_[offset]) +
+                                           static_cast<boost::crypt::uint16_t>(constant_[offset]) +
+                                           carry};
+            carry = 0U;
+            while (result > static_cast<boost::crypt::uint16_t>(0xFFU))
+            {
+                result -= 0xFFU;
+                ++carry;
+            }
+
+            ++offset;
+        }
+    }
+
+    ++reseed_counter_;
     return state::success;
 }
 
