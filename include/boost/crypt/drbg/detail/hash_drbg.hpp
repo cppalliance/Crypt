@@ -13,10 +13,6 @@
 #include <boost/crypt/utility/config.hpp>
 #include <boost/crypt/utility/null.hpp>
 
-#if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
-#include <memory>
-#endif
-
 namespace boost {
 namespace crypt {
 namespace drbg {
@@ -63,6 +59,15 @@ private:
                                                    ForwardIter3 provided_data_2 = nullptr, boost::crypt::size_t provided_data_size_2 = 0U,
                                                    ForwardIter4 provided_data_3 = nullptr, boost::crypt::size_t provided_data_size_3 = 0U,
                                                    ForwardIter5 provided_data_4 = nullptr, boost::crypt::size_t provided_data_size_4 = 0U) noexcept -> state;
+
+    template <typename ForwardIter1>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto hashgen(ForwardIter1 returned_bits, boost::crypt::size_t requested_number_of_bytes) noexcept -> state;
+
+    template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*, typename ForwardIter3 = boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate_impl(const boost::crypt::false_type&,
+                                                         ForwardIter1 data, boost::crypt::size_t requested_bits,
+                                                         ForwardIter2 additional_data, boost::crypt::size_t additional_data_size,
+                                                         ForwardIter3, boost::crypt::size_t) noexcept -> state;
 
 public:
 
@@ -138,7 +143,158 @@ public:
     constexpr auto reseed(std::span<T, extent> entropy, std::span<T, extent> additional_input) noexcept -> state
     { return reseed(entropy.begin(), entropy.size(), additional_input.begin(), additional_input.size()); }
     #endif // BOOST_CRYPT_HAS_SPAN
+
+    template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*, typename ForwardIter3 = boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
+                                                    ForwardIter2 additional_data_1 = nullptr, boost::crypt::size_t additional_data_1_size = 0U,
+                                                    ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0U) noexcept -> state;
 };
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename ForwardIter1>
+BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::hashgen(
+    ForwardIter1 returned_bits, boost::crypt::size_t requested_number_of_bytes) noexcept -> state
+{
+    auto data {value_};
+    boost::crypt::size_t offset {};
+    while (offset < requested_number_of_bytes)
+    {
+        HasherType hasher {};
+        const auto hasher_return {hasher.process_bytes(data.begin(), data.size())};
+        if (BOOST_CRYPT_UNLIKELY(hasher_return != state::success))
+        {
+            return hasher_return;
+        }
+
+        const auto w {hasher.get_digest()};
+        if (offset + w.size() < requested_number_of_bytes)
+        {
+            for (const auto byte : w)
+            {
+                returned_bits[offset++] = byte;
+            }
+        }
+        else
+        {
+            for (boost::crypt::size_t i {}; i < requested_number_of_bytes - offset; ++i)
+            {
+                returned_bits[offset++] = w[i];
+            }
+        }
+
+        // data = data + 1 mod 2^seedlen
+        // We really skip the modulo here because once we hit the bounds check it's effectively the mod
+        if (BOOST_CRYPT_LIKELY(data[0] < 0xFFU))
+        {
+            data[0] = data[0] + static_cast<boost::crypt::uint8_t>(1U);
+        }
+        else
+        {
+            bool continue_rounding {};
+            boost::crypt::size_t i {};
+            while (i + 1U < data.size() && continue_rounding)
+            {
+                if (data[i] == 0xFFU)
+                {
+                    data[i] = static_cast<boost::crypt::uint8_t>(0U);
+                    continue_rounding = true;
+                }
+                else if (continue_rounding)
+                {
+                    data[i] = data[i] + static_cast<boost::crypt::uint8_t>(1U);
+                    continue_rounding = false;
+                }
+
+                ++i;
+            }
+        }
+    }
+
+    return state::success();
+}
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*, typename ForwardIter3 = boost::crypt::uint8_t*>
+BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::generate_impl(
+        const boost::crypt::false_type&,
+        ForwardIter1 data, boost::crypt::size_t requested_bits,
+        ForwardIter2 additional_data, boost::crypt::size_t additional_data_size,
+        ForwardIter3, boost::crypt::size_t) noexcept -> state
+{
+    if (reseed_counter_ > reseed_interval)
+    {
+        return state::requires_reseed;
+    }
+    if (utility::is_null(data))
+    {
+        return state::null;
+    }
+    if (!initialized_)
+    {
+        return state::uninitialized;
+    }
+
+    const boost::crypt::size_t requested_bytes {requested_bits / 8U};
+    if (requested_bytes > max_bytes_per_request)
+    {
+        return state::requested_too_many_bits;
+    }
+
+    if (utility::is_null(additional_data))
+    {
+        additional_data_size = 0U;
+    }
+    if (additional_data_size != 0U)
+    {
+        if (BOOST_CRYPT_UNLIKELY(additional_data_size > max_length))
+        {
+            return state::input_too_long; // LCOV_EXCL_LINE
+        }
+        HasherType hasher {};
+        hasher.process_byte(static_cast<boost::crypt::uint8_t>(0x02));
+        hasher.process_bytes(value_.begin(), value_.size());
+        hasher.process_bytes(additional_data.begin(), additional_data_size);
+        const auto w {hasher.get_digest()};
+
+        // V = (v + w) mod 2^seedlen
+        auto w_iter {w.cbegin()};
+        auto v_iter {value_.begin()};
+
+        // Since the size of V depends on the size of w we will never have an overflow situation
+        for (; w_iter != w_iter.end(); ++w_iter, ++v_iter)
+        {
+            const auto sum_val {static_cast<boost::crypt::uint16_t>(*w_iter) + static_cast<boost::crypt::uint16_t>(*v_iter)};
+            const auto new_val {static_cast<boost::crypt::uint8_t>(sum_val & 0xFFU)};
+            *v_iter = new_val;
+
+            // Handle the carry
+            if (sum_val > 0xFFU)
+            {
+                *(v_iter + 1) = *(v_iter + 1) + static_cast<boost::crypt::uint8_t>(1U);
+            }
+        }
+    }
+
+    const auto hashgen_return {hashgen(data, requested_bytes)};
+    if (BOOST_CRYPT_UNLIKELY(hashgen_return != state::success))
+    {
+        return hashgen_return;
+    }
+
+    // Step 5: v = (v + h + c + reseed counter) mod 2^seedlen
+
+    return state::success;
+}
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
+BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
+                                                ForwardIter2 additional_data_1, boost::crypt::size_t additional_data_1_size,
+                                                ForwardIter3 additional_data_2, boost::crypt::size_t additional_data_2_size) noexcept -> state
+{
+    using impl_type = integral_constant<bool, prediction_resistance>;
+    return generate_impl(impl_type(), data, requested_bits, additional_data_1, additional_data_1_size, additional_data_2, additional_data_2_size);
+}
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename Container1, typename Container2>
