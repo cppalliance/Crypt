@@ -176,7 +176,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         #pragma clang diagnostic push
         #pragma clang diagnostic ignored "-Wsign-conversion"
         #endif
-        
+
         const auto w {hasher.get_digest()};
         if (offset + w.size() < requested_number_of_bytes)
         {
@@ -575,14 +575,16 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         ForwardIter4 provided_data_3,  boost::crypt::size_t provided_data_size_3,
         ForwardIter5 provided_data_4,  boost::crypt::size_t provided_data_size_4) noexcept -> state
 {
-    boost::crypt::array<boost::crypt::uint8_t, seedlen_bytes / outlen_bytes + 1> temp {};
     const auto no_of_bytes_to_return {no_of_bits_to_return / 8U};
     const auto len {(no_of_bytes_to_return + 7U) / outlen_bytes};
-    BOOST_CRYPT_ASSERT(len <= temp.size());
 
     if (BOOST_CRYPT_UNLIKELY(len > 255))
     {
         return state::requested_too_many_bits;
+    }
+    else if (BOOST_CRYPT_UNLIKELY(return_container_size < no_of_bytes_to_return))
+    {
+        return state::out_of_memory;
     }
 
     // The hash string concatenates the value of no_of_bits_to_return
@@ -607,35 +609,27 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         hasher.process_bytes(provided_data_4, provided_data_size_4);
         const auto return_val {hasher.get_digest()};
 
-        if (BOOST_CRYPT_UNLIKELY(offset + return_val.size() <= temp.size()))
-        {
-            return state::out_of_memory;
-        }
         for (const auto val : return_val)
         {
-            temp[offset++] = val;
+            return_container[offset++] = val;
         }
     }
 
-    if (BOOST_CRYPT_UNLIKELY(return_container_size > no_of_bytes_to_return))
+    // The final iteration we need to make sure we don't write too many bytes
+    HasherType hasher;
+    hasher.process_byte(static_cast<boost::crypt::uint8_t>(len));
+    hasher.process_bytes(bits_to_return_array.begin(), bits_to_return_array.size());
+    hasher.process_bytes(provided_data_1, provided_data_size_1);
+    hasher.process_bytes(provided_data_2, provided_data_size_2);
+    hasher.process_bytes(provided_data_3, provided_data_size_3);
+    hasher.process_bytes(provided_data_4, provided_data_size_4);
+    const auto return_val {hasher.get_digest()};
+
+    boost::crypt::size_t i {};
+    while (offset < no_of_bytes_to_return)
     {
-        return state::out_of_memory;
+        return_container[offset++] = return_val[i++];
     }
-
-    // We ignore this since we allow both containers and pointers
-    #ifdef __clang__
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wsign-conversion"
-    #endif
-
-    for (boost::crypt::size_t i {}; i < no_of_bytes_to_return; ++i)
-    {
-        return_container[i] = temp[i];
-    }
-
-    #ifdef __clang__
-    #pragma clang diagnostic pop
-    #endif
 
     return state::success;
 }
