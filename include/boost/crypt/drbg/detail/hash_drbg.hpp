@@ -40,7 +40,7 @@ private:
     static constexpr boost::crypt::size_t max_bytes_per_request {65536U};
     static constexpr boost::crypt::size_t min_length {max_hasher_security / 8U};
     static constexpr boost::crypt::size_t min_entropy {min_length * 3U / 2U};
-    static constexpr boost::crypt::size_t seedlen {outlen >= 384 ? 888U : 444U};
+    static constexpr boost::crypt::size_t seedlen {outlen >= 384 ? 888U : 440U};
     static constexpr boost::crypt::size_t seedlen_bytes {seedlen / 8U};
 
     static constexpr boost::crypt::uint64_t max_length {4294967296ULL}; // 2^35 / 8
