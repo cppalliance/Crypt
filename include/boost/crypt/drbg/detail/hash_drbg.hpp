@@ -178,7 +178,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         #endif
 
         const auto w {hasher.get_digest()};
-        if (offset + w.size() < requested_number_of_bytes)
+        if (offset + w.size() <= requested_number_of_bytes)
         {
             for (const auto byte : w)
             {
@@ -187,43 +187,27 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         }
         else
         {
-            for (boost::crypt::size_t i {}; offset < requested_number_of_bytes; ++i)
+            for (boost::crypt::size_t i {}; offset < requested_number_of_bytes && i < w.size(); ++i)
             {
                 returned_bits[offset++] = w[i];
             }
         }
 
+        // Step 3: Increment data by 1 modulo 2^seedlen
+        boost::crypt::uint16_t carry {1};
+        boost::crypt::ptrdiff_t i {data.size() - 1};
+
+        while (carry && i >= 0)
+        {
+            const boost::crypt::uint16_t sum {static_cast<boost::crypt::uint16_t>(static_cast<boost::crypt::uint16_t>(data[i]) + carry)};
+            data[i] = static_cast<boost::crypt::uint8_t>(sum & 0xFFU);
+            carry = sum >> 8U;
+            --i;
+        }
+
         #ifdef __clang__
         #pragma clang diagnostic pop
-        #pragma clang diagnostic ignored "-Wsign-conversion"
         #endif
-
-        // data = data + 1 mod 2^seedlen
-        // We really skip the modulo here because once we hit the bounds check it's effectively the mod
-        if (BOOST_CRYPT_LIKELY(data[0] < static_cast<boost::crypt::uint8_t>(0xFFU)))
-        {
-            data[0] = data[0] + static_cast<boost::crypt::uint8_t>(1U);
-        }
-        else
-        {
-            bool continue_rounding {};
-            boost::crypt::size_t i {};
-            while (i + 1U < data.size() && continue_rounding)
-            {
-                if (data[i] == static_cast<boost::crypt::uint8_t>(0xFFU))
-                {
-                    data[i] = static_cast<boost::crypt::uint8_t>(0U);
-                    continue_rounding = true;
-                }
-                else if (continue_rounding)
-                {
-                    data[i] = data[i] + static_cast<boost::crypt::uint8_t>(1U);
-                    continue_rounding = false;
-                }
-
-                ++i;
-            }
-        }
     }
 
     return state::success;
@@ -600,6 +584,11 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
     boost::crypt::size_t offset {};
     for (boost::crypt::uint8_t counter {0x01}; counter <= static_cast<boost::crypt::uint8_t>(len); ++counter)
     {
+        #ifdef __clang__
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wsign-conversion"
+        #endif
+
         HasherType hasher;
         hasher.process_byte(counter);
         hasher.process_bytes(bits_to_return_array.begin(), bits_to_return_array.size());
@@ -613,6 +602,10 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         {
             return_container[offset++] = return_val[i];
         }
+
+        #ifdef __clang__
+        #pragma clang diagnostic pop
+        #endif
     }
 
     return state::success;
