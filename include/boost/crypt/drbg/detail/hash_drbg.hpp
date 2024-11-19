@@ -187,7 +187,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         }
         else
         {
-            for (boost::crypt::size_t i {}; i < requested_number_of_bytes - offset; ++i)
+            for (boost::crypt::size_t i {}; offset < requested_number_of_bytes; ++i)
             {
                 returned_bits[offset++] = w[i];
             }
