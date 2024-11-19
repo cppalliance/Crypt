@@ -575,8 +575,8 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         ForwardIter4 provided_data_3,  boost::crypt::size_t provided_data_size_3,
         ForwardIter5 provided_data_4,  boost::crypt::size_t provided_data_size_4) noexcept -> state
 {
-    const auto no_of_bytes_to_return {no_of_bits_to_return / 8U};
-    const auto len {(no_of_bytes_to_return + 7U) / outlen_bytes};
+    const auto no_of_bytes_to_return {(no_of_bits_to_return + 7U) / 8U};
+    const auto len {(no_of_bytes_to_return + outlen_bytes - 1U) / outlen_bytes};
 
     if (BOOST_CRYPT_UNLIKELY(len > 255))
     {
@@ -598,7 +598,7 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
     // See 10.3.1
     // temp = temp || HASH(counter, no_of_bits_to_return || input_string)
     boost::crypt::size_t offset {};
-    for (boost::crypt::uint8_t counter {0x01}; counter < static_cast<boost::crypt::uint8_t>(len); ++counter)
+    for (boost::crypt::uint8_t counter {0x01}; counter <= static_cast<boost::crypt::uint8_t>(len); ++counter)
     {
         HasherType hasher;
         hasher.process_byte(counter);
@@ -609,26 +609,10 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         hasher.process_bytes(provided_data_4, provided_data_size_4);
         const auto return_val {hasher.get_digest()};
 
-        for (const auto val : return_val)
+        for (boost::crypt::size_t i {}; i < return_val.size() && offset < no_of_bytes_to_return; ++i)
         {
-            return_container[offset++] = val;
+            return_container[offset++] = return_val[i];
         }
-    }
-
-    // The final iteration we need to make sure we don't write too many bytes
-    HasherType hasher;
-    hasher.process_byte(static_cast<boost::crypt::uint8_t>(len));
-    hasher.process_bytes(bits_to_return_array.begin(), bits_to_return_array.size());
-    hasher.process_bytes(provided_data_1, provided_data_size_1);
-    hasher.process_bytes(provided_data_2, provided_data_size_2);
-    hasher.process_bytes(provided_data_3, provided_data_size_3);
-    hasher.process_bytes(provided_data_4, provided_data_size_4);
-    const auto return_val {hasher.get_digest()};
-
-    boost::crypt::size_t i {};
-    while (offset < no_of_bytes_to_return)
-    {
-        return_container[offset++] = return_val[i++];
     }
 
     return state::success;
