@@ -588,11 +588,11 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
     }
 
     // The hash string concatenates the value of no_of_bits_to_return
-    boost::crypt::array<boost::crypt::uint8_t, 4U> bits_to_return_array = {
-        static_cast<boost::crypt::uint8_t>(no_of_bits_to_return & 0xFF),
-        static_cast<boost::crypt::uint8_t>((no_of_bits_to_return >> 8) & 0xFF),
+    const boost::crypt::array<boost::crypt::uint8_t, 4U> bits_to_return_array = {
+        static_cast<boost::crypt::uint8_t>((no_of_bits_to_return >> 24) & 0xFF),
         static_cast<boost::crypt::uint8_t>((no_of_bits_to_return >> 16) & 0xFF),
-        static_cast<boost::crypt::uint8_t>((no_of_bits_to_return >> 24) & 0xFF)
+        static_cast<boost::crypt::uint8_t>((no_of_bits_to_return >> 8) & 0xFF),
+        static_cast<boost::crypt::uint8_t>(no_of_bits_to_return & 0xFF)
     };
 
     // See 10.3.1
