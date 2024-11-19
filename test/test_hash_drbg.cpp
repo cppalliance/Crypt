@@ -29,18 +29,18 @@ void sha_1_basic_correctness()
     // 4) Destroy drbg
     BOOST_TEST(rng.init(entropy, entropy.size(), nonce, nonce.size()) == boost::crypt::state::success);
     // ** INSTANTIATE:
-    // V = a884a83fa40bcf730e7395dd5800ea7101b4877aaa29da9b7bc0bd2bd052b9b4022f83bae38064134a233835845fdd1442bf3a0221bdc8
-    // C = 4977fb1268c1f6286b5b3969d416fb8ca7e4eaab7fd2edefc239202baa033f8b44e9145148ad24ce83d597176a0bacc84c99246f15e088
+    // V = a8 84 a8 3f a4 0b cf 73 0e 73 95 dd 58 00 ea 71 01 b4 87 7a aa 29 da 9b 7b c0 bd 2b d0 52 b9 b4 02 2f 83 ba e3 80 64 13 4a 23 38 35 84 5f dd 14 42 bf 3a 02 21 bd c8
+    // C = 49 77 fb 12 68 c1 f6 28 6b 5b 39 69 d4 16 fb 8c a7 e4 ea ab 7f d2 ed ef c2 39 20 2b aa 03 3f 8b 44 e9 14 51 48 ad 24 ce 83 d5 97 17 6a 0b ac c8 4c 99 24 6f 15 e0 88
 
     BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::state::success);
     // ** GENERATE (FIRST CALL):
-    // V = f1fca3520ccdc59b79cecf472c17e5fda999722629fcc88b3df9dd577a55f93f47189892b18e1c5f39dfc077ae256588eecec7bbd0323c
-    // C = 4977fb1268c1f6286b5b3969d416fb8ca7e4eaab7fd2edefc239202baa033f8b44e9145148ad24ce83d597176a0bacc84c99246f15e088
+    // V = f1 fc a3 52 0c cd c5 9b 79 ce cf 47 2c 17 e5 fd a9 99 72 26 29 fc c8 8b 3d f9 dd 57 7a 55 f9 3f 47 18 98 92 b1 8e 1c 5f 39 df c0 77 ae 25 65 88 ee ce c7 bb d0 32 3c
+    // C = 49 77 fb 12 68 c1 f6 28 6b 5b 39 69 d4 16 fb 8c a7 e4 ea ab 7f d2 ed ef c2 39 20 2b aa 03 3f 8b 44 e9 14 51 48 ad 24 ce 83 d5 97 17 6a 0b ac c8 4c 99 24 6f 15 e0 88
 
     BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::state::success);
     // ** GENERATE (SECOND CALL):
-    // V = 3b749e64758fbbc3e52a08b1002ee18a517e5cd1a9cfb67b0032fd83245938ca8c01add77068515bde248c75adea10bbaaf0bc18e66a2c
-    // C = 4977fb1268c1f6286b5b3969d416fb8ca7e4eaab7fd2edefc239202baa033f8b44e9145148ad24ce83d597176a0bacc84c99246f15e088
+    // V = 3b 74 9e 64 75 8f bb c3 e5 2a 08 b1 00 2e e1 8a 51 7e 5c d1 a9 cf b6 7b 00 32 fd 83 24 59 38 ca 8c 01 ad d7 70 68 51 5b de 24 8c 75 ad ea 10 bb aa f0 bc 18 e6 6a 2c
+    // C = 49 77 fb 12 68 c1 f6 28 6b 5b 39 69 d4 16 fb 8c a7 e4 ea ab 7f d2 ed ef c2 39 20 2b aa 03 3f 8b 44 e9 14 51 48 ad 24 ce 83 d5 97 17 6a 0b ac c8 4c 99 24 6f 15 e0 88
 
     constexpr boost::crypt::array<boost::crypt::uint8_t, 80> nist_return = {
         0x0e, 0x28, 0x13, 0x0f, 0xa5, 0xca, 0x11, 0xed, 0xd3, 0x29,
