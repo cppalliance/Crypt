@@ -250,7 +250,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         return state::uninitialized;
     }
 
-    const boost::crypt::size_t requested_bytes {requested_bits / 8U};
+    const boost::crypt::size_t requested_bytes {(requested_bits + 7U) / 8U};
     if (requested_bytes > max_bytes_per_request)
     {
         return state::requested_too_many_bits;
@@ -311,14 +311,14 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
     // we also terminate the calculation at mod 2^seedlen since anything past that is irrelevant
     // It just so happens that value_ is 2^seedlen long
     const boost::crypt::array<boost::crypt::uint8_t, 64U / 8U> reseed_counter_bytes = {
+        static_cast<boost::crypt::uint8_t>((reseed_counter_ >> 56U) & 0xFFU),
+        static_cast<boost::crypt::uint8_t>((reseed_counter_ >> 48U) & 0xFFU),
+        static_cast<boost::crypt::uint8_t>((reseed_counter_ >> 40U) & 0xFFU),
+        static_cast<boost::crypt::uint8_t>((reseed_counter_ >> 32U) & 0xFFU),
+        static_cast<boost::crypt::uint8_t>((reseed_counter_ >> 24U) & 0xFFU),
+        static_cast<boost::crypt::uint8_t>((reseed_counter_ >> 16U) & 0xFFU),
+        static_cast<boost::crypt::uint8_t>((reseed_counter_ >> 8U) & 0xFFU),
         static_cast<boost::crypt::uint8_t>(reseed_counter_ & 0xFFU),
-        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 8U),
-        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 16U),
-        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 24U),
-        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 32U),
-        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 40U),
-        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 48U),
-        static_cast<boost::crypt::uint8_t>(reseed_counter_ << 56U),
     };
 
     boost::crypt::size_t offset {};
@@ -334,8 +334,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                 carry
             )};
 
-        carry = result / 0xFF;
-        result %= 0xFF;
+        carry = result >> 8U;
+        result &= 0xFF;
 
         value_[offset] = static_cast<boost::crypt::uint8_t>(result);
 
@@ -353,8 +353,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                     carry
                 )};
 
-            carry = result / 0xFF;
-            result %= 0xFF;
+            carry = result >> 8U;
+            result &= 0xFF;
 
             value_[offset] = static_cast<boost::crypt::uint8_t>(result);
 
@@ -372,8 +372,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                     static_cast<boost::crypt::uint16_t>(constant_[offset]) +
                     carry
                 )};
-            carry = result / 0xFF;
-            result %= 0xFF;
+            carry = result >> 8U;
+            result &= 0xFF;
 
             value_[offset] = static_cast<boost::crypt::uint8_t>(result);
 
@@ -387,8 +387,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
                         static_cast<boost::crypt::uint16_t>(constant_[offset]) +
                         carry
                 )};
-            carry = result / 0xFF;
-            result %= 0xFF;
+            carry = result >> 8U;
+            result &= 0xFF;
 
             value_[offset] = static_cast<boost::crypt::uint8_t>(result);
 
