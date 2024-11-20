@@ -451,9 +451,10 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         additional_input_size = 0U;
     }
 
+    boost::crypt::array<boost::crypt::uint8_t, seedlen_bytes> seed {};
     constexpr boost::crypt::array<boost::crypt::uint8_t, 1U> offset_array = { 0x01 };
     auto seed_status {hash_df(seedlen,
-                              value_.begin(), value_.size(),
+                              seed.begin(), seed.size(),
                               offset_array.begin(), offset_array.size(),
                               value_.begin(), value_.size(),
                               entropy, entropy_size,
@@ -463,6 +464,8 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
     {
         return seed_status;
     }
+    
+    value_ = seed;
 
     constexpr boost::crypt::array<boost::crypt::uint8_t, 1U> c_offset_array = { 0x00 };
     seed_status = hash_df(seedlen,

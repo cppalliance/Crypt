@@ -91,13 +91,13 @@ void sha1_pr_false()
     // 4) Generate compare
     BOOST_TEST(rng.init(entropy, entropy.size(), nonce, nonce.size()) == boost::crypt::state::success);
     // ** INSTANTIATE:
-    // 	V = 9e8301725d5f133b4ab7d329fd2f87ae5f89d96a9dd7e2b98beee1c707b8c3fe412d1125b58bae5dc08a11dac3be4a3147347160fef218
-    //	C = e5e12450450efe5fdc777c95b8c23c938fcd592e2d788f12461936e4a16131b1f2d11ce7f0159ee1e635e62f3df8bda4fea077ad5f9d06
+    // 	V = 9e 83 01 72 5d 5f 13 3b 4a b7 d3 29 fd 2f 87 ae 5f 89 d9 6a 9d d7 e2 b9 8b ee e1 c7 07 b8 c3 fe 41 2d 11 25 b5 8b ae 5d c0 8a 11 da c3 be 4a 31 47 34 71 60 fe f2 18
+    //	C = e5 e1 24 50 45 0e fe 5f dc 77 7c 95 b8 c2 3c 93 8f cd 59 2e 2d 78 8f 12 46 19 36 e4 a1 61 31 b1 f2 d1 1c e7 f0 15 9e e1 e6 35 e6 2f 3d f8 bd a4 fe a0 77 ad 5f 9d 06
 
     BOOST_TEST(rng.reseed(entropy_reseed) == boost::crypt::state::success);
     // ** RESEED:
-    //	V = 745c659f2944829ca6e209c8ca2dddecf9f1861383e34e94007a3a51b8444fd5ae738e7d9c0d5e69aa97ee16c49cfd2432eb32ba5738fa
-    //	C = a1fc40009357a024d878818cf6f979a88d4cc5d760b308ae1a5b9f067972e6f7cf92ddb129a8d3c1bb0005bcf3f8871fd65e794f1990b7
+    //	V = 74 5c 65 9f 29 44 82 9c a6 e2 09 c8 ca 2d dd ec f9 f1 86 13 83 e3 4e 94 00 7a 3a 51 b8 44 4f d5 ae 73 8e 7d 9c 0d 5e 69 aa 97 ee 16 c4 9c fd 24 32 eb 32 ba 57 38 fa
+    //	C = a1 fc 40 00 93 57 a0 24 d8 78 81 8c f6 f9 79 a8 8d 4c c5 d7 60 b3 08 ae 1a 5b 9f 06 79 72 e6 f7 cf 92 dd b1 29 a8 d3 c1 bb 00 05 bc f3 f8 87 1f d6 5e 79 4f 19 90 b7
 
     BOOST_TEST(rng.generate(return_bits.begin(), 640U) == boost::crypt::state::success);
     // ** GENERATE (FIRST CALL):
@@ -130,6 +130,8 @@ void sha1_pr_false()
             // LCOV_EXCL_STOP
         }
     }
+
+    rng.destroy();
 }
 
 int main()
