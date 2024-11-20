@@ -77,7 +77,14 @@ private:
 
 public:
 
-    BOOST_CRYPT_GPU_ENABLED constexpr hash_drbg() = default;
+    BOOST_CRYPT_GPU_ENABLED constexpr hash_drbg() noexcept = default;
+
+    #ifdef BOOST_CRYPT_HAS_CXX20_CONSTEXPR
+    BOOST_CRYPT_GPU_ENABLED constexpr ~hash_drbg() noexcept
+    {
+        destroy();
+    }
+    #endif
 
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*, typename ForwardIter3 = boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
@@ -154,7 +161,18 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
                                                     ForwardIter2 additional_data_1 = nullptr, boost::crypt::size_t additional_data_1_size = 0U,
                                                     ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0U) noexcept -> state;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept;
 };
+
+template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::destroy() noexcept
+{
+    constant_.fill(0x00);
+    value_.fill(0x00);
+    reseed_counter_ = 0U;
+    initialized_ = false;
+}
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1>
