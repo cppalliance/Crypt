@@ -66,14 +66,14 @@ private:
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*, typename ForwardIter3 = boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto generate_impl(const boost::crypt::false_type&,
                                                          ForwardIter1 data, boost::crypt::size_t requested_bits,
-                                                         ForwardIter2 additional_data, boost::crypt::size_t additional_data_size,
-                                                         ForwardIter3, boost::crypt::size_t) noexcept -> state;
+                                                         ForwardIter2 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0U,
+                                                         ForwardIter3 = nullptr, boost::crypt::size_t = 0U) noexcept -> state;
 
-    template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
+    template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*, typename ForwardIter3 = boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto generate_impl(const boost::crypt::true_type&,
                                                          ForwardIter1 data, boost::crypt::size_t requested_bits,
                                                          ForwardIter2 entropy, boost::crypt::size_t entropy_size,
-                                                         ForwardIter3 additional_data, boost::crypt::size_t additional_data_size) noexcept -> state;
+                                                         ForwardIter3 additional_data = nullptr, boost::crypt::size_t additional_data_size = 0U) noexcept -> state;
 
 public:
 
@@ -406,9 +406,10 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>
-BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::generate(ForwardIter1 data, boost::crypt::size_t requested_bits,
-                                                ForwardIter2 additional_data_1, boost::crypt::size_t additional_data_1_size,
-                                                ForwardIter3 additional_data_2, boost::crypt::size_t additional_data_2_size) noexcept -> state
+BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::generate(
+        ForwardIter1 data, boost::crypt::size_t requested_bits,
+        ForwardIter2 additional_data_1, boost::crypt::size_t additional_data_1_size,
+        ForwardIter3 additional_data_2, boost::crypt::size_t additional_data_2_size) noexcept -> state
 {
     using impl_type = integral_constant<bool, prediction_resistance>;
     return generate_impl(impl_type(), data, requested_bits, additional_data_1, additional_data_1_size, additional_data_2, additional_data_2_size);
