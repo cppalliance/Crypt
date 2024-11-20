@@ -246,7 +246,7 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr auto crbegin() const noexcept -> const_reverse_iterator { return const_reverse_iterator{elements + N}; }
     BOOST_CRYPT_GPU_ENABLED constexpr auto rend() noexcept -> reverse_iterator { return reverse_iterator{elements}; }
     BOOST_CRYPT_GPU_ENABLED constexpr auto rend() const noexcept -> const_reverse_iterator { return const_reverse_iterator{elements}; }
-    BOOST_CRYPT_GPU_ENABLED constexpr auto crend() const noexcept -> const_reverse_iterator { return const_reverse_iterator{elements + N}; }
+    BOOST_CRYPT_GPU_ENABLED constexpr auto crend() const noexcept -> const_reverse_iterator { return const_reverse_iterator{elements}; }
 
     // Sizing
     BOOST_CRYPT_GPU_ENABLED constexpr auto size() const noexcept -> size_type { return N; }
