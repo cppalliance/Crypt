@@ -222,7 +222,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         {
             const boost::crypt::uint16_t sum {static_cast<boost::crypt::uint16_t>(static_cast<boost::crypt::uint16_t>(data[i]) + carry)};
             data[i] = static_cast<boost::crypt::uint8_t>(sum & 0xFFU);
-            carry = sum >> 8U;
+            carry = static_cast<boost::crypt::uint16_t>(sum >> 8U);
             --i;
         }
 
@@ -281,21 +281,16 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         const auto w {hasher.get_digest()};
 
         // V = (v + w) mod 2^seedlen
-        auto w_iter {w.cbegin()};
-        auto v_iter {value_.begin()};
+        auto w_iter {w.crbegin()};
+        auto v_iter {value_.rbegin()};
 
         // Since the size of V depends on the size of w we will never have an overflow situation
-        for (; w_iter != w.cend(); ++w_iter, ++v_iter)
+        boost::crypt::uint16_t carry {};
+        for (; w_iter != w.crend(); ++w_iter, ++v_iter)
         {
-            const auto sum_val {static_cast<boost::crypt::uint16_t>(static_cast<boost::crypt::uint16_t>(*w_iter) + static_cast<boost::crypt::uint16_t>(*v_iter))};
-            const auto new_val {static_cast<boost::crypt::uint8_t>(sum_val & 0xFFU)};
-            *v_iter = new_val;
-
-            // Handle the carry
-            if (sum_val > 0xFFU)
-            {
-                *(v_iter + 1) = *(v_iter + 1) + static_cast<boost::crypt::uint8_t>(1U);
-            }
+            const auto sum {static_cast<boost::crypt::uint16_t>(static_cast<boost::crypt::uint16_t>(*w_iter) + static_cast<boost::crypt::uint16_t>(*v_iter) + carry)};
+            carry = static_cast<boost::crypt::uint16_t>(sum >> 8U);
+            *v_iter = static_cast<boost::crypt::uint8_t>(sum & 0xFFU);
         }
     }
 
@@ -345,6 +340,13 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
             carry
         )};
 
+        // GCC converts the += to int for some odd reason
+        // This is clearly incorrect so we ignore it
+        #if defined(__GNUC__) && __GNUC__ >= 5
+        #  pragma GCC diagnostic push
+        #  pragma GCC diagnostic ignored "-Wconversion"
+        #endif
+
         if (h_longer || h_iter != h.crend())
         {
             sum += static_cast<boost::crypt::uint16_t>(*h_iter++);
@@ -354,13 +356,17 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
             sum += static_cast<boost::crypt::uint16_t>(*reseed_counter_iter++);
         }
 
-        carry = sum >> 8U;
+        carry = static_cast<boost::crypt::uint16_t>(sum >> 8U);
         sum &= 0xFFU;
 
         BOOST_CRYPT_ASSERT(carry >= 0U && carry <= 3U);
         BOOST_CRYPT_ASSERT(sum <= 0xFFU);
 
         *value_iter++ = static_cast<boost::crypt::uint8_t>(sum);
+
+        #if defined(__GNUC__) && __GNUC__ >= 5
+        #  pragma GCC diagnostic pop
+        #endif
     }
 
     ++reseed_counter_;
