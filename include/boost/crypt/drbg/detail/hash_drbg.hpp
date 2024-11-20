@@ -294,6 +294,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
     // we add all bytes of the same offset at once and have an integer rather than boolean carry
     // we also terminate the calculation at mod 2^seedlen since anything past that is irrelevant
     // It just so happens that value_ is 2^seedlen long
+    //
+    // The rub is that everything is to be in big endian order so we use reverse iterators
     const boost::crypt::array<boost::crypt::uint8_t, 64U / 8U> reseed_counter_bytes = {
         static_cast<boost::crypt::uint8_t>((reseed_counter_ >> 56U) & 0xFFU),
         static_cast<boost::crypt::uint8_t>((reseed_counter_ >> 48U) & 0xFFU),
@@ -305,79 +307,37 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         static_cast<boost::crypt::uint8_t>(reseed_counter_ & 0xFFU),
     };
 
-    boost::crypt::size_t offset {};
+    auto value_iter {value_.rbegin()};
+    auto h_iter {h.crbegin()};
+    auto c_iter {constant_.crbegin()};
+    auto reseed_counter_iter {reseed_counter_bytes.crbegin()};
     boost::crypt::uint16_t carry {};
-    while (offset < reseed_counter_bytes.size())
+    const auto h_longer {h.size() >= value_.size()};
+    // Value and constant are the same length so we don't need to duplicate those checks
+    while (value_iter != value_.rend())
     {
-         boost::crypt::uint16_t result {
-            static_cast<boost::crypt::uint16_t>(
-                static_cast<boost::crypt::uint16_t>(value_[offset]) +
-                static_cast<boost::crypt::uint16_t>(h[offset]) +
-                static_cast<boost::crypt::uint16_t>(constant_[offset]) +
-                static_cast<boost::crypt::uint16_t>(reseed_counter_bytes[offset]) +
-                carry
-            )};
+        boost::crypt::uint16_t sum {static_cast<boost::crypt::uint16_t>(
+            static_cast<boost::crypt::uint16_t>(*value_iter) +
+            static_cast<boost::crypt::uint16_t>(*c_iter++) +
+            carry
+        )};
 
-        carry = result >> 8U;
-        result &= 0xFF;
-
-        value_[offset] = static_cast<boost::crypt::uint8_t>(result);
-
-        ++offset;
-    }
-    if (value_.size() < h.size())
-    {
-        while (offset < value_.size())
+        if (h_longer || h_iter != h.crend())
         {
-            boost::crypt::uint16_t result {
-                static_cast<boost::crypt::uint16_t>(
-                    static_cast<boost::crypt::uint16_t>(value_[offset]) +
-                    static_cast<boost::crypt::uint16_t>(h[offset]) +
-                    static_cast<boost::crypt::uint16_t>(constant_[offset]) +
-                    carry
-                )};
-
-            carry = result >> 8U;
-            result &= 0xFF;
-
-            value_[offset] = static_cast<boost::crypt::uint8_t>(result);
-
-            ++offset;
+            sum += static_cast<boost::crypt::uint16_t>(*h_iter++);
         }
-    }
-    else
-    {
-        while (offset < h.size())
+        if (reseed_counter_iter != reseed_counter_bytes.crend())
         {
-            boost::crypt::uint16_t result {
-                static_cast<boost::crypt::uint16_t>(
-                    static_cast<boost::crypt::uint16_t>(value_[offset]) +
-                    static_cast<boost::crypt::uint16_t>(h[offset]) +
-                    static_cast<boost::crypt::uint16_t>(constant_[offset]) +
-                    carry
-                )};
-            carry = result >> 8U;
-            result &= 0xFF;
-
-            value_[offset] = static_cast<boost::crypt::uint8_t>(result);
-
-            ++offset;
+            sum += static_cast<boost::crypt::uint16_t>(*reseed_counter_iter++);
         }
-        while (offset < value_.size())
-        {
-            boost::crypt::uint16_t result {
-                static_cast<boost::crypt::uint16_t>(
-                        static_cast<boost::crypt::uint16_t>(value_[offset]) +
-                        static_cast<boost::crypt::uint16_t>(constant_[offset]) +
-                        carry
-                )};
-            carry = result >> 8U;
-            result &= 0xFF;
 
-            value_[offset] = static_cast<boost::crypt::uint8_t>(result);
+        carry = sum >> 8U;
+        sum &= 0xFFU;
 
-            ++offset;
-        }
+        BOOST_CRYPT_ASSERT(carry >= 0U && carry <= 3U);
+        BOOST_CRYPT_ASSERT(sum <= 0xFFU);
+
+        *value_iter++ = static_cast<boost::crypt::uint8_t>(sum);
     }
 
     ++reseed_counter_;
