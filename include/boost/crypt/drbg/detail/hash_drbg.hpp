@@ -452,7 +452,12 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
     }
 
     constexpr boost::crypt::array<boost::crypt::uint8_t, 1U> offset_array = { 0x01 };
-    auto seed_status = hash_df(seedlen, value_.begin(), value_.size(), offset_array.begin(), offset_array.size(), value_.begin(), value_.end(), entropy, entropy_size, additional_input, additional_input_size);
+    auto seed_status {hash_df(seedlen,
+                              value_.begin(), value_.size(),
+                              offset_array.begin(), offset_array.size(),
+                              value_.begin(), value_.size(),
+                              entropy, entropy_size,
+                              additional_input, additional_input_size)};
 
     if (BOOST_CRYPT_UNLIKELY(seed_status != state::success))
     {
@@ -460,7 +465,10 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
     }
 
     constexpr boost::crypt::array<boost::crypt::uint8_t, 1U> c_offset_array = { 0x00 };
-    seed_status = hash_df(seedlen, constant_.begin(), constant_.size(), c_offset_array.begin(), c_offset_array.size(), value_.begin(), value_.size());
+    seed_status = hash_df(seedlen,
+                          constant_.begin(), constant_.size(),
+                          c_offset_array.begin(), c_offset_array.size(),
+                          value_.begin(), value_.size());
 
     if (BOOST_CRYPT_UNLIKELY(seed_status != state::success))
     {
