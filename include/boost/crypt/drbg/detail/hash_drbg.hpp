@@ -191,8 +191,11 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         }
 
         #ifdef __clang__
-        #pragma clang diagnostic push
-        #pragma clang diagnostic ignored "-Wsign-conversion"
+        #  pragma clang diagnostic push
+        #  pragma clang diagnostic ignored "-Wsign-conversion"
+        #elif defined(__GNUC__)
+        #  pragma GCC diagnostic push
+        #  pragma GCC diagnostic ignored "-Wsign-conversion"
         #endif
 
         const auto w {hasher.get_digest()};
@@ -224,7 +227,9 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         }
 
         #ifdef __clang__
-        #pragma clang diagnostic pop
+        #  pragma clang diagnostic pop
+        #elif defined(__GNUC__)
+        #  pragma GCC diagnostic pop
         #endif
     }
 
@@ -563,8 +568,11 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
     for (boost::crypt::uint8_t counter {0x01}; counter <= static_cast<boost::crypt::uint8_t>(len); ++counter)
     {
         #ifdef __clang__
-        #pragma clang diagnostic push
-        #pragma clang diagnostic ignored "-Wsign-conversion"
+        #  pragma clang diagnostic push
+        #  pragma clang diagnostic ignored "-Wsign-conversion"
+        #elif defined(__GNUC__)
+        #  pragma GCC diagnostic push
+        #  pragma GCC diagnostic ignored "-Wsign-conversion"
         #endif
 
         HasherType hasher;
@@ -582,7 +590,9 @@ constexpr auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_res
         }
 
         #ifdef __clang__
-        #pragma clang diagnostic pop
+        #  pragma clang diagnostic pop
+        #elif defined(__GNUC__)
+        #  pragma GCC diagnostic pop
         #endif
     }
 
