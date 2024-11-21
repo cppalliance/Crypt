@@ -303,11 +303,12 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         }
 
         // Handle final carry past the end of w
+        // Since we are to do v = (v+w) mod seedlen we don't concern ourselves past v_end
         while (carry && v_iter != v_end)
         {
             const auto sum {static_cast<boost::crypt::uint16_t>(*v_iter + carry)};
             carry = static_cast<boost::crypt::uint16_t>(sum >> 8U);
-            *v_iter = static_cast<boost::crypt::uint8_t>(sum & 0xFFU);
+            *v_iter++ = static_cast<boost::crypt::uint8_t>(sum & 0xFFU);
         }
     }
 
