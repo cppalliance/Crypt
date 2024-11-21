@@ -351,24 +351,23 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
     const auto h_end {h.crend()};
 
     auto c_iter {constant_.crbegin()};
-    const auto c_end {constant_.crend()};
 
     auto reseed_counter_iter {reseed_counter_bytes.crbegin()};
     const auto reseed_counter_end {reseed_counter_bytes.crend()};
 
     boost::crypt::uint16_t carry {};
+
+    // Since the length of constant and value are known to be the same we only boundary check one of the two
     while (value_iter != value_end)
     {
-        boost::crypt::uint16_t sum {static_cast<boost::crypt::uint16_t>(static_cast<boost::crypt::uint16_t>(*value_iter) + carry)};
+        boost::crypt::uint16_t sum {static_cast<boost::crypt::uint16_t>(
+                                        static_cast<boost::crypt::uint16_t>(*value_iter) +
+                                        static_cast<boost::crypt::uint16_t>(*c_iter++) + carry
+                                        )};
 
         if (h_iter != h_end)
         {
             sum += static_cast<boost::crypt::uint16_t>(*h_iter++);
-        }
-
-        if (c_iter != c_end)
-        {
-            sum += static_cast<boost::crypt::uint16_t>(*c_iter++);
         }
 
         if (reseed_counter_iter != reseed_counter_end)
