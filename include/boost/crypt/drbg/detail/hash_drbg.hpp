@@ -356,8 +356,13 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
     auto reseed_counter_iter {reseed_counter_bytes.crbegin()};
     const auto reseed_counter_end {reseed_counter_bytes.crend()};
 
-    boost::crypt::uint16_t carry {};
+    // Older GCC warns the += is int instead of uint16_t
+    #if defined(__GNUC__) && __GNUC__ >= 5 && __GNUC__ < 10
+    #  pragma GCC diagnostic push
+    #  pragma GCC diagnostic ignored "-Wconversion"
+    #endif
 
+    boost::crypt::uint16_t carry {};
     // Since the length of constant and value are known to be the same we only boundary check one of the two
     while (value_iter != value_end)
     {
@@ -379,6 +384,10 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         carry = static_cast<boost::crypt::uint16_t>(sum >> 8U);
         *value_iter++ = static_cast<boost::crypt::uint8_t>(sum & 0xFFU);
     }
+
+    #if defined(__GNUC__) && __GNUC__ >= 5 && __GNUC__ < 10
+    #  pragma GCC diagnostic pop
+    #endif
 
     ++reseed_counter_;
     return state::success;
