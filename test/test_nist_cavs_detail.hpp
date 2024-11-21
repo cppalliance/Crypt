@@ -1851,7 +1851,10 @@ auto test_vectors_drbg_no_reseed(const nist::cavs::test_vector_container_drbg_no
             {
                 // LCOV_EXCL_START
                 result_is_ok = false;
-                std::cerr << "Error with vector: " << count << std::endl;
+                std::cerr << "Error with vector: " << count
+                          << "\nBeginning of entropy: " << std::to_string(test_vector.initial_entropy[0]) << ", "
+                          << std::to_string(test_vector.initial_entropy[1]) << ", "
+                          << std::to_string(test_vector.initial_entropy[2]) << std::endl;
                 break;
                 // LCOV_EXCL_STOP
             }
@@ -1895,7 +1898,10 @@ auto test_vectors_drbg_pr_false(const nist::cavs::test_vector_container_drbg_pr_
             {
                 // LCOV_EXCL_START
                 result_is_ok = false;
-                std::cerr << "Error with vector: " << count << std::endl;
+                std::cerr << "Error with vector: " << count
+                          << "\nBeginning of entropy: " << std::to_string(test_vector.initial_entropy[0]) << ", "
+                          << std::to_string(test_vector.initial_entropy[1]) << ", "
+                          << std::to_string(test_vector.initial_entropy[2]) << std::endl;
                 break;
                 // LCOV_EXCL_STOP
             }
@@ -1938,7 +1944,10 @@ auto test_vectors_drbg_pr_true(const nist::cavs::test_vector_container_drbg_pr_t
             {
                 // LCOV_EXCL_START
                 result_is_ok = false;
-                std::cerr << "Error with vector: " << count << std::endl;
+                std::cerr << "Error with vector: " << count
+                          << "\nBeginning of entropy: " << std::to_string(test_vector.initial_entropy[0]) << ", "
+                          << std::to_string(test_vector.initial_entropy[1]) << ", "
+                          << std::to_string(test_vector.initial_entropy[2]) << std::endl;
                 break;
                 // LCOV_EXCL_STOP
             }
