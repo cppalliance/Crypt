@@ -270,12 +270,91 @@ void sha1_additional_data()
     }
 }
 
+void sha1_additional_gen_input()
+{
+    boost::crypt::sha1_hash_drbg_pr rng;
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> entropy = {
+        0x8b, 0x76, 0x99, 0x15, 0x91, 0x7b, 0xbf, 0x4e, 0x4b, 0x48, 0xf2, 0x66, 0x39, 0x30, 0x61, 0x52
+    };
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 8> nonce = {
+        0x17, 0xea, 0x14, 0xe8, 0xad, 0x54, 0x46, 0xaa
+    };
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> personalization_string = {
+        0x99, 0x94, 0xed, 0x56, 0xb1, 0x35, 0x5a, 0x6d, 0x60, 0x3e, 0x36, 0x6a, 0x8f, 0x9c, 0x04, 0xa9
+    };
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> additional_input_1 = {
+        0x1b, 0x8c, 0x8b, 0x88, 0xd7, 0xce, 0x96, 0xeb, 0x7a, 0xbd, 0x03, 0xb5, 0x55, 0x1c, 0xe9, 0x9d
+    };
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> entropy_gen_1 = {
+        0x36, 0x39, 0x1d, 0x0d, 0x89, 0x75, 0x10, 0xaa, 0x84, 0x4c, 0x99, 0x20, 0x48, 0x8d, 0x49, 0xf2
+    };
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> additional_input_2 = {
+        0xfa, 0xb6, 0xfc, 0x0a, 0xcb, 0x22, 0x98, 0x38, 0x65, 0xc3, 0x83, 0x62, 0x53, 0x71, 0x8f, 0x31
+    };
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> entropy_gen_2 = {
+        0x74, 0xc7, 0xb5, 0x4e, 0x9f, 0xdc, 0x82, 0x4f, 0xc8, 0xe0, 0x46, 0x36, 0x73, 0xef, 0x92, 0xbc
+    };
+
+    boost::crypt::array<boost::crypt::uint8_t, 80> return_bits {};
+
+    // Test process is:
+    // 1) Instantiate drbg
+    // 2) Generate bits, do not compare
+    // 3) Generate bits, compare
+    // 4) Destroy drbg
+    BOOST_TEST(rng.init(entropy, nonce, personalization_string) == boost::crypt::state::success);
+    // ** INSTANTIATE:
+    //	V = 1bd499277b1c3b8ea183b2a924669ab99cb7dec9ef7709b6e1f11bf3e2199b09984c869669b268de0d09128fc9b4be5fc417d1c3ed9aa6
+    //	C = de0f063ebdb0219fbfe6c9b3ac9271758423ff0394779e446f74dc977aded577e109efed627abf164873af417b6589ea4293c79c83cd6d
+
+    BOOST_TEST(rng.generate(return_bits.begin(), 640U, entropy_gen_1.begin(), entropy_gen_1.size(), additional_input_1.begin(), additional_input_1.size()) == boost::crypt::state::success);
+    // ** GENERATE (FIRST CALL):
+    // 	V = 5175a69940d5ffd54c444fbf42716d910785b4eb11d26b2254ee5784295a8b21e61d38c7e7fde8353b7a0be7a13a9fb3e699e902574eb9
+    //	C = 2d6bf03f0da8e4d4f3c0648bae0b9be4911cf870ca8789a16886a9b9fe64338012b6feae2c889cc78553c2a6a7c9829b32a57316e14042
+
+    BOOST_TEST(rng.generate(return_bits.begin(), 640U, entropy_gen_2.begin(), entropy_gen_2.size(), additional_input_2.begin(), additional_input_2.size()) == boost::crypt::state::success);
+    // ** GENERATE (SECOND CALL):
+    //	V = c35d4a033e2541a93e3e7ff5840f30f90a99775273cea47d3c16280bd36655e9314f15c43df89cd668dd79385287de9b87e5577e623354
+    //	C = 9767cd1c4a51fc33f046e281aa2c5c98b116364638f46271951c38db1d246eadc92b977b0643183c39ae95184e2f147f9c8b7f5d6158d5
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 80> nist_return = {
+        0x1f, 0x07, 0x77, 0x2a, 0x46, 0x66, 0x2b, 0x37, 0x50, 0xe3,
+        0x9b, 0x31, 0x91, 0xfa, 0x74, 0xc8, 0x35, 0x4f, 0x9d, 0x7e,
+        0xae, 0xa5, 0x6b, 0xa0, 0xd2, 0x92, 0x72, 0xd0, 0x71, 0xef,
+        0x6d, 0xa2, 0x41, 0x1c, 0xd0, 0x5b, 0x64, 0x76, 0x2e, 0x27,
+        0xa7, 0x36, 0xb0, 0x88, 0xd9, 0x2d, 0xad, 0x4f, 0x22, 0x2e,
+        0xfa, 0x3e, 0x3c, 0xa2, 0xbe, 0xe0, 0xd5, 0xf1, 0x40, 0x1d,
+        0x7e, 0xf5, 0x3e, 0x38, 0x42, 0x13, 0x21, 0x81, 0x51, 0x1a,
+        0x51, 0x59, 0xbc, 0x8e, 0xa3, 0xa6, 0xdb, 0x12, 0x15, 0xab
+    };
+
+    for (boost::crypt::size_t i {}; i < return_bits.size(); ++i)
+    {
+        if (!BOOST_TEST_EQ(return_bits[i], nist_return[i]))
+        {
+            // LCOV_EXCL_START
+            std::cerr << std::hex
+                      << "Got: " << static_cast<boost::crypt::uint32_t>(return_bits[i])
+                      << "\nExpected: " << static_cast<boost::crypt::uint32_t>(nist_return[i]) << std::endl;
+            // LCOV_EXCL_STOP
+        }
+    }
+}
+
 int main()
 {
     sha_1_basic_correctness();
     sha1_pr_false();
     sha_1_pr_true();
     sha1_additional_data();
+    sha1_additional_gen_input();
 
     return boost::report_errors();
 }
