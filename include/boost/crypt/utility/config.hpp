@@ -104,6 +104,11 @@
 #  endif // C++20
 #endif // BOOST_CRYPT_HAS_CUDA
 
+// C++20 constexpr destructors
+#if __cpp_constexpr >= 201907L
+#  define BOOST_CRYPT_HAS_CXX20_CONSTEXPR
+#endif
+
 #else // We are building a module
 
 // If someone is building the module successfully they defintiely have the above things
