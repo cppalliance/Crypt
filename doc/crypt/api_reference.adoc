@@ -14,11 +14,12 @@ https://www.boost.org/LICENSE_1_0.txt
 
 == Structures and Classes
 
-- <<md5_hasher, `md5_hasher`>>
+=== Hashers
 
+- <<md5_hasher, `md5_hasher`>>
 - <<sha1_hasher, `sha1_hasher`>>
 
-=== SHA2 Family
+==== SHA2 Family of Hashers
 - <<sha224_hasher, `sha224_hasher`>>
 - <<sha256_hasher, `sha256_hasher`>>
 - <<sha384_hasher, `sha384_hasher`>>
@@ -26,11 +27,14 @@ https://www.boost.org/LICENSE_1_0.txt
 - <<sha512_224_hasher, `sha512_224_hasher`>>
 - <<sha512_256_hasher, `sha512_256_hasher`>>
 
-=== SHA3 Family
+==== SHA3 Family of Hashers
 - <<sha3_224_hasher, `sha3_224_hasher`>>
 - <<sha3_256_hasher, `sha3_256_hasher`>>
 - <<sha3_384_hasher, `sha3_384_hasher`>>
 - <<sha3_512_hasher, `sha3_512_hasher`>>
+
+=== Hash-Based Message Authentication Codes (HMAC)
+- <<hmac, `hmac`>>
 
 == Enums
 
