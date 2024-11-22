@@ -38,6 +38,10 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr hmac() noexcept = default;
 
+    #ifdef BOOST_CRYPT_HAS_CXX20_CONSTEXPR
+    BOOST_CRYPT_GPU_ENABLED constexpr ~hmac() noexcept { destroy(); }
+    #endif
+
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr hmac(ForwardIter key, boost::crypt::size_t size) noexcept { init(key, size); }
 
@@ -67,7 +71,21 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_outer_key() noexcept -> key_type;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_inner_key() noexcept -> key_type;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept -> void;
 };
+
+template <typename HasherType>
+constexpr auto hmac<HasherType>::destroy() noexcept -> void
+{
+    inner_key_.fill(0x00);
+    outer_key_.fill(0x00);
+    inner_hash_.destroy();
+    outer_hash_.destroy();
+    initialized_ = false;
+    computed_ = false;
+    corrupted_ = false;
+}
 
 template <typename HasherType>
 constexpr auto hmac<HasherType>::get_inner_key() noexcept -> key_type
