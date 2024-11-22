@@ -65,6 +65,31 @@ https://www.boost.org/LICENSE_1_0.txt
 - <<hash_drgb, `sha3_512_hash_drbg_pr`>>
 
 ==== HMAC-Based
+===== Non-Prediction Resistant
+- <<hmac_drbg, `sha1_hmac_drbg`>>
+- <<hmac_drbg, `sha224_hmac_drbg`>>
+- <<hmac_drbg, `sha256_hmac_drbg`>>
+- <<hmac_drbg, `sha384_hmac_drbg`>>
+- <<hmac_drbg, `sha512_hmac_drbg`>>
+- <<hmac_drbg, `sha512_224_hmac_drbg`>>
+- <<hmac_drbg, `sha512_256_hmac_drbg`>>
+- <<hmac_drbg, `sha3_224_hmac_drbg`>>
+- <<hmac_drbg, `sha3_256_hmac_drbg`>>
+- <<hmac_drbg, `sha3_384_hmac_drbg`>>
+- <<hmac_drbg, `sha3_512_hmac_drbg`>>
+
+===== Prediction Resistant
+- <<hmac_drbg, `sha1_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha224_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha256_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha384_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha512_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha512_224_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha512_256_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha3_224_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha3_256_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha3_384_hmac_drbg_pr`>>
+- <<hmac_drbg, `sha3_512_hmac_drbg_pr`>>
 
 == Enums
 
