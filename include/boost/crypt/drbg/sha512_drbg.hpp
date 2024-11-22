@@ -6,6 +6,7 @@
 #define BOOST_CRYPT_DRBG_SHA512_DRBG_HPP
 
 #include <boost/crypt/drbg/detail/hmac_drbg.hpp>
+#include <boost/crypt/drbg/detail/hash_drbg.hpp>
 #include <boost/crypt/hash/sha512.hpp>
 
 namespace boost {
@@ -14,9 +15,15 @@ namespace crypt {
 namespace drbg {
 
 template <bool prediction_resistance>
+using sha512_hash_drbg_t = drbg::hash_drbg<sha512_hasher, 256U, 512U, prediction_resistance>;
+
+template <bool prediction_resistance>
 using sha512_hmac_drbg_t = drbg::hmac_drbg<hmac<sha512_hasher>, 256U, 512U, prediction_resistance>;
 
 } // namespace drbg
+
+BOOST_CRYPT_EXPORT using sha512_hash_drbg = drbg::sha512_hash_drbg_t<false>;
+BOOST_CRYPT_EXPORT using sha512_hash_drbg_pr = drbg::sha512_hash_drbg_t<true>;
 
 BOOST_CRYPT_EXPORT using sha512_hmac_drbg = drbg::sha512_hmac_drbg_t<false>;
 BOOST_CRYPT_EXPORT using sha512_hmac_drbg_pr = drbg::sha512_hmac_drbg_t<true>;
