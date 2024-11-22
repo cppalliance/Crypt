@@ -47,6 +47,8 @@ include::crypt/sha3_512.adoc[]
 
 include::crypt/hmac.adoc[]
 
+include::crypt/hash_drbg.adoc[]
+
 include::crypt/config.adoc[]
 
 include::crypt/reference.adoc[]

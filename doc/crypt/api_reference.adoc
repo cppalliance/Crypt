@@ -36,6 +36,36 @@ https://www.boost.org/LICENSE_1_0.txt
 === Hash-Based Message Authentication Codes (HMAC)
 - <<hmac, `hmac`>>
 
+=== Deterministic Random Bit Generators (DRBG)
+==== Hash-Based
+===== Non-Prediction Resistant
+- <<hash_drgb, `sha1_hash_drbg`>>
+- <<hash_drgb, `sha224_hash_drbg`>>
+- <<hash_drgb, `sha256_hash_drbg`>>
+- <<hash_drgb, `sha384_hash_drbg`>>
+- <<hash_drgb, `sha512_hash_drbg`>>
+- <<hash_drgb, `sha512_224_hash_drbg`>>
+- <<hash_drgb, `sha512_256_hash_drbg`>>
+- <<hash_drgb, `sha3_224_hash_drbg`>>
+- <<hash_drgb, `sha3_256_hash_drbg`>>
+- <<hash_drgb, `sha3_384_hash_drbg`>>
+- <<hash_drgb, `sha3_512_hash_drbg`>>
+
+===== Prediction Resistant
+- <<hash_drgb, `sha1_hash_drbg_pr`>>
+- <<hash_drgb, `sha224_hash_drbg_pr`>>
+- <<hash_drgb, `sha256_hash_drbg_pr`>>
+- <<hash_drgb, `sha384_hash_drbg_pr`>>
+- <<hash_drgb, `sha512_hash_drbg_pr`>>
+- <<hash_drgb, `sha512_224_hash_drbg_pr`>>
+- <<hash_drgb, `sha512_256_hash_drbg_pr`>>
+- <<hash_drgb, `sha3_224_hash_drbg_pr`>>
+- <<hash_drgb, `sha3_256_hash_drbg_pr`>>
+- <<hash_drgb, `sha3_384_hash_drbg_pr`>>
+- <<hash_drgb, `sha3_512_hash_drbg_pr`>>
+
+==== HMAC-Based
+
 == Enums
 
 - <<state, `state`>>
