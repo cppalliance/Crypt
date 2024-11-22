@@ -71,6 +71,10 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr hmac_drbg() = default;
 
+    #ifdef BOOST_CRYPT_HAS_CXX20_CONSTEXPR
+    BOOST_CRYPT_GPU_ENABLED constexpr ~hmac_drbg() noexcept { destroy(); }
+    #endif
+
     template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = const boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter1 entropy, boost::crypt::size_t entropy_size,
                                                 ForwardIter2 nonce = nullptr, boost::crypt::size_t nonce_size = 0,
@@ -143,7 +147,17 @@ public:
     template <typename Container1, typename Container2, typename Container3>
     BOOST_CRYPT_GPU_ENABLED constexpr auto generate(Container1& data, const Container2& additional_data_1, const Container3& additional_data_2) noexcept -> state;
 
+    BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept;
 };
+
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resistance>::destroy() noexcept
+{
+    key_.fill(0x00);
+    value_.fill(0x00);
+    reseed_counter_ = 0U;
+    initialized_ = false;
+}
 
 template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
 template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3>

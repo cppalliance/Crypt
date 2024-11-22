@@ -206,6 +206,8 @@ void sha1_pr()
 
     #endif
     #endif
+
+    rng.destroy();
 }
 
 int main()
