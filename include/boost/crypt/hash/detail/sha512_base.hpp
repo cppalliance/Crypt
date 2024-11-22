@@ -75,6 +75,10 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr sha512_base() noexcept { init(); }
 
+    #ifdef BOOST_CRYPT_HAS_CXX20_CONSTEXPR
+    BOOST_CRYPT_GPU_ENABLED constexpr ~sha512_base() noexcept { destroy(); }
+    #endif
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto init() noexcept -> void;
 
     template <typename ByteType>
@@ -116,6 +120,8 @@ public:
     #endif // BOOST_CRYPT_HAS_CUDA
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept -> void { init(); }
 };
 
 template <boost::crypt::size_t digest_size>
@@ -574,6 +580,7 @@ constexpr auto sha512_base<digest_size>::init(const integral_constant<boost::cry
 template <boost::crypt::size_t digest_size>
 constexpr auto sha512_base<digest_size>::init() noexcept -> void
 {
+    intermediate_hash_.fill(0);
     buffer_.fill(0);
     buffer_index_ = 0U;
     low_ = 0U;

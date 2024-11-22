@@ -65,6 +65,10 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr sha3_base() noexcept { init(); };
 
+    #ifdef BOOST_CRYPT_HAS_CXX20_CONSTEXPR
+    BOOST_CRYPT_GPU_ENABLED constexpr ~sha3_base() noexcept { destroy(); }
+    #endif
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto init() noexcept -> void;
 
     template <typename ByteType>
@@ -112,6 +116,8 @@ public:
 
     template <typename Container>
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest(Container& container) noexcept -> boost::crypt::size_t;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept -> void { init(); }
 };
 
 template <boost::crypt::size_t digest_size, bool is_xof>

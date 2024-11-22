@@ -62,6 +62,10 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto base_init() noexcept -> void;
 
+    #ifdef BOOST_CRYPT_HAS_CXX20_CONSTEXPR
+    BOOST_CRYPT_GPU_ENABLED constexpr ~hasher_base_512() noexcept { destroy(); }
+    #endif
+
     template <typename ByteType>
     BOOST_CRYPT_GPU_ENABLED constexpr auto process_byte(ByteType byte) noexcept -> state;
 
@@ -101,11 +105,14 @@ public:
     #endif // BOOST_CRYPT_HAS_CUDA
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_base_digest() noexcept -> return_type;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept -> void { base_init(); };
 };
 
 template <boost::crypt::size_t digest_size, boost::crypt::size_t intermediate_hash_size, typename Derived>
 BOOST_CRYPT_GPU_ENABLED constexpr auto hasher_base_512<digest_size, intermediate_hash_size, Derived>::base_init() noexcept -> void
 {
+    intermediate_hash_.fill(0);
     buffer_.fill(0);
     buffer_index_ = 0U;
     low_ = 0U;

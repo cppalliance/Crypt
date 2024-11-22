@@ -79,6 +79,8 @@ void basic_tests()
             BOOST_TEST_EQ(res[i], soln[i]);
         }
     }
+
+    hmac_tester.destroy();
 }
 
 template <typename HasherType>
