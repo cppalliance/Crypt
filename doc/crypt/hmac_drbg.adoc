@@ -1,0 +1,139 @@
+////
+Copyright 2024 Matt Borland
+Distributed under the Boost Software License, Version 1.0.
+https://www.boost.org/LICENSE_1_0.txt
+////
+
+[#hmac_drbg]
+:idprefix: hmac_drbg_
+
+= HMAC-Based Deterministic Random Bit Generators
+
+== Overview
+The HMAC based DRBGs are nearly the same as the hash DRBGs, but internally they use the hmac of a hasher instead of just that hasher directly.
+These should be preferred for use in new code over the hash equivalents.
+
+== Reference
+
+[source, c++]
+----
+namespace boost {
+namespace crypt {
+
+namespace drbg {
+
+template <bool prediction_resistance>
+using sha1_hmac_drbg_t = hmac_drbg<hmac<sha1_hasher>, 128U, 160U, prediction_resistance>;
+
+} // namespace drbg
+
+BOOST_CRYPT_EXPORT using sha1_hmac_drbg = drbg::sha1_hmac_drbg_t<false>;
+BOOST_CRYPT_EXPORT using sha1_hmac_drbg_pr = drbg::sha1_hmac_drbg_t<true>;
+
+namespace drbg {
+
+// Max hasher security is defined in NIST SP 800-57 Table 3:
+// See: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r5.pdf
+//
+// 112: None
+// 128: SHA-1
+// 192: SHA-224, SHA-512/224, SHA3-224
+// 256: SHA-256, SHA-512/256, SHA-384, SHA-512, SHA3-256, SHA3-384, SHA3-512
+//
+// Outlen is defined in NIST SP 800-90A Rev 1 Section 10.1 table 2
+// 160: SHA-1
+// 224: SHA-224, SHA-512/224
+// 256: SHA-256, SHA-512/256
+// 384: SHA-384
+// 512: SHA-512
+// Max hasher security is defined in NIST SP 800-57 Table 3:
+// See: https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r5.pdf
+//
+// 112: None
+// 128: SHA-1
+// 192: SHA-224, SHA-512/224, SHA3-224
+// 256: SHA-256, SHA-512/256, SHA-384, SHA-512, SHA3-256, SHA3-384, SHA3-512
+//
+// Outlen is defined in NIST SP 800-90A Rev 1 Section 10.1 table 2
+// 160: SHA-1
+// 224: SHA-224, SHA-512/224
+// 256: SHA-256, SHA-512/256
+// 384: SHA-384
+// 512: SHA-512
+template <typename HMACType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
+class hmac_drbg
+{
+public:
+
+    BOOST_CRYPT_GPU_ENABLED constexpr hmac_drbg() = default;
+
+    template <typename ForwardIter1, typename ForwardIter2, typename ForwardIter3 = const boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter1 entropy, boost::crypt::size_t entropy_size, ForwardIter2 nonce = nullptr, boost::crypt::size_t nonce_size = 0, ForwardIter3 personalization = nullptr, boost::crypt::size_t personalization_size = 0) noexcept -> state;
+
+    template <typename Container1, typename Container2, typename Container3>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container1& entropy, const Container2& nonce, const Container3& personalization) noexcept -> state;
+
+    template <typename Container1, typename Container2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container1& entropy, const Container2& nonce) noexcept -> state;
+
+    template <typename Container1>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container1& entropy) noexcept -> state;
+
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    constexpr auto init(std::string_view entropy) noexcept -> state;
+    constexpr auto init(std::string_view entropy, std::string_view nonce) noexcept -> state;
+    constexpr auto init(std::string_view entropy, std::string_view nonce, std::string_view personalization) noexcept -> state;
+    #endif
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+    template <typename T, std::size_t extent>
+    constexpr auto init(std::span<T, extent> entropy) noexcept -> state;
+
+    template <typename T, std::size_t extent>
+    constexpr auto init(std::span<T, extent> entropy, std::span<T, extent> nonce) noexcept -> state;
+
+    template <typename T, std::size_t extent>
+    constexpr auto init(std::span<T, extent> entropy, std::span<T, extent> nonce, std::span<T, extent> personalization) noexcept -> state;
+    #endif
+
+    template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(ForwardIter1 entropy, boost::crypt::size_t entropy_size, ForwardIter2 additional_input = nullptr, boost::crypt::size_t additional_input_size = 0) noexcept -> state;
+
+    template <typename Container1>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(const Container1& entropy) noexcept -> state;
+
+    template <typename Container1, typename Container2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto reseed(const Container1& entropy, const Container2& additional_input) noexcept -> state;
+
+    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    constexpr auto reseed(std::string_view entropy) noexcept -> state;
+    constexpr auto reseed(std::string_view entropy, std::string_view additional_input) noexcept -> state;
+    #endif
+
+    #ifdef BOOST_CRYPT_HAS_SPAN
+    template <typename T, std::size_t extent>
+    constexpr auto reseed(std::span<T, extent> entropy) noexcept -> state;
+
+    template <typename T, std::size_t extent>
+    constexpr auto reseed(std::span<T, extent> entropy, std::span<T, extent> additional_input) noexcept -> state;
+    #endif
+
+    template <typename ForwardIter1, typename ForwardIter2 = const boost::crypt::uint8_t*, typename ForwardIter3 = const boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate(ForwardIter1 data, boost::crypt::size_t requested_bits, ForwardIter2 additional_data_1 = nullptr, boost::crypt::size_t additional_data_1_size = 0, ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0) noexcept -> state;
+
+    template <typename Container1>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate(Container1& data) noexcept -> state;
+
+    template <typename Container1, typename Container2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate(Container1& data, const Container2& additional_data_1) noexcept -> state;
+
+    template <typename Container1, typename Container2, typename Container3>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generate(Container1& data, const Container2& additional_data_1, const Container3& additional_data_2) noexcept -> state;
+
+};
+
+} // namespace drbg
+} // namespace crypt
+} // namespace boost
+
+----
