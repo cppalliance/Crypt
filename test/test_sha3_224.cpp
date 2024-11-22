@@ -175,6 +175,8 @@ void test_class()
 
         hasher.init();
     }
+
+    hasher.destroy();
 }
 
 template <typename T>
