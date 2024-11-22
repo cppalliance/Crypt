@@ -163,6 +163,12 @@ public:
                                                     ForwardIter3 additional_data_2 = nullptr, boost::crypt::size_t additional_data_2_size = 0U) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept;
+
+    #ifdef BOOST_CRYPT_DEBUG
+    constexpr auto get_v() const noexcept { return value_; }
+    constexpr auto get_c() const noexcept { return constant_; }
+    #endif
+
 };
 
 template <typename HasherType, boost::crypt::size_t max_hasher_security, boost::crypt::size_t outlen, bool prediction_resistance>
@@ -282,11 +288,14 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
 
         // V = (v + w) mod 2^seedlen
         auto w_iter {w.crbegin()};
+        const auto w_end {w.crend()};
+
         auto v_iter {value_.rbegin()};
+        const auto v_end {value_.rend()};
 
         // Since the size of V depends on the size of w we will never have an overflow situation
         boost::crypt::uint16_t carry {};
-        for (; w_iter != w.crend(); ++w_iter, ++v_iter)
+        for (; w_iter != w_end; ++w_iter, ++v_iter)
         {
             const auto sum {static_cast<boost::crypt::uint16_t>(static_cast<boost::crypt::uint16_t>(*w_iter) + static_cast<boost::crypt::uint16_t>(*v_iter) + carry)};
             carry = static_cast<boost::crypt::uint16_t>(sum >> 8U);
@@ -294,11 +303,12 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         }
 
         // Handle final carry past the end of w
-        while (carry && v_iter != value_.rend())
+        // Since we are to do v = (v+w) mod seedlen we don't concern ourselves past v_end
+        while (carry && v_iter != v_end)
         {
             const auto sum {static_cast<boost::crypt::uint16_t>(*v_iter + carry)};
             carry = static_cast<boost::crypt::uint16_t>(sum >> 8U);
-            *v_iter = static_cast<boost::crypt::uint8_t>(sum & 0xFFU);
+            *v_iter++ = static_cast<boost::crypt::uint8_t>(sum & 0xFFU);
         }
     }
 
@@ -333,49 +343,51 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
         static_cast<boost::crypt::uint8_t>(reseed_counter_ & 0xFFU),
     };
 
+    // Initialize iterators for V
     auto value_iter {value_.rbegin()};
+    const auto value_end {value_.rend()};
+
+    // Initialize iterators for H, C, and reseed_counter_bytes
     auto h_iter {h.crbegin()};
+    const auto h_end {h.crend()};
+
     auto c_iter {constant_.crbegin()};
+
     auto reseed_counter_iter {reseed_counter_bytes.crbegin()};
+    const auto reseed_counter_end {reseed_counter_bytes.crend()};
+
+    // Older GCC warns the += is int instead of uint16_t
+    #if defined(__GNUC__) && __GNUC__ >= 5 && __GNUC__ < 10
+    #  pragma GCC diagnostic push
+    #  pragma GCC diagnostic ignored "-Wconversion"
+    #endif
+
     boost::crypt::uint16_t carry {};
-    const auto h_longer {h.size() >= value_.size()};
-    // Value and constant are the same length so we don't need to duplicate those checks
-    while (value_iter != value_.rend())
+    // Since the length of constant and value are known to be the same we only boundary check one of the two
+    while (value_iter != value_end)
     {
         boost::crypt::uint16_t sum {static_cast<boost::crypt::uint16_t>(
-            static_cast<boost::crypt::uint16_t>(*value_iter) +
-            static_cast<boost::crypt::uint16_t>(*c_iter++) +
-            carry
-        )};
+                                        static_cast<boost::crypt::uint16_t>(*value_iter) +
+                                        static_cast<boost::crypt::uint16_t>(*c_iter++) + carry
+                                        )};
 
-        // GCC converts the += to int for some odd reason
-        // This is clearly incorrect so we ignore it
-        #if defined(__GNUC__) && __GNUC__ >= 5
-        #  pragma GCC diagnostic push
-        #  pragma GCC diagnostic ignored "-Wconversion"
-        #endif
-
-        if (h_longer || h_iter != h.crend())
+        if (h_iter != h_end)
         {
             sum += static_cast<boost::crypt::uint16_t>(*h_iter++);
         }
-        if (reseed_counter_iter != reseed_counter_bytes.crend())
+
+        if (reseed_counter_iter != reseed_counter_end)
         {
             sum += static_cast<boost::crypt::uint16_t>(*reseed_counter_iter++);
         }
 
         carry = static_cast<boost::crypt::uint16_t>(sum >> 8U);
-        sum &= 0xFFU;
-
-        BOOST_CRYPT_ASSERT(carry >= 0U && carry <= 3U);
-        BOOST_CRYPT_ASSERT(sum <= 0xFFU);
-
-        *value_iter++ = static_cast<boost::crypt::uint8_t>(sum);
-
-        #if defined(__GNUC__) && __GNUC__ >= 5
-        #  pragma GCC diagnostic pop
-        #endif
+        *value_iter++ = static_cast<boost::crypt::uint8_t>(sum & 0xFFU);
     }
+
+    #if defined(__GNUC__) && __GNUC__ >= 5 && __GNUC__ < 10
+    #  pragma GCC diagnostic pop
+    #endif
 
     ++reseed_counter_;
     return state::success;
