@@ -78,16 +78,16 @@ extern "C"
 {
   extern volatile std::uint32_t app_benchmark_standalone_result;
 
-  auto app_benchmark_run_standalone       (void) -> bool;
-  auto app_benchmark_get_standalone_result(void) -> bool;
+  auto app_benchmark_run_standalone() -> bool;
+  auto app_benchmark_get_standalone_result() noexcept -> bool;
 
-  auto app_benchmark_run_standalone(void) -> bool
+  auto app_benchmark_run_standalone() -> bool
   {
-    auto result_is_ok = true;
+    bool result_is_ok { true };
 
     for(unsigned i = 0U; i < 64U; ++i)
     {
-      result_is_ok &= app::benchmark::run_hasher_256();
+      result_is_ok & (app::benchmark::run_hasher_256() && result_is_ok);
     }
 
     app_benchmark_standalone_result =
@@ -99,17 +99,15 @@ extern "C"
     return result_is_ok;
   }
 
-  auto app_benchmark_get_standalone_result(void) -> bool
+  auto app_benchmark_get_standalone_result() noexcept -> bool
   {
-    volatile auto result_is_ok = (app_benchmark_standalone_result == static_cast<std::uint32_t>(UINT32_C(0xF00DCAFE)));
-
-    return result_is_ok;
+    return (app_benchmark_standalone_result == static_cast<std::uint32_t>(UINT32_C(0xF00DCAFE)));
   }
 }
 
 auto main() -> int
 {
-  auto result_is_ok = true;
+  bool result_is_ok { true };
 
   result_is_ok = (::app_benchmark_run_standalone       () && result_is_ok);
   result_is_ok = (::app_benchmark_get_standalone_result() && result_is_ok);
@@ -119,7 +117,7 @@ auto main() -> int
 
 extern "C"
 {
-  volatile std::uint32_t app_benchmark_standalone_result;
+  volatile std::uint32_t app_benchmark_standalone_result { };
 }
 #endif // APP_BENCHMARK_STANDALONE_MAIN
 
