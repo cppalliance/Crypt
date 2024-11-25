@@ -48,12 +48,16 @@ private:
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
     };
 
+    boost::crypt::array<boost::crypt::array<boost::crypt::uint8_t, 4U>, 4U> state {};
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto rot_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
     template <typename ForwardIterator>
     BOOST_CRYPT_GPU_ENABLED constexpr auto key_expansion(ForwardIterator key) noexcept -> boost::crypt::array<boost::crypt::uint8_t, Nk>;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto sub_bytes() noexcept -> void;
 };
 
 template <boost::crypt::size_t Nr>
@@ -121,6 +125,18 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
     }
 
     return w;
+}
+
+template <boost::crypt::size_t Nr>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_bytes() noexcept -> void
+{
+    for (auto& line : state)
+    {
+        for (auto& val : line)
+        {
+            val = sbox[val];
+        }
+    }
 }
 
 } // namespace aes
