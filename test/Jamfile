@@ -70,6 +70,8 @@ run test_hmac_drbg.cpp ;
 
 run test_hash_drbg.cpp ;
 
+run test_aes.cpp ;
+
 # NIST standard testing
 run test_nist_cavs_sha1_monte.cpp ;
 run test_nist_cavs_sha1_short_long.cpp ;
