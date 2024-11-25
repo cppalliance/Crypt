@@ -101,10 +101,26 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
 
         if (i % Nk == 0)
         {
-
+            rot_word(temp);
+            sub_word(temp);
+            temp[0] ^= Rcon[i / Nk];
         }
+        BOOST_CRYPT_IF_CONSTEXPR (Nk > 6U)
+        {
+            if (i % Nk == 4U)
+            {
+                sub_word(temp);
+            }
+        }
+        const auto j {i * 4U};
+        const auto l {(i - Nk) * 4U};
+        w[j + 0U] = w[l + 0U] ^ temp[0];
+        w[j + 1U] = w[l + 1U] ^ temp[1];
+        w[j + 2U] = w[l + 2U] ^ temp[2];
+        w[j + 3U] = w[l + 3U] ^ temp[3];
     }
 
+    return w;
 }
 
 } // namespace aes
