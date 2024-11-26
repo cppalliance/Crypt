@@ -60,6 +60,8 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_bytes() noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto shift_rows() noexcept -> void;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto xtimes(boost::crypt::uint8_t x) noexcept -> boost::crypt::uint8_t;
 };
 
 template <boost::crypt::size_t Nr>
@@ -160,6 +162,15 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::shift_rows() noexcept -> void
     state[3][3] = state[2][3];
     state[2][3] = state[1][3];
     state[1][3] = temp;
+}
+
+// The transformation of bytes in which the polynomial representation
+// of the input byte is multiplied by x, modulo m(x), to produce the
+// polynomial representation of the output byte.
+template <boost::crypt::size_t Nr>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::xtimes(boost::crypt::uint8_t x) noexcept -> boost::crypt::uint8_t
+{
+    return ((x << 1U) ^ (((x >> 7U) & 1U) * 0x01U));
 }
 
 } // namespace aes
