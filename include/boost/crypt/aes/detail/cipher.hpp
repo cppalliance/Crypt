@@ -61,7 +61,9 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto shift_rows() noexcept -> void;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto xtimes(boost::crypt::uint8_t x) noexcept -> boost::crypt::uint8_t;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto xtimes(boost::crypt::uint8_t b) noexcept -> boost::crypt::uint8_t;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto mix_columns() noexcept -> void;
 };
 
 // The transformation of words in which the four bytes of the word
@@ -177,9 +179,32 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::shift_rows() noexcept -> void
 // of the input byte is multiplied by x, modulo m(x), to produce the
 // polynomial representation of the output byte.
 template <boost::crypt::size_t Nr>
-BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::xtimes(boost::crypt::uint8_t x) noexcept -> boost::crypt::uint8_t
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::xtimes(boost::crypt::uint8_t b) noexcept -> boost::crypt::uint8_t
 {
-    return ((x << 1U) ^ (((x >> 7U) & 1U) * 0x01U));
+    const auto temp {static_cast<boost::crypt::uint8_t>(b & 0xFEU)};
+    return static_cast<boost::crypt::uint8_t>(temp == b ? temp : temp & 0x1BU);
+}
+
+// The transformation of the state that takes all of the columns of the
+// state and mixes their data (independently of one another) to produce
+// new columns.
+template <boost::crypt::size_t Nr>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::mix_columns() noexcept -> void
+{
+    for (auto& line : state)
+    {
+        // s'_0,c = ({02} * s_0,c) ^ ({03} * s_1,c) ^ s_2,c ^ s_3,c
+        line[0] = xtimes(line[0]) ^ (xtimes(line[1]) ^ line[1]) ^ line[2] ^ line[3];
+
+        // s'_1,c = s_0,c ^ ({02} * s_1,c) ^ ({03} * s_2,c) ^ s_3,c
+        line[1] = line[0] ^ xtimes(line[1]) ^ (xtimes(line[2]) ^ line[2]) ^ line[3];
+
+        // s`_2,c = s_0,c ^ s_1,c ^ ({02} * s_2,c) ^ ({03} * s_3,c)
+        line[2] = line[0] ^ line[1] ^ xtimes(line[2]) ^ (xtimes(line[3]) ^ line[3]);
+
+        // s`_3,c = ({03} * s_0,c) ^ s_1,c ^ s_2,c ^ ({02} * s_3,c)
+        line[3] = (xtimes(line[0]) ^ line[0]) ^ line[1] ^ line[2] ^ xtimes(line[3]);
+    }
 }
 
 } // namespace aes
