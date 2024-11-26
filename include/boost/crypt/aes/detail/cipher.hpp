@@ -65,6 +65,8 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto xtimes(boost::crypt::uint8_t b) noexcept -> boost::crypt::uint8_t;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto mix_columns() noexcept -> void;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto add_round_key(boost::crypt::uint8_t round) noexcept -> void;
 };
 
 // The transformation of words in which the four bytes of the word
@@ -202,6 +204,20 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::mix_columns() noexcept -> voi
 
         // s`_3,c = ({03} * s_0,c) ^ s_1,c ^ s_2,c ^ ({02} * s_3,c)
         line[3] = (xtimes(line[0]) ^ line[0]) ^ line[1] ^ line[2] ^ xtimes(line[3]);
+    }
+}
+
+// The transformation of the state in which a round key is combined
+// with the state.
+template <boost::crypt::size_t Nr>
+constexpr auto cipher<Nr>::add_round_key(boost::crypt::uint8_t round) noexcept -> void
+{
+    for (boost::crypt::size_t i {}; i < state.size(); ++i)
+    {
+        for (boost::crypt::size_t j {}; j < state[i].size(); ++j)
+        {
+            state[i][j] ^= round_key[(round * Nb * 4U) + (i * Nb) + j];
+        }
     }
 }
 
