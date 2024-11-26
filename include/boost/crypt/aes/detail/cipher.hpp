@@ -49,13 +49,14 @@ private:
     };
 
     boost::crypt::array<boost::crypt::array<boost::crypt::uint8_t, 4U>, 4U> state {};
+    boost::crypt::array<boost::crypt::uint8_t, Nk> round_key {};
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto rot_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
     template <typename ForwardIterator>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto key_expansion(ForwardIterator key) noexcept -> boost::crypt::array<boost::crypt::uint8_t, Nk>;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto key_expansion(ForwardIterator key) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_bytes() noexcept -> void;
 
@@ -92,27 +93,26 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_word(boost::crypt::array<
 // The routine that generates the round keys from the key.
 template <boost::crypt::size_t Nr>
 template <typename ForwardIterator>
-BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator key) noexcept -> boost::crypt::array<boost::crypt::uint8_t, Nk>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator key) noexcept -> void
 {
-    boost::crypt::array<boost::crypt::uint8_t, Nk> w {};
     boost::crypt::array<boost::crypt::uint8_t, 4> temp {};
 
     for (boost::crypt::size_t i {}; i < Nk; ++i)
     {
         const auto k {i * 4U};
-        w[k + 0U] = key[k + 0U];
-        w[k + 1U] = key[k + 1U];
-        w[k + 2U] = key[k + 2U];
-        w[k + 3U] = key[k + 3U];
+        round_key[k + 0U] = key[k + 0U];
+        round_key[k + 1U] = key[k + 1U];
+        round_key[k + 2U] = key[k + 2U];
+        round_key[k + 3U] = key[k + 3U];
     }
 
     for (boost::crypt::size_t i {Nk}; i < Nb * (Nr + 1); ++i)
     {
         const auto k {(i - 1) * 4U};
-        temp[0] = w[k + 0U];
-        temp[1] = w[k + 1U];
-        temp[2] = w[k + 2U];
-        temp[3] = w[k + 3U];
+        temp[0] = round_key[k + 0U];
+        temp[1] = round_key[k + 1U];
+        temp[2] = round_key[k + 2U];
+        temp[3] = round_key[k + 3U];
 
         if (i % Nk == 0)
         {
@@ -129,13 +129,11 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
         }
         const auto j {i * 4U};
         const auto l {(i - Nk) * 4U};
-        w[j + 0U] = w[l + 0U] ^ temp[0];
-        w[j + 1U] = w[l + 1U] ^ temp[1];
-        w[j + 2U] = w[l + 2U] ^ temp[2];
-        w[j + 3U] = w[l + 3U] ^ temp[3];
+        round_key[j + 0U] = round_key[l + 0U] ^ temp[0];
+        round_key[j + 1U] = round_key[l + 1U] ^ temp[1];
+        round_key[j + 2U] = round_key[l + 2U] ^ temp[2];
+        round_key[j + 3U] = round_key[l + 3U] ^ temp[3];
     }
-
-    return w;
 }
 
 // The transformation of the state that applies the S-box independently
