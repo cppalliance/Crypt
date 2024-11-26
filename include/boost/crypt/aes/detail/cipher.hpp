@@ -76,8 +76,29 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr ~cipher() noexcept { destroy(); }
     #endif
 
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter key, boost::crypt::size_t key_length) noexcept -> boost::crypt::state;
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept;
 };
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter>
+constexpr auto cipher<Nr>::init(ForwardIter key, boost::crypt::size_t key_length) noexcept -> boost::crypt::state
+{
+    if (utility::is_null(key))
+    {
+        return state::null;
+    }
+    else if (key_length < Nk)
+    {
+        return state::insufficient_key_length;
+    }
+
+    key_expansion(key);
+    return state::success;
+}
+
 
 template <boost::crypt::size_t Nr>
 constexpr auto cipher<Nr>::destroy() noexcept
