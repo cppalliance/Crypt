@@ -64,6 +64,8 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto xtimes(boost::crypt::uint8_t x) noexcept -> boost::crypt::uint8_t;
 };
 
+// The transformation of words in which the four bytes of the word
+// are permuted cyclically.
 template <boost::crypt::size_t Nr>
 BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::rot_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void
 {
@@ -74,6 +76,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::rot_word(boost::crypt::array<
     temp[3] = temp0;
 }
 
+// The transformation of words in which the S-box is applied to each
+// of the four bytes of the word.
 template <boost::crypt::size_t Nr>
 BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void
 {
@@ -83,6 +87,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_word(boost::crypt::array<
     temp[3] = sbox[temp[3]];
 }
 
+// The routine that generates the round keys from the key.
 template <boost::crypt::size_t Nr>
 template <typename ForwardIterator>
 BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator key) noexcept -> boost::crypt::array<boost::crypt::uint8_t, Nk>
@@ -131,6 +136,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
     return w;
 }
 
+// The transformation of the state that applies the S-box independently
+// to each byte of the state.
 template <boost::crypt::size_t Nr>
 BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_bytes() noexcept -> void
 {
@@ -143,6 +150,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_bytes() noexcept -> void
     }
 }
 
+// The transformation of the state in which the last three rows are
+// cyclically shifted by different offsets.
 template <boost::crypt::size_t Nr>
 BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::shift_rows() noexcept -> void
 {
