@@ -67,7 +67,30 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto mix_columns() noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto add_round_key(boost::crypt::uint8_t round) noexcept -> void;
+
+public:
+
+    BOOST_CRYPT_GPU_ENABLED constexpr cipher() noexcept = default;
+
+    #ifdef BOOST_CRYPT_HAS_CXX20_CONSTEXPR
+    BOOST_CRYPT_GPU_ENABLED constexpr ~cipher() noexcept { destroy(); }
+    #endif
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept;
 };
+
+template <boost::crypt::size_t Nr>
+constexpr auto cipher<Nr>::destroy() noexcept
+{
+    for (auto& line : state)
+    {
+        for (auto& byte : line)
+        {
+            byte = static_cast<boost::crypt::uint8_t>(0x00);
+        }
+    }
+    round_key.fill(0x00);
+}
 
 // The transformation of words in which the four bytes of the word
 // are permuted cyclically.
