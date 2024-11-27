@@ -5,10 +5,12 @@
 #ifndef BOOST_CRYPT_AES_DETAIL_CIPHER_HPP
 #define BOOST_CRYPT_AES_DETAIL_CIPHER_HPP
 
+#include <boost/crypt/aes/detail/cipher_mode.hpp>
 #include <boost/crypt/utility/state.hpp>
 #include <boost/crypt/utility/array.hpp>
 #include <boost/crypt/utility/cstdint.hpp>
 #include <boost/crypt/utility/cstddef.hpp>
+#include <boost/crypt/utility/null.hpp>
 
 namespace boost {
 namespace crypt {
@@ -68,16 +70,28 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto add_round_key(boost::crypt::uint8_t round) noexcept -> void;
 
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto cipher_impl(ForwardIter buffer) noexcept -> void;
+
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr cipher() noexcept = default;
 
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr cipher(ForwardIter key, boost::crypt::size_t key_length) noexcept { init(key, key_length); }
+    
     #ifdef BOOST_CRYPT_HAS_CXX20_CONSTEXPR
     BOOST_CRYPT_GPU_ENABLED constexpr ~cipher() noexcept { destroy(); }
     #endif
 
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter key, boost::crypt::size_t key_length) noexcept -> boost::crypt::state;
+
+    template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt(ForwardIter data, boost::crypt::size_t data_length = Nk) noexcept -> boost::crypt::state;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept;
 };
@@ -99,6 +113,73 @@ constexpr auto cipher<Nr>::init(ForwardIter key, boost::crypt::size_t key_length
     return state::success;
 }
 
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter>
+constexpr auto cipher<Nr>::cipher_impl(ForwardIter buffer) noexcept -> void
+{
+    // Write the buffer to state and then perform operations
+    boost::crypt::size_t offset {};
+    for (boost::crypt::size_t i {}; i < Nb; ++i)
+    {
+        for (boost::crypt::size_t j {}; j < Nb; ++j)
+        {
+            state[i][j] = static_cast<boost::crypt::uint8_t>(buffer[offset++]);
+        }
+    }
+
+    boost::crypt::uint8_t round {};
+
+    add_round_key(round);
+
+    for (round = static_cast<boost::crypt::uint8_t>(1); round < static_cast<boost::crypt::uint8_t>(Nr); ++round)
+    {
+        sub_bytes();
+        shift_rows();
+        mix_columns();
+        add_round_key(round);
+    }
+
+    sub_bytes();
+    shift_rows();
+    add_round_key(round);
+
+    // Write the cipher text back
+    offset = 0U;
+    for (boost::crypt::size_t i {}; i < Nb; ++i)
+    {
+        for (boost::crypt::size_t j {}; j < Nb; ++j)
+        {
+            buffer[offset++] = static_cast<boost::crypt::uint8_t>(state[i][j]);
+        }
+    }
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter>
+constexpr auto cipher<Nr>::encrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
+{
+    boost::crypt::size_t offset {};
+    while (buffer_size >= state.size())
+    {
+        cipher_impl(buffer[offset]);
+        buffer_size -= state.size();
+        offset += state.size();
+    }
+}
+
+template <boost::crypt::size_t Nr>
+template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
+constexpr auto cipher<Nr>::encrypt(ForwardIter data, boost::crypt::size_t data_length) noexcept -> boost::crypt::state
+{
+    if (utility::is_null(data))
+    {
+        return state::null;
+    }
+
+    encrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
+    return state::success;
+}
 
 template <boost::crypt::size_t Nr>
 constexpr auto cipher<Nr>::destroy() noexcept

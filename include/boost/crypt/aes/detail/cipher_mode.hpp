@@ -12,7 +12,7 @@ namespace boost {
 namespace crypt {
 namespace aes {
 
-enum class mode : boost::crypt::uint8_t
+enum class cipher_mode : boost::crypt::uint8_t
 {
     ecb,     // Electronic Codebook
 };
