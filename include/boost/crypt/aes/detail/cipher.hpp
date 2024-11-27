@@ -290,12 +290,17 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::shift_rows() noexcept -> void
 
     temp        = state[0][1];
     state[0][1] = state[1][1];
+    state[1][1] = state[2][1];
     state[2][1] = state[3][1];
     state[3][1] = temp;
 
     temp        = state[0][2];
     state[0][2] = state[2][2];
     state[2][2] = temp;
+
+    temp        = state[1][2];
+    state[1][2] = state[3][2];
+    state[3][2] = temp;
 
     temp        = state[0][3];
     state[0][3] = state[3][3];
