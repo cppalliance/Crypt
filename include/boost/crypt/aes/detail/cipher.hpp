@@ -325,20 +325,29 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::xtimes(boost::crypt::uint8_t 
 template <boost::crypt::size_t Nr>
 BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::mix_columns() noexcept -> void
 {
-    for (auto& line : state)
+    for (auto& column : state)
     {
         // s'_0,c = ({02} * s_0,c) ^ ({03} * s_1,c) ^ s_2,c ^ s_3,c
-        line[0] = xtimes(line[0]) ^ (xtimes(line[1]) ^ line[1]) ^ line[2] ^ line[3];
+        const auto t0 {xtimes(column[0])};
+        const auto t1 {xtimes(column[1])};
+        column[0] = t0 ^ (t1 ^ column[1]) ^ column[2] ^ column[3];
 
         // s'_1,c = s_0,c ^ ({02} * s_1,c) ^ ({03} * s_2,c) ^ s_3,c
-        line[1] = line[0] ^ xtimes(line[1]) ^ (xtimes(line[2]) ^ line[2]) ^ line[3];
+        const auto t2 {xtimes(column[1])};
+        const auto t3 {xtimes(column[2])};
+        column[1] = column[0] ^ t2 ^ (t3 ^ column[2]) ^ column[3];
 
         // s`_2,c = s_0,c ^ s_1,c ^ ({02} * s_2,c) ^ ({03} * s_3,c)
-        line[2] = line[0] ^ line[1] ^ xtimes(line[2]) ^ (xtimes(line[3]) ^ line[3]);
+        const auto t4 {xtimes(column[2])};
+        const auto t5 {xtimes(column[3])};
+        column[2] = column[0] ^ column[1] ^ t4 ^ (t5 ^ column[3]);
 
         // s`_3,c = ({03} * s_0,c) ^ s_1,c ^ s_2,c ^ ({02} * s_3,c)
-        line[3] = (xtimes(line[0]) ^ line[0]) ^ line[1] ^ line[2] ^ xtimes(line[3]);
+        const auto t6 {xtimes(column[0])};
+        const auto t7 {xtimes(column[3])};
+        column[3] = (t6 ^ column[0]) ^ column[1] ^ column[2] ^ t7;
     }
+
 }
 
 // The transformation of the state in which a round key is combined
