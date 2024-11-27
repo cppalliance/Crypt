@@ -16,18 +16,7 @@ namespace boost {
 namespace crypt {
 namespace aes {
 
-template <boost::crypt::size_t Nr>
-class cipher
-{
-private:
-
-    static constexpr boost::crypt::size_t Nb {4}; // Block size
-    static constexpr boost::crypt::size_t Nk {Nr == 10 ? 4 :
-                                              Nr == 12 ? 6 :
-                                              Nr == 14 ? 8 : 0}; // Key length
-    static_assert(Nk != 0, "Invalid number of rounds");
-
-    static constexpr boost::crypt::array<boost::crypt::uint8_t, 256> sbox = {
+BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::array<boost::crypt::uint8_t, 256> sbox = {
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
         0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
         0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
@@ -44,21 +33,37 @@ private:
         0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
         0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
         0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
-    };
+};
 
-    static constexpr boost::crypt::array<boost::crypt::uint8_t, 11> Rcon = {
+BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::array<boost::crypt::uint8_t, 11> Rcon = {
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
-    };
+};
 
-    boost::crypt::array<boost::crypt::array<boost::crypt::uint8_t, 4U>, 4U> state {};
-    boost::crypt::array<boost::crypt::uint8_t, Nk> round_key {};
+template <boost::crypt::size_t Nr>
+class cipher
+{
+private:
+
+    static constexpr boost::crypt::size_t Nb {4}; // Block size
+    static constexpr boost::crypt::size_t Nk {Nr == 10 ? 4 :
+                                              Nr == 12 ? 6 :
+                                              Nr == 14 ? 8 : 0}; // Key length in 32-bit words
+
+    static_assert(Nk != 0, "Invalid key length");
+
+    static constexpr boost::crypt::size_t key_expansion_size {Nr == 10 ? 176 :
+                                                              Nr == 12 ? 208 :
+                                                              Nr == 14 ? 240 : 0};
+
+    boost::crypt::array<boost::crypt::array<boost::crypt::uint8_t, Nb>, Nb> state {};
+    boost::crypt::array<boost::crypt::uint8_t, key_expansion_size> round_key {};
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto rot_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
     template <typename ForwardIterator>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto key_expansion(ForwardIterator key) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto key_expansion(ForwardIterator key, boost::crypt::size_t key_length) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_bytes() noexcept -> void;
 
@@ -109,7 +114,7 @@ constexpr auto cipher<Nr>::init(ForwardIter key, boost::crypt::size_t key_length
         return state::insufficient_key_length;
     }
 
-    key_expansion(key);
+    key_expansion(key, key_length);
     return state::success;
 }
 
@@ -219,7 +224,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_word(boost::crypt::array<
 // The routine that generates the round keys from the key.
 template <boost::crypt::size_t Nr>
 template <typename ForwardIterator>
-BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator key) noexcept -> void
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator key, boost::crypt::size_t key_length) noexcept -> void
 {
     boost::crypt::array<boost::crypt::uint8_t, 4> temp {};
 
