@@ -144,9 +144,10 @@ constexpr auto cipher<Nr>::cipher_impl(ForwardIter buffer) noexcept -> void
         add_round_key(round);
     }
 
+    BOOST_CRYPT_ASSERT(round == Nr);
     sub_bytes();
     shift_rows();
-    add_round_key(round);
+    add_round_key(Nr);
 
     // Write the cipher text back
     offset = 0U;
