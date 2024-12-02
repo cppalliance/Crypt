@@ -63,7 +63,7 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
     template <typename ForwardIterator>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto key_expansion(ForwardIterator key, boost::crypt::size_t key_length) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto key_expansion(ForwardIterator key, boost::crypt::size_t) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_bytes() noexcept -> void;
 
@@ -226,7 +226,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_word(boost::crypt::array<
 // The routine that generates the round keys from the key.
 template <boost::crypt::size_t Nr>
 template <typename ForwardIterator>
-BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator key, boost::crypt::size_t key_length) noexcept -> void
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator key, boost::crypt::size_t) noexcept -> void
 {
     boost::crypt::array<boost::crypt::uint8_t, 4> temp {};
 
