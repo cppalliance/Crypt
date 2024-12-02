@@ -54,8 +54,6 @@ jobs:
           - { compiler: gcc-14,    cxxstd: '11,14,17,20,2b', os: ubuntu-24.04 }
           - { name: GCC w/ sanitizers, sanitize: yes,
               compiler: gcc-13,    cxxstd: '03,11,14,17,20', os: ubuntu-24.04 }
-          - { name: Collect coverage, coverage: yes,
-              compiler: gcc-13,    cxxstd: '03,2b',          os: ubuntu-24.04, install: 'g++-13-multilib', address-model: '32,64' }
 
           # Linux, clang
           - { compiler: clang-6.0, cxxstd: '03,11,14,17',    os: ubuntu-20.04 }
@@ -257,8 +255,6 @@ jobs:
         include:
           - { toolset: msvc-14.2, cxxstd: '14,17,20',       addrmd: '32,64', os: windows-2019 }
           - { toolset: msvc-14.3, cxxstd: '14,17,20,latest',addrmd: '32,64', os: windows-2022 }
-          - { name: Collect coverage, coverage: yes,
-              toolset: msvc-14.3, cxxstd: 'latest',         addrmd: '64',    os: windows-2022 }
           - { toolset: clang-win, cxxstd: '14,17,latest',   addrmd: '32,64', os: windows-2022 }
           - { toolset: gcc,       cxxstd: '03,11,14,17,2a', addrmd: '64',    os: windows-2019 }
 
