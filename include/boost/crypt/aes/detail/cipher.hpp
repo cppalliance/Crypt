@@ -239,6 +239,11 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
         round_key[k + 3U] = key[k + 3U];
     }
 
+    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
+    #  pragma GCC diagnostic push
+    #  pragma GCC diagnostic ignored "-Wsign-conversion"
+    #endif
+
     for (boost::crypt::size_t i {Nk}; i < Nb * (Nr + 1); ++i)
     {
         const auto k {(i - 1) * 4U};
@@ -267,6 +272,10 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
         round_key[j + 2U] = round_key[l + 2U] ^ temp[2];
         round_key[j + 3U] = round_key[l + 3U] ^ temp[3];
     }
+
+    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
+    #  pragma GCC diagnostic pop
+    #endif
 }
 
 // The transformation of the state that applies the S-box independently
@@ -317,7 +326,16 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::shift_rows() noexcept -> void
 template <boost::crypt::size_t Nr>
 BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::xtimes(boost::crypt::uint8_t b) noexcept -> boost::crypt::uint8_t
 {
+    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
+    #  pragma GCC diagnostic push
+    #  pragma GCC diagnostic ignored "-Wsign-conversion"
+    #endif
+
     return static_cast<boost::crypt::uint8_t>(static_cast<boost::crypt::uint8_t>(b << 1U) ^ static_cast<boost::crypt::uint8_t>(((b >> 7U) & 1U) * 0x1BU));
+
+    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
+    #  pragma GCC diagnostic pop
+    #endif
 }
 
 // The transformation of the state that takes all of the columns of the
