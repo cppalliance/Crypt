@@ -86,6 +86,8 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_bytes() noexcept -> void;
 
+    BOOST_CRYPT_GPU_ENABLED constexpr auto inv_sub_bytes() noexcept -> void;
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto shift_rows() noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto xtimes(boost::crypt::uint8_t b) noexcept -> boost::crypt::uint8_t;
@@ -316,6 +318,19 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_bytes() noexcept -> void
     }
 }
 
+// The inverse of sub_bytes (above), in which rsbox is applied to each byte
+template <boost::crypt::size_t Nr>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::inv_sub_bytes() noexcept -> void
+{
+    for (auto& line : state)
+    {
+        for (auto& val : line)
+        {
+            val = rsbox[val];
+        }
+    }
+}
+
 // The transformation of the state in which the last three rows are
 // cyclically shifted by different offsets.
 template <boost::crypt::size_t Nr>
@@ -397,6 +412,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::mix_columns() noexcept -> voi
 
 // The transformation of the state in which a round key is combined
 // with the state.
+//
+// Add round_key is it's own inverse so there is no separate inverse function
 template <boost::crypt::size_t Nr>
 constexpr auto cipher<Nr>::add_round_key(boost::crypt::uint8_t round) noexcept -> void
 {
