@@ -96,6 +96,10 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto mix_columns() noexcept -> void;
 
+    BOOST_CRYPT_GPU_ENABLED constexpr auto gf28_multiply(boost::crypt::uint8_t x, boost::crypt::uint8_t y) noexcept -> boost::crypt::uint8_t;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto inv_mix_columns() noexcept -> void;
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto add_round_key(boost::crypt::uint8_t round) noexcept -> void;
 
     template <typename ForwardIter>
@@ -414,6 +418,57 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::xtimes(boost::crypt::uint8_t 
 // new columns.
 template <boost::crypt::size_t Nr>
 BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::mix_columns() noexcept -> void
+{
+    for (auto& column : state)
+    {
+        const auto s0 {column[0]};
+        const auto all_c {static_cast<boost::crypt::uint8_t>(column[0] ^ column[1] ^ column[2] ^ column[3])};
+
+        // s'_0,c = ({02} * s_0,c) ^ ({03} * s_1,c) ^ s_2,c ^ s_3,c
+        auto temp  {static_cast<boost::crypt::uint8_t>(column[0] ^ column[1])};
+        temp = xtimes(temp);
+        column[0] ^= temp ^ all_c;
+
+        // s'_1,c = s_0,c ^ ({02} * s_1,c) ^ ({03} * s_2,c) ^ s_3,c
+        temp = static_cast<boost::crypt::uint8_t>(column[1] ^ column[2]);
+        temp = xtimes(temp);
+        column[1] ^= temp ^ all_c;
+
+        // s`_2,c = s_0,c ^ s_1,c ^ ({02} * s_2,c) ^ ({03} * s_3,c)
+        temp = static_cast<boost::crypt::uint8_t>(column[2] ^ column[3]);
+        temp = xtimes(temp);
+        column[2] ^= temp ^ all_c;
+
+        // s`_3,c = ({03} * s_0,c) ^ s_1,c ^ s_2,c ^ ({02} * s_3,c)
+        temp = static_cast<boost::crypt::uint8_t>(column[3] ^ s0);
+        temp = xtimes(temp);
+        column[3] ^= temp ^ all_c ;
+    }
+}
+
+template <boost::crypt::size_t Nr>
+constexpr auto cipher<Nr>::gf28_multiply(boost::crypt::uint8_t x, boost::crypt::uint8_t y) noexcept -> boost::crypt::uint8_t
+{
+    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
+    #  pragma GCC diagnostic push
+    #  pragma GCC diagnostic ignored "-Wsign-conversion"
+    #endif
+
+    return static_cast<boost::crypt::uint8_t>(
+            ((y & 1U) * x) ^
+            ((y >> 1U & 1U) * xtimes(x)) ^
+            ((y >> 2U & 1U) * xtimes(xtimes(x))) ^
+            ((y >> 3U & 1U) * xtimes(xtimes(xtimes(x)))) ^
+            ((y >> 4U & 1U) * xtimes(xtimes(xtimes(xtimes(x)))))
+            );
+
+    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
+    #  pragma GCC diagnostic pop
+    #endif
+}
+
+template <boost::crypt::size_t Nr>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::inv_mix_columns() noexcept -> void
 {
     for (auto& column : state)
     {
