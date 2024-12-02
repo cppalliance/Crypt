@@ -317,8 +317,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::shift_rows() noexcept -> void
 template <boost::crypt::size_t Nr>
 BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::xtimes(boost::crypt::uint8_t b) noexcept -> boost::crypt::uint8_t
 {
-    const auto temp {b << 1U};
-    return static_cast<boost::crypt::uint8_t>(b & 0x80U ? (temp ^ 0x1BU) : temp);
+    return static_cast<boost::crypt::uint8_t>(static_cast<boost::crypt::uint8_t>(b << 1U) ^ static_cast<boost::crypt::uint8_t>(((b >> 7U) & 1U) * 0x1BU));
 }
 
 // The transformation of the state that takes all of the columns of the
