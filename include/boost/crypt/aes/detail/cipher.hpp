@@ -90,6 +90,8 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto shift_rows() noexcept -> void;
 
+    BOOST_CRYPT_GPU_ENABLED constexpr auto inv_shift_rows() noexcept -> void;
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto xtimes(boost::crypt::uint8_t b) noexcept -> boost::crypt::uint8_t;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto mix_columns() noexcept -> void;
@@ -357,6 +359,36 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::shift_rows() noexcept -> void
     state[3][3] = state[2][3];
     state[2][3] = state[1][3];
     state[1][3] = temp;
+}
+
+// inv_shift_rows in the inverse of shift rows (above).
+// In particular, the bytes in the last three rows of the state are shifted cyclically
+//
+// s'_r,c = s_r,(c-r) mod 4 for 0 <= r < 4 and 0 <= c < 4
+template <boost::crypt::size_t Nr>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::inv_shift_rows() noexcept -> void
+{
+    boost::crypt::uint8_t temp {};
+
+    temp        = state[3][1];
+    state[3][1] = state[2][1];
+    state[2][1] = state[1][1];
+    state[1][1] = state[0][1];
+    state[0][1] = temp;
+
+    temp        = state[0][2];
+    state[0][2] = state[2][2];
+    state[2][2] = temp;
+
+    temp        = state[1][2];
+    state[1][2] = state[3][2];
+    state[3][2] = temp;
+
+    temp        = state[0][3];
+    state[0][3] = state[1][3];
+    state[1][3] = state[2][3];
+    state[2][3] = state[3][3];
+    state[3][3] = temp;
 }
 
 // The transformation of bytes in which the polynomial representation
