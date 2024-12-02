@@ -242,6 +242,9 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
     #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
     #  pragma GCC diagnostic push
     #  pragma GCC diagnostic ignored "-Wsign-conversion"
+    #elif defined(_MSC_VER)
+    #  pragma warning( push )
+    #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
     #endif
 
     for (boost::crypt::size_t i {Nk}; i < Nb * (Nr + 1); ++i)
@@ -275,6 +278,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
 
     #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
     #  pragma GCC diagnostic pop
+    #elif defined(_MSC_VER)
+    #  pragma warning( pop )
     #endif
 }
 
