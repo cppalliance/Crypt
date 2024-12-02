@@ -357,10 +357,23 @@ constexpr auto hmac_drbg<HMACType, max_hasher_security, outlen, prediction_resis
     }
     if (additional_data_size != 0U)
     {
+        // If we are on a different 32 bit or smaller platform and using clang ignore the warning
+        #ifdef __clang__
+        #  pragma clang diagnostic push
+        #  pragma clang diagnostic ignored "-Wtautological-constant-out-of-range-compare"
+        #endif
+
+        #if !defined(__i386__) && !defined(_M_IX86)
         if (additional_data_size > max_length)
         {
             return state::input_too_long;
         }
+        #endif // 32-bit platforms
+
+        #ifdef __clang__
+        #  pragma clang diagnostic pop
+        #endif
+
         update(additional_data, additional_data_size);
     }
 
