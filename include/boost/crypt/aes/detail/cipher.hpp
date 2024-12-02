@@ -165,11 +165,12 @@ template <typename ForwardIter>
 constexpr auto cipher<Nr>::encrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
 {
-    while (buffer_size >= state.size())
+    constexpr auto state_complete_size {Nb * Nb};
+    while (buffer_size >= state_complete_size)
     {
         cipher_impl(buffer);
-        buffer_size -= state.size();
-        buffer += static_cast<boost::crypt::ptrdiff_t>(state.size());
+        buffer_size -= state_complete_size;
+        buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
     }
 }
 
