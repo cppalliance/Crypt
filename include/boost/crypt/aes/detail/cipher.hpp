@@ -359,11 +359,12 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::mix_columns() noexcept -> voi
 template <boost::crypt::size_t Nr>
 constexpr auto cipher<Nr>::add_round_key(boost::crypt::uint8_t round) noexcept -> void
 {
-    for (boost::crypt::size_t i {}; i < state.size(); ++i)
+    for (boost::crypt::size_t i {}; i < Nb; ++i)
     {
-        for (boost::crypt::size_t j {}; j < state[i].size(); ++j)
+        for (boost::crypt::size_t j {}; j < Nb; ++j)
         {
-            state[i][j] ^= round_key[(round * Nb * 4U) + (i * Nb) + j];
+            const auto round_key_value {round_key[(round * Nb * 4U) + (i * Nb) + j]};
+            state[i][j] ^= round_key_value;
         }
     }
 }
