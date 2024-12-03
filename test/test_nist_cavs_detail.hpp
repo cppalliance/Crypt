@@ -1502,14 +1502,108 @@ auto parse_file_drbg<test_type::drbg_pr_true>(const std::string& test_vectors_fi
     return result_parse_is_ok;
 }
 
+auto parse_file_aes(const std::string& test_vectors_filename, std::deque<test_object_aes>& test_vectors_to_get) -> bool
+{
+    bool result_parse_is_ok { false };
+
+    const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::drbg_no_reseed) };
+
+    const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
+
+    BOOST_TEST(result_filename_plausible_is_ok);
+
+    if(result_filename_plausible_is_ok)
+    {
+        std::string str_result  { };
+
+        // Read the file for creating the test cases.
+        std::ifstream in(test_vectors_filename_relative.c_str());
+
+        const bool file_is_open = in.is_open();
+
+        unsigned count { };
+
+        if(file_is_open)
+        {
+            result_parse_is_ok = true;
+            std::string line {};
+
+            std::string key {};
+            std::string iv {};
+            std::string plaintext {};
+            std::string ciphertext {};
+
+            while(getline(in, line))
+            {
+                const auto pos_cnt = line.find("COUNT =", 0U);
+                const auto pos_key = line.find("KEY =", 0U);
+                const auto pos_iv = line.find("IV =", 0U);
+                const auto pos_plaintext = line.find("PLAINTEXT =", 0U);
+                const auto pos_ciphertext = line.find("CIPHERTEXT =", 0U);
+
+                const bool line_is_representation_is_cnt = (pos_cnt != std::string::npos);
+                const bool line_is_representation_is_key = (pos_key != std::string::npos);
+                const bool line_is_representation_is_iv = (pos_iv != std::string::npos);
+                const bool line_is_representation_is_plaintext  = (pos_plaintext  != std::string::npos);
+                const bool line_is_representation_is_ciphertext = (pos_ciphertext != std::string::npos);
+
+                // Get the next count.
+                if (line_is_representation_is_cnt)
+                {
+                    ++count;
+                }
+                else if (line_is_representation_is_key)
+                {
+                    key = line.substr(6U, line.length() - 6U);
+                }
+                else if (line_is_representation_is_iv)
+                {
+                    iv = line.substr(5U, line.length() - 5U);
+                }
+                else if (line_is_representation_is_plaintext)
+                {
+                    plaintext = line.substr(12U, line.length() - 12U);
+                }
+                else if (line_is_representation_is_ciphertext)
+                {
+                    ciphertext = line.substr(13U, line.length() - 13U);
+                }
+                if (!plaintext.empty() && !ciphertext.empty())
+                {
+                    // Add the new test object to v.
+                    const test_object_aes test_obj(key, iv, plaintext, ciphertext);
+
+                    test_vectors_to_get.push_back(test_obj);
+
+                    key.clear();
+                    iv.clear();
+                    plaintext.clear();
+                    ciphertext.clear();
+                }
+            }
+
+            in.close();
+
+            result_parse_is_ok = ((!test_vectors_to_get.empty()) && (count == 7U) && result_parse_is_ok);
+        }
+    }
+
+    BOOST_TEST(result_parse_is_ok);
+
+    return result_parse_is_ok;
+}
+
 } // namespace detail
 
 using detail::test_vector_container_type;
 using detail::parse_file_vectors;
 using detail::parse_file_monte;
+using detail::parse_file_aes;
 using detail::test_vector_container_drbg_no_reseed;
 using detail::test_vector_container_drbg_pr_false;
 using detail::test_vector_container_drbg_pr_true;
+using detail::test_vector_container_aes;
+using detail::test_type;
 
 template<typename HasherType>
 auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> bool
