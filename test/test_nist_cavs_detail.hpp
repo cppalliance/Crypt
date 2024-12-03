@@ -2156,6 +2156,7 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
 
     bool result_is_ok { true };
 
+    const auto total_tests {test_vectors.size()};
     std::size_t count {};
     for (const auto& test_vector : test_vectors)
     {
@@ -2168,7 +2169,7 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
             aes.init(test_vector.key.begin(), test_vector.key.size());
         }
 
-        if (count < 8)
+        if (count < total_tests / 2U)
         {
             // Encrypt Path
             aes.template encrypt<mode>(plaintext.begin(), plaintext.size());
@@ -2200,6 +2201,7 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
 
     bool result_is_ok { true };
 
+    const auto total_tests {test_vectors.size()};
     std::size_t count {};
     for (const auto& test_vector : test_vectors)
     {
@@ -2212,7 +2214,7 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
             aes.init(test_vector.key.begin(), test_vector.key.size());
         }
 
-        if (count < 8)
+        if (count < total_tests / 2U)
         {
             // Encrypt Path
             aes.template encrypt<mode>(plaintext.begin(), plaintext.size());
@@ -2221,6 +2223,57 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
         {
             // Decrypt Path
             aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size());
+        }
+
+        if (plaintext != ciphertext)
+        {
+            // LCOV_EXCL_START
+            result_is_ok = false;
+            std::cerr << "Error with vector: " << count << std::endl;
+            // LCOV_EXCL_STOP
+        }
+
+        ++count;
+    }
+
+    return result_is_ok;
+}
+
+template <boost::crypt::aes::cipher_mode mode, typename AESType>
+auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vectors) -> bool
+{
+    BOOST_TEST(!test_vectors.empty());
+
+    bool result_is_ok { true };
+
+    const auto total_tests {test_vectors.size()};
+    std::size_t count {};
+    for (const auto& test_vector : test_vectors)
+    {
+        auto plaintext {test_vector.plaintext};
+        auto ciphertext {test_vector.ciphertext};
+
+        AESType aes;
+        if (mode == boost::crypt::aes::cipher_mode::ecb)
+        {
+            aes.init(test_vector.key.begin(), test_vector.key.size());
+        }
+
+        if (count < total_tests / 2U)
+        {
+            // Encrypt Path
+            for (int i {}; i < 1000; ++i)
+            {
+                aes.template encrypt<mode>(plaintext.begin(), plaintext.size());
+            }
+        }
+        else
+        {
+            // Decrypt Path
+            for (int i {}; i < 1000; ++i)
+            {
+                aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size());
+            }
         }
 
         if (plaintext != ciphertext)
