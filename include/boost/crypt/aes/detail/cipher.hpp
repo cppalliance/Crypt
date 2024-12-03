@@ -131,6 +131,9 @@ public:
     template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt(ForwardIter data, boost::crypt::size_t data_length = Nk) noexcept -> boost::crypt::state;
 
+    template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt(ForwardIter data, boost::crypt::size_t data_length = Nk) noexcept -> boost::crypt::state;
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept;
 };
 
@@ -273,6 +276,19 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter data, boost::crypt::size_t data_l
     }
 
     encrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
+    return state::success;
+}
+
+template <boost::crypt::size_t Nr>
+template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
+constexpr auto cipher<Nr>::decrypt(ForwardIter data, boost::crypt::size_t data_length) noexcept -> boost::crypt::state
+{
+    if (utility::is_null(data) || data_length == 0U)
+    {
+        return state::null;
+    }
+
+    decrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
     return state::success;
 }
 
