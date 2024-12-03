@@ -632,6 +632,12 @@ auto where_file(const std::string& test_vectors_filename, test_type test) -> std
         case test_type::drbg_pr_false:
         case test_type::drbg_pr_true:
             folder_path = "drbg/";
+            break;
+        case test_type::aes_kat:
+        case test_type::aes_mct:
+        case test_type::aes_mmt:
+            folder_path = "aes/";
+            break;
     }
 
     // Boost-root
