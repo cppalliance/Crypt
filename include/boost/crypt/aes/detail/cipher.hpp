@@ -35,6 +35,25 @@ BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::array<boost::crypt::uint8_t, 256> sbo
         0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
 };
 
+BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::array<boost::crypt::uint8_t, 256> rsbox = {
+        0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
+        0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
+        0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
+        0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25,
+        0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92,
+        0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84,
+        0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06,
+        0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b,
+        0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73,
+        0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e,
+        0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b,
+        0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4,
+        0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f,
+        0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
+        0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
+        0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
+};
+
 BOOST_CRYPT_INLINE_CONSTEXPR boost::crypt::array<boost::crypt::uint8_t, 11> Rcon = {
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
 };
@@ -57,6 +76,7 @@ private:
 
     boost::crypt::array<boost::crypt::array<boost::crypt::uint8_t, Nb>, Nb> state {};
     boost::crypt::array<boost::crypt::uint8_t, key_expansion_size> round_key {};
+    bool initialized {false};
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto rot_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
@@ -67,11 +87,19 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto sub_bytes() noexcept -> void;
 
+    BOOST_CRYPT_GPU_ENABLED constexpr auto inv_sub_bytes() noexcept -> void;
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto shift_rows() noexcept -> void;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto inv_shift_rows() noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto xtimes(boost::crypt::uint8_t b) noexcept -> boost::crypt::uint8_t;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto mix_columns() noexcept -> void;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto gf28_multiply(boost::crypt::uint8_t x, boost::crypt::uint8_t y) noexcept -> boost::crypt::uint8_t;
+
+    BOOST_CRYPT_GPU_ENABLED constexpr auto inv_mix_columns() noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto add_round_key(boost::crypt::uint8_t round) noexcept -> void;
 
@@ -79,7 +107,13 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto cipher_impl(ForwardIter buffer) noexcept -> void;
 
     template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto inv_cipher_impl(ForwardIter buffer) noexcept -> void;
+
+    template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
+
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
 
 public:
 
@@ -98,6 +132,9 @@ public:
     template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt(ForwardIter data, boost::crypt::size_t data_length = Nk) noexcept -> boost::crypt::state;
 
+    template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt(ForwardIter data, boost::crypt::size_t data_length = Nk) noexcept -> boost::crypt::state;
+
     BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept;
 };
 
@@ -115,6 +152,7 @@ constexpr auto cipher<Nr>::init(ForwardIter key, boost::crypt::size_t key_length
     }
 
     key_expansion(key, key_length);
+    initialized = true;
     return state::success;
 }
 
@@ -147,7 +185,49 @@ constexpr auto cipher<Nr>::cipher_impl(ForwardIter buffer) noexcept -> void
     BOOST_CRYPT_ASSERT(round == Nr);
     sub_bytes();
     shift_rows();
-    add_round_key(Nr);
+    add_round_key(round);
+
+    // Write the cipher text back
+    offset = 0U;
+    for (boost::crypt::size_t i {}; i < Nb; ++i)
+    {
+        for (boost::crypt::size_t j {}; j < Nb; ++j)
+        {
+            buffer[offset++] = static_cast<boost::crypt::uint8_t>(state[i][j]);
+        }
+    }
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter>
+constexpr auto cipher<Nr>::inv_cipher_impl(ForwardIter buffer) noexcept -> void
+{
+    // Write the buffer to state and then perform operations
+    boost::crypt::ptrdiff_t offset {};
+    for (boost::crypt::size_t i {}; i < Nb; ++i)
+    {
+        for (boost::crypt::size_t j {}; j < Nb; ++j)
+        {
+            state[i][j] = static_cast<boost::crypt::uint8_t>(buffer[offset++]);
+        }
+    }
+
+    boost::crypt::uint8_t round {Nr};
+
+    add_round_key(round);
+
+    for (--round; round > 0; --round)
+    {
+        inv_shift_rows();
+        inv_sub_bytes();
+        add_round_key(round);
+        inv_mix_columns();
+    }
+
+    BOOST_CRYPT_ASSERT(round == 0);
+    inv_shift_rows();
+    inv_sub_bytes();
+    add_round_key(round);
 
     // Write the cipher text back
     offset = 0U;
@@ -175,6 +255,20 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter buffer, boost::crypt::size_t
 }
 
 template <boost::crypt::size_t Nr>
+template <typename ForwardIter>
+constexpr auto cipher<Nr>::decrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
+{
+    constexpr auto state_complete_size {Nb * Nb};
+    while (buffer_size >= state_complete_size)
+    {
+        inv_cipher_impl(buffer);
+        buffer_size -= state_complete_size;
+        buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+    }
+}
+
+template <boost::crypt::size_t Nr>
 template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
 constexpr auto cipher<Nr>::encrypt(ForwardIter data, boost::crypt::size_t data_length) noexcept -> boost::crypt::state
 {
@@ -182,8 +276,29 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter data, boost::crypt::size_t data_l
     {
         return state::null;
     }
+    else if (!initialized)
+    {
+        return state::uninitialized;
+    }
 
     encrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
+    return state::success;
+}
+
+template <boost::crypt::size_t Nr>
+template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
+constexpr auto cipher<Nr>::decrypt(ForwardIter data, boost::crypt::size_t data_length) noexcept -> boost::crypt::state
+{
+    if (utility::is_null(data) || data_length == 0U)
+    {
+        return state::null;
+    }
+    else if (!initialized)
+    {
+        return state::uninitialized;
+    }
+
+    decrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
     return state::success;
 }
 
@@ -198,6 +313,7 @@ constexpr auto cipher<Nr>::destroy() noexcept
         }
     }
     round_key.fill(0x00);
+    initialized = false;
 }
 
 // The transformation of words in which the four bytes of the word
@@ -297,6 +413,19 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::sub_bytes() noexcept -> void
     }
 }
 
+// The inverse of sub_bytes (above), in which rsbox is applied to each byte
+template <boost::crypt::size_t Nr>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::inv_sub_bytes() noexcept -> void
+{
+    for (auto& line : state)
+    {
+        for (auto& val : line)
+        {
+            val = rsbox[val];
+        }
+    }
+}
+
 // The transformation of the state in which the last three rows are
 // cyclically shifted by different offsets.
 template <boost::crypt::size_t Nr>
@@ -323,6 +452,36 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::shift_rows() noexcept -> void
     state[3][3] = state[2][3];
     state[2][3] = state[1][3];
     state[1][3] = temp;
+}
+
+// inv_shift_rows in the inverse of shift rows (above).
+// In particular, the bytes in the last three rows of the state are shifted cyclically
+//
+// s'_r,c = s_r,(c-r) mod 4 for 0 <= r < 4 and 0 <= c < 4
+template <boost::crypt::size_t Nr>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::inv_shift_rows() noexcept -> void
+{
+    boost::crypt::uint8_t temp {};
+
+    temp        = state[3][1];
+    state[3][1] = state[2][1];
+    state[2][1] = state[1][1];
+    state[1][1] = state[0][1];
+    state[0][1] = temp;
+
+    temp        = state[0][2];
+    state[0][2] = state[2][2];
+    state[2][2] = temp;
+
+    temp        = state[1][2];
+    state[1][2] = state[3][2];
+    state[3][2] = temp;
+
+    temp        = state[0][3];
+    state[0][3] = state[1][3];
+    state[1][3] = state[2][3];
+    state[2][3] = state[3][3];
+    state[3][3] = temp;
 }
 
 // The transformation of bytes in which the polynomial representation
@@ -376,8 +535,55 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::mix_columns() noexcept -> voi
     }
 }
 
+template <boost::crypt::size_t Nr>
+constexpr auto cipher<Nr>::gf28_multiply(boost::crypt::uint8_t x, boost::crypt::uint8_t y) noexcept -> boost::crypt::uint8_t
+{
+    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
+    #  pragma GCC diagnostic push
+    #  pragma GCC diagnostic ignored "-Wsign-conversion"
+    #endif
+
+    return static_cast<boost::crypt::uint8_t>(
+            ((y & 1U) * x) ^
+            ((y >> 1U & 1U) * xtimes(x)) ^
+            ((y >> 2U & 1U) * xtimes(xtimes(x))) ^
+            ((y >> 3U & 1U) * xtimes(xtimes(xtimes(x)))) ^
+            ((y >> 4U & 1U) * xtimes(xtimes(xtimes(xtimes(x)))))
+            );
+
+    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
+    #  pragma GCC diagnostic pop
+    #endif
+}
+
+template <boost::crypt::size_t Nr>
+BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::inv_mix_columns() noexcept -> void
+{
+    for (auto& column : state)
+    {
+        const auto s0 {column[0]};
+        const auto s1 {column[1]};
+        const auto s2 {column[2]};
+        const auto s3 {column[3]};
+
+        // s'_0,c = ({0e} * s_0,c) ^ ({0b} * s_1,c) ^ ({0d} * s_2,c) ^ ({09} * s_3,c)
+        column[0] = gf28_multiply(s0, 0x0e) ^ gf28_multiply(s1, 0x0b) ^ gf28_multiply(s2, 0x0d) ^ gf28_multiply(s3, 0x09);
+
+        // s'_1,c = ({09} * s_0,c) ^ ({0e} * s_1,c) ^ ({0b} * s_2,c) ^ ({0d} * s_3,c)
+        column[1] = gf28_multiply(s0, 0x09) ^ gf28_multiply(s1, 0x0e) ^ gf28_multiply(s2, 0x0b) ^ gf28_multiply(s3, 0x0d);
+
+        // s`_2,c = ({0d} * s_0,c) ^ ({09} * s_1,c) ^ ({0e} * s_2,c) ^ ({0b} * s_3,c)
+        column[2] = gf28_multiply(s0, 0x0d) ^ gf28_multiply(s1, 0x09) ^ gf28_multiply(s2, 0x0e) ^ gf28_multiply(s3, 0x0b);
+
+        // s`_3,c = ({0b} * s_0,c) ^ ({0d} * s_1,c) ^ ({09} * s_2,c) ^ ({0e} * s_3,c)
+        column[3] = gf28_multiply(s0, 0x0b) ^ gf28_multiply(s1, 0x0d) ^ gf28_multiply(s2, 0x09) ^ gf28_multiply(s3, 0x0e);
+    }
+}
+
 // The transformation of the state in which a round key is combined
 // with the state.
+//
+// Add round_key is its own inverse so there is no separate inverse function
 template <boost::crypt::size_t Nr>
 constexpr auto cipher<Nr>::add_round_key(boost::crypt::uint8_t round) noexcept -> void
 {
