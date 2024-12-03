@@ -212,11 +212,11 @@ constexpr auto cipher<Nr>::inv_cipher_impl(ForwardIter buffer) noexcept -> void
         }
     }
 
-    boost::crypt::uint8_t round {};
+    boost::crypt::uint8_t round {Nr};
 
     add_round_key(round);
 
-    for (round = static_cast<boost::crypt::uint8_t>(Nr - 1U); round < 0; --round)
+    for (round -= 1U; round > 0; --round)
     {
         inv_shift_rows();
         inv_sub_bytes();
@@ -567,16 +567,16 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::inv_mix_columns() noexcept ->
         const auto s3 {column[3]};
 
         // s'_0,c = ({0e} * s_0,c) ^ ({0b} * s_1,c) ^ ({0d} * s_2,c) ^ ({09} * s_3,c)
-        column[0] = gf28_multiply(0x0e, s0) ^ gf28_multiply(0x0b, s1) ^ gf28_multiply(0x0d, s2) ^ gf28_multiply(0x09, s3);
+        column[0] = gf28_multiply(s0, 0x0e) ^ gf28_multiply(s1, 0x0b) ^ gf28_multiply(s2, 0x0d) ^ gf28_multiply(s3, 0x09);
 
         // s'_1,c = ({09} * s_0,c) ^ ({0e} * s_1,c) ^ ({0b} * s_2,c) ^ ({0d} * s_3,c)
-        column[1] = gf28_multiply(0x09, s0) ^ gf28_multiply(0x0e, s1) ^ gf28_multiply(0x0b, s2) ^ gf28_multiply(0x0d, s3);
+        column[1] = gf28_multiply(s0, 0x09) ^ gf28_multiply(s1, 0x0e) ^ gf28_multiply(s2, 0x0b) ^ gf28_multiply(s3, 0x0d);
 
         // s`_2,c = ({0d} * s_0,c) ^ ({09} * s_1,c) ^ ({0e} * s_2,c) ^ ({0b} * s_3,c)
-        column[2] = gf28_multiply(0x0d, s0) ^ gf28_multiply(0x09, s1) ^ gf28_multiply(0x0e, s2) ^ gf28_multiply(0x0b, s3);
+        column[2] = gf28_multiply(s0, 0x0d) ^ gf28_multiply(s1, 0x09) ^ gf28_multiply(s2, 0x0e) ^ gf28_multiply(s3, 0x0b);
 
         // s`_3,c = ({0b} * s_0,c) ^ ({0d} * s_1,c) ^ ({09} * s_2,c) ^ ({0e} * s_3,c)
-        column[3] = gf28_multiply(0x0b, s0) ^ gf28_multiply(0x0d, s1) ^ gf28_multiply(0x09, s2) ^ gf28_multiply(0x0e, s3);
+        column[3] = gf28_multiply(s0, 0x0b) ^ gf28_multiply(s1, 0x0d) ^ gf28_multiply(s2, 0x09) ^ gf28_multiply(s3, 0x0e);
     }
 }
 
