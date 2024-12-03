@@ -76,6 +76,7 @@ private:
 
     boost::crypt::array<boost::crypt::array<boost::crypt::uint8_t, Nb>, Nb> state {};
     boost::crypt::array<boost::crypt::uint8_t, key_expansion_size> round_key {};
+    bool initialized {false};
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto rot_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
@@ -151,6 +152,7 @@ constexpr auto cipher<Nr>::init(ForwardIter key, boost::crypt::size_t key_length
     }
 
     key_expansion(key, key_length);
+    initialized = true;
     return state::success;
 }
 
@@ -274,6 +276,10 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter data, boost::crypt::size_t data_l
     {
         return state::null;
     }
+    else if (!initialized)
+    {
+        return state::uninitialized;
+    }
 
     encrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
     return state::success;
@@ -286,6 +292,10 @@ constexpr auto cipher<Nr>::decrypt(ForwardIter data, boost::crypt::size_t data_l
     if (utility::is_null(data) || data_length == 0U)
     {
         return state::null;
+    }
+    else if (!initialized)
+    {
+        return state::uninitialized;
     }
 
     decrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
@@ -303,6 +313,7 @@ constexpr auto cipher<Nr>::destroy() noexcept
         }
     }
     round_key.fill(0x00);
+    initialized = false;
 }
 
 // The transformation of words in which the four bytes of the word
