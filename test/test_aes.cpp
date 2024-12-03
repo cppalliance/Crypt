@@ -19,16 +19,24 @@ void basic_aes128_test()
         0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34
     };
 
+    const auto original_message {plaintext};
+
     boost::crypt::aes128 gen;
     BOOST_TEST(gen.init(key, key.size()) == boost::crypt::state::success);
     BOOST_TEST(gen.encrypt<boost::crypt::aes::cipher_mode::ecb>(plaintext.begin(), plaintext.size()) == boost::crypt::state::success);
 
-    boost::crypt::array<uint8_t, 16> validation_1 = {
+    const boost::crypt::array<uint8_t, 16> validation_1 = {
         0x39, 0x25, 0x84, 0x1d, 0x02, 0xdc, 0x09, 0xfb,
         0xdc, 0x11, 0x85, 0x97, 0x19, 0x6a, 0x0b, 0x32,
     };
 
     BOOST_TEST(plaintext == validation_1);
+
+    BOOST_TEST(gen.decrypt<boost::crypt::aes::cipher_mode::ecb>(plaintext.begin(), plaintext.size()) == boost::crypt::state::success);
+
+    BOOST_TEST(plaintext == original_message);
+
+    gen.destroy();
 }
 
 int main()
