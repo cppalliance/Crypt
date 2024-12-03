@@ -106,6 +106,9 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto cipher_impl(ForwardIter buffer) noexcept -> void;
 
     template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto inv_cipher_impl(ForwardIter buffer) noexcept -> void;
+
+    template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
 
 public:
@@ -174,7 +177,49 @@ constexpr auto cipher<Nr>::cipher_impl(ForwardIter buffer) noexcept -> void
     BOOST_CRYPT_ASSERT(round == Nr);
     sub_bytes();
     shift_rows();
-    add_round_key(Nr);
+    add_round_key(round);
+
+    // Write the cipher text back
+    offset = 0U;
+    for (boost::crypt::size_t i {}; i < Nb; ++i)
+    {
+        for (boost::crypt::size_t j {}; j < Nb; ++j)
+        {
+            buffer[offset++] = static_cast<boost::crypt::uint8_t>(state[i][j]);
+        }
+    }
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter>
+constexpr auto cipher<Nr>::inv_cipher_impl(ForwardIter buffer) noexcept -> void
+{
+    // Write the buffer to state and then perform operations
+    boost::crypt::ptrdiff_t offset {};
+    for (boost::crypt::size_t i {}; i < Nb; ++i)
+    {
+        for (boost::crypt::size_t j {}; j < Nb; ++j)
+        {
+            state[i][j] = static_cast<boost::crypt::uint8_t>(buffer[offset++]);
+        }
+    }
+
+    boost::crypt::uint8_t round {};
+
+    add_round_key(round);
+
+    for (round = static_cast<boost::crypt::uint8_t>(Nr - 1U); round < 0; --round)
+    {
+        inv_shift_rows();
+        inv_sub_bytes();
+        add_round_key(round);
+        inv_mix_columns();
+    }
+
+    BOOST_CRYPT_ASSERT(round == 0);
+    inv_shift_rows();
+    inv_sub_bytes();
+    add_round_key(round);
 
     // Write the cipher text back
     offset = 0U;
@@ -494,7 +539,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::inv_mix_columns() noexcept ->
 // The transformation of the state in which a round key is combined
 // with the state.
 //
-// Add round_key is it's own inverse so there is no separate inverse function
+// Add round_key is its own inverse so there is no separate inverse function
 template <boost::crypt::size_t Nr>
 constexpr auto cipher<Nr>::add_round_key(boost::crypt::uint8_t round) noexcept -> void
 {
