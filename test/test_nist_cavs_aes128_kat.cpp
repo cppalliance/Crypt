@@ -7,6 +7,7 @@
 #include "test_nist_cavs_detail.hpp"
 #include <string>
 #include <vector>
+#include <iostream>
 
 auto main() -> int
 {
@@ -16,14 +17,24 @@ auto main() -> int
         "ECBGFSbox128.rsp",
         "ECBKeySbox128.rsp",
         "ECBVarKey128.rsp",
-        "ECBVarTxt128.rsp"
+        "ECBVarTxt128.rsp",
+        "ECBGFSbox128_20.rsp",
+        "ECBKeySbox128_20.rsp",
+        "ECBVarKey128_20.rsp",
+        "ECBVarTxt128_20.rsp"
     };
 
     for (const auto& file : files_to_test)
     {
         nist::cavs::test_vector_container_aes test_vectors {};
 
-        BOOST_TEST(nist::cavs::detail::parse_file_aes(file, test_vectors));
+        if (!BOOST_TEST(nist::cavs::detail::parse_file_aes(file, test_vectors)))
+        {
+            // LCOV_EXCL_START
+            std::cerr << "Failed to open file: " << file << std::endl;
+            continue;
+            // LCOV_EXCL_STOP
+        }
 
         result_is_ok = (nist::cavs::test_vectors_aes_kat<boost::crypt::aes::cipher_mode::ecb, boost::crypt::aes128>(test_vectors) && result_is_ok);
 
