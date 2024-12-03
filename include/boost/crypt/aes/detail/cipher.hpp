@@ -216,7 +216,7 @@ constexpr auto cipher<Nr>::inv_cipher_impl(ForwardIter buffer) noexcept -> void
 
     add_round_key(round);
 
-    for (round -= 1U; round > 0; --round)
+    for (--round; round > 0; --round)
     {
         inv_shift_rows();
         inv_sub_bytes();
