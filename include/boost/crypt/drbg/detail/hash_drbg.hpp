@@ -276,10 +276,23 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto hash_drbg<HasherType, max_hasher_security
     if (additional_data_size != 0U)
     {
         // Step 2.1 and 2.2
-        if (BOOST_CRYPT_UNLIKELY(additional_data_size > max_length))
+        // If we are on a different 32 bit or smaller platform and using clang ignore the warning
+        #ifdef __clang__
+        #  pragma clang diagnostic push
+        #  pragma clang diagnostic ignored "-Wtautological-constant-out-of-range-compare"
+        #endif
+
+        #if !defined(__i386__) && !defined(_M_IX86)
+        if (additional_data_size > max_length)
         {
             return state::input_too_long; // LCOV_EXCL_LINE
         }
+        #endif // 32-bit platforms
+
+        #ifdef __clang__
+        #  pragma clang diagnostic pop
+        #endif
+
         HasherType hasher {};
         hasher.process_byte(static_cast<boost::crypt::uint8_t>(0x02));
         hasher.process_bytes(value_.begin(), value_.size());
