@@ -8,6 +8,7 @@
 
 #include <boost/core/lightweight_test.hpp>
 #include "boost/crypt/mac/hmac.hpp"
+#include "boost/crypt/aes/detail/cipher_mode.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <deque>
@@ -613,6 +614,8 @@ public:
     const plaintext_type plaintext {};
     const ciphertext_type ciphertext {};
 };
+
+using test_vector_container_aes = std::deque<test_object_aes>;
 
 auto where_file(const std::string& test_vectors_filename, test_type test) -> std::string
 {
@@ -2140,6 +2143,50 @@ auto test_vectors_drbg_pr_true(const nist::cavs::test_vector_container_drbg_pr_t
                 // LCOV_EXCL_STOP
             }
         }
+        ++count;
+    }
+
+    return result_is_ok;
+}
+
+template <boost::crypt::aes::cipher_mode mode, typename AESType>
+auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vectors) -> bool
+{
+    BOOST_TEST(!test_vectors.empty());
+
+    bool result_is_ok { true };
+
+    std::size_t count {};
+    for (const auto& test_vector : test_vectors)
+    {
+        auto plaintext {test_vector.plaintext};
+        auto ciphertext {test_vector.ciphertext};
+
+        AESType aes;
+        if (mode == boost::crypt::aes::cipher_mode::ecb)
+        {
+            aes.init(test_vector.key.begin(), test_vector.key.size());
+        }
+
+        if (count < 8)
+        {
+            // Encrypt Path
+            aes.encrypt<mode>(plaintext.begin(), plaintext.size());
+        }
+        else
+        {
+            // Decrypt Path
+            aes.decrypt<mode>(ciphertext.begin(), ciphertext.size());
+        }
+
+        if (plaintext != ciphertext)
+        {
+            // LCOV_EXCL_START
+            result_is_ok = false;
+            std::cerr << "Error with vector: " << count << std::endl;
+            // LCOV_EXCL_STOP
+        }
+
         ++count;
     }
 
