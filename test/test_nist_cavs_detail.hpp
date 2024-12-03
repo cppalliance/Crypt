@@ -940,7 +940,7 @@ auto parse_file_vectors_variable_xof(const std::string& test_vectors_filename, t
 
                     const auto length_from_file = static_cast<std::size_t>(std::strtoul(str_len.c_str(), nullptr, 10U));
 
-                    lengths.push_back(length_from_file/CHAR_BIT);
+                    lengths.push_back(length_from_file / 8U);
                 }
 
                 // Get the next message.
