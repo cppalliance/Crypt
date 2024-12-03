@@ -473,27 +473,21 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::inv_mix_columns() noexcept ->
     for (auto& column : state)
     {
         const auto s0 {column[0]};
-        const auto all_c {static_cast<boost::crypt::uint8_t>(column[0] ^ column[1] ^ column[2] ^ column[3])};
+        const auto s1 {column[1]};
+        const auto s2 {column[2]};
+        const auto s3 {column[3]};
 
-        // s'_0,c = ({02} * s_0,c) ^ ({03} * s_1,c) ^ s_2,c ^ s_3,c
-        auto temp  {static_cast<boost::crypt::uint8_t>(column[0] ^ column[1])};
-        temp = xtimes(temp);
-        column[0] ^= temp ^ all_c;
+        // s'_0,c = ({0e} * s_0,c) ^ ({0b} * s_1,c) ^ ({0d} * s_2,c) ^ ({09} * s_3,c)
+        column[0] = gf28_multiply(0x0e, s0) ^ gf28_multiply(0x0b, s1) ^ gf28_multiply(0x0d, s2) ^ gf28_multiply(0x09, s3);
 
-        // s'_1,c = s_0,c ^ ({02} * s_1,c) ^ ({03} * s_2,c) ^ s_3,c
-        temp = static_cast<boost::crypt::uint8_t>(column[1] ^ column[2]);
-        temp = xtimes(temp);
-        column[1] ^= temp ^ all_c;
+        // s'_1,c = ({09} * s_0,c) ^ ({0e} * s_1,c) ^ ({0b} * s_2,c) ^ ({0d} * s_3,c)
+        column[1] = gf28_multiply(0x09, s0) ^ gf28_multiply(0x0e, s1) ^ gf28_multiply(0x0b, s2) ^ gf28_multiply(0x0d, s3);
 
-        // s`_2,c = s_0,c ^ s_1,c ^ ({02} * s_2,c) ^ ({03} * s_3,c)
-        temp = static_cast<boost::crypt::uint8_t>(column[2] ^ column[3]);
-        temp = xtimes(temp);
-        column[2] ^= temp ^ all_c;
+        // s`_2,c = ({0d} * s_0,c) ^ ({09} * s_1,c) ^ ({0e} * s_2,c) ^ ({0b} * s_3,c)
+        column[2] = gf28_multiply(0x0d, s0) ^ gf28_multiply(0x09, s1) ^ gf28_multiply(0x0e, s2) ^ gf28_multiply(0x0b, s3);
 
-        // s`_3,c = ({03} * s_0,c) ^ s_1,c ^ s_2,c ^ ({02} * s_3,c)
-        temp = static_cast<boost::crypt::uint8_t>(column[3] ^ s0);
-        temp = xtimes(temp);
-        column[3] ^= temp ^ all_c ;
+        // s`_3,c = ({0b} * s_0,c) ^ ({0d} * s_1,c) ^ ({09} * s_2,c) ^ ({0e} * s_3,c)
+        column[3] = gf28_multiply(0x0b, s0) ^ gf28_multiply(0x0d, s1) ^ gf28_multiply(0x09, s2) ^ gf28_multiply(0x0e, s3);
     }
 }
 
