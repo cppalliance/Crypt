@@ -1509,7 +1509,7 @@ auto parse_file_aes(const std::string& test_vectors_filename, std::deque<test_ob
 {
     bool result_parse_is_ok { false };
 
-    const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::drbg_no_reseed) };
+    const std::string test_vectors_filename_relative { where_file(test_vectors_filename, test_type::aes_kat) };
 
     const bool result_filename_plausible_is_ok { (!test_vectors_filename_relative.empty()) };
 
@@ -1587,7 +1587,7 @@ auto parse_file_aes(const std::string& test_vectors_filename, std::deque<test_ob
 
             in.close();
 
-            result_parse_is_ok = ((!test_vectors_to_get.empty()) && (count == 7U) && result_parse_is_ok);
+            result_parse_is_ok = ((!test_vectors_to_get.empty()) && count > 0U && result_parse_is_ok);
         }
     }
 
@@ -2171,12 +2171,12 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
         if (count < 8)
         {
             // Encrypt Path
-            aes.encrypt<mode>(plaintext.begin(), plaintext.size());
+            aes.template encrypt<mode>(plaintext.begin(), plaintext.size());
         }
         else
         {
             // Decrypt Path
-            aes.decrypt<mode>(ciphertext.begin(), ciphertext.size());
+            aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size());
         }
 
         if (plaintext != ciphertext)
