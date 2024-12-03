@@ -111,6 +111,9 @@ private:
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
 
+    template <typename ForwardIter>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr cipher() noexcept = default;
@@ -241,6 +244,20 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter buffer, boost::crypt::size_t
     while (buffer_size >= state_complete_size)
     {
         cipher_impl(buffer);
+        buffer_size -= state_complete_size;
+        buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+    }
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter>
+constexpr auto cipher<Nr>::decrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
+{
+    constexpr auto state_complete_size {Nb * Nb};
+    while (buffer_size >= state_complete_size)
+    {
+        inv_cipher_impl(buffer);
         buffer_size -= state_complete_size;
         buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
     }
