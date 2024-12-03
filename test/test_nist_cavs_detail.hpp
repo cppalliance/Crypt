@@ -26,6 +26,9 @@ enum class test_type : unsigned
     drbg_no_reseed,
     drbg_pr_false,
     drbg_pr_true,
+    aes_kat,
+    aes_mmt,
+    aes_mct
 };
 
 inline auto convert_hex_string_to_byte_container(const std::string& str_in) -> std::deque<std::uint8_t>
