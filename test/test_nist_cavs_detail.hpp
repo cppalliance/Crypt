@@ -529,6 +529,91 @@ using test_vector_container_drbg_no_reseed = std::deque<test_object_drbg<test_ty
 using test_vector_container_drbg_pr_false = std::deque<test_object_drbg<test_type::drbg_pr_false>>;
 using test_vector_container_drbg_pr_true = std::deque<test_object_drbg<test_type::drbg_pr_true>>;
 
+struct test_object_aes
+{
+public:
+    using size_type             = std::size_t;
+    using key_type              = std::vector<std::uint8_t>;
+    using iv_type               = std::vector<std::uint8_t>;
+    using plaintext_type        = std::vector<std::uint8_t>;
+    using ciphertext_type       = std::vector<std::uint8_t>;
+
+    test_object_aes() = delete;
+
+    explicit test_object_aes (const std::string& key_input,
+                              const std::string& plaintext_input,
+                              const std::string& ciphertext_input)
+            : key
+                      {
+                              [&key_input]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(key_input) };
+                                  return key_type (byte_data.cbegin(),   byte_data.cend());
+                              }()
+                      },
+              plaintext
+                      {
+                              [&plaintext_input]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(plaintext_input) };
+                                  return plaintext_type (byte_data.cbegin(), byte_data.cend());
+                              }()
+                      },
+              ciphertext
+                      {
+                              [&ciphertext_input]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(ciphertext_input) };
+                                  return ciphertext_type (byte_data.cbegin(), byte_data.cend());
+                              }()
+                      }
+    { }
+
+    explicit test_object_aes (const std::string& key_input,
+                              const std::string& iv_input,
+                              const std::string& plaintext_input,
+                              const std::string& ciphertext_input)
+            : key
+                      {
+                              [&key_input]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(key_input) };
+                                  return key_type (byte_data.cbegin(),   byte_data.cend());
+                              }()
+                      },
+              iv
+                      {
+                              [&iv_input]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(iv_input) };
+                                  return iv_type (byte_data.cbegin(), byte_data.cend());
+                              }()
+                      },
+              plaintext
+                      {
+                              [&plaintext_input]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(plaintext_input) };
+                                  return plaintext_type (byte_data.cbegin(), byte_data.cend());
+                              }()
+                      },
+              ciphertext
+                      {
+                              [&ciphertext_input]()
+                              {
+                                  const auto byte_data { detail::convert_hex_string_to_byte_container(ciphertext_input) };
+                                  return ciphertext_type (byte_data.cbegin(), byte_data.cend());
+                              }()
+                      }
+    { }
+
+
+    const key_type key {};
+    const iv_type  iv {};
+    const plaintext_type plaintext {};
+    const ciphertext_type ciphertext {};
+};
+
 auto where_file(const std::string& test_vectors_filename, test_type test) -> std::string
 {
   // Try to open the file in each of the known relative paths
