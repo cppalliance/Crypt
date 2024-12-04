@@ -260,6 +260,15 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     }
 }
 
+#if defined(__GNUC__) && __GNUC__ >= 5
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wconversion"
+#  pragma GCC diagnostic ignored "-Wsign-conversion"
+#elif defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
@@ -271,15 +280,36 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // Cj = CIPH_k(P_j xor C_j-1)
 
     constexpr auto state_complete_size {Nb * Nb};
+    for (boost::crypt::size_t i {}; i < state_complete_size; ++i)
+    {
+        buffer[i] ^= iv[i];
+    }
 
+    cipher_impl(buffer);
+    buffer_size -= state_complete_size;
+    buffer += state_complete_size;
 
     while (buffer_size >= state_complete_size)
     {
         cipher_impl(buffer);
         buffer_size -= state_complete_size;
+        if (buffer_size >= state_complete_size)
+        {
+            for (boost::crypt::size_t i {}; i < state_complete_size; ++i)
+            {
+                buffer[state_complete_size + i] ^= buffer[i];
+            }
+        }
+
         buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
     }
 }
+
+#if defined(__GNUC__) && __GNUC__ >= 5
+#  pragma GCC diagnostic pop
+#elif defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
 
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter>
