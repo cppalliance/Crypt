@@ -117,8 +117,8 @@ private:
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cbc>&) noexcept -> void;
 
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
+    template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
 
 public:
 
@@ -138,8 +138,9 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt(ForwardIter1 data, boost::crypt::size_t data_length = Nk,
                                                    ForwardIter2 iv = nullptr, boost::crypt::size_t iv_length = 0U) noexcept -> boost::crypt::state;
 
-    template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt(ForwardIter data, boost::crypt::size_t data_length = Nk) noexcept -> boost::crypt::state;
+    template <boost::crypt::aes::cipher_mode mode, typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt(ForwardIter1 data, boost::crypt::size_t data_length = Nk,
+                                                   ForwardIter2 iv = nullptr, boost::crypt::size_t iv_length = 0U) noexcept -> boost::crypt::state;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept;
 };
@@ -308,8 +309,8 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 #endif
 
 template <boost::crypt::size_t Nr>
-template <typename ForwardIter>
-constexpr auto cipher<Nr>::decrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size,
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
 {
     constexpr auto state_complete_size {Nb * Nb};
@@ -361,8 +362,9 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter1 data, boost::crypt::size_t data_
 }
 
 template <boost::crypt::size_t Nr>
-template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
-constexpr auto cipher<Nr>::decrypt(ForwardIter data, boost::crypt::size_t data_length) noexcept -> boost::crypt::state
+template <boost::crypt::aes::cipher_mode mode, typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::decrypt(ForwardIter1 data, boost::crypt::size_t data_length,
+                                   ForwardIter2 iv, boost::crypt::size_t iv_length) noexcept -> boost::crypt::state
 {
     if (utility::is_null(data) || data_length == 0U)
     {
@@ -373,7 +375,28 @@ constexpr auto cipher<Nr>::decrypt(ForwardIter data, boost::crypt::size_t data_l
         return state::uninitialized;
     }
 
-    decrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
+    #if defined(_MSC_VER)
+    #  pragma warning( push )
+    #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
+    #endif
+
+    BOOST_CRYPT_IF_CONSTEXPR (mode != aes::cipher_mode::ecb)
+    {
+        if (utility::is_null(iv) || iv_length == 0U)
+        {
+            return state::null;
+        }
+        else if (iv_length != (Nk * 4U)) // Nk is in 32-bit words not bytes
+        {
+            return state::insufficient_key_length;
+        }
+    }
+
+    #if defined(_MSC_VER)
+    #  pragma warning( pop )
+    #endif
+
+    decrypt_impl(data, data_length, iv, iv_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
     return state::success;
 }
 
