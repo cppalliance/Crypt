@@ -109,8 +109,13 @@ private:
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto inv_cipher_impl(ForwardIter buffer) noexcept -> void;
 
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
+    template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
+
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cbc>&) noexcept -> void;
 
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
@@ -242,11 +247,32 @@ constexpr auto cipher<Nr>::inv_cipher_impl(ForwardIter buffer) noexcept -> void
 }
 
 template <boost::crypt::size_t Nr>
-template <typename ForwardIter>
-constexpr auto cipher<Nr>::encrypt_impl(ForwardIter buffer, boost::crypt::size_t buffer_size,
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
 {
     constexpr auto state_complete_size {Nb * Nb};
+    while (buffer_size >= state_complete_size)
+    {
+        cipher_impl(buffer);
+        buffer_size -= state_complete_size;
+        buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+    }
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::cbc>&) noexcept -> void
+{
+    // In CBC mode:
+    // C1 = CIPH_k(P1 xor IV)
+    // Cj = CIPH_k(P_j xor C_j-1)
+
+    constexpr auto state_complete_size {Nb * Nb};
+
+
     while (buffer_size >= state_complete_size)
     {
         cipher_impl(buffer);
@@ -294,13 +320,17 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter1 data, boost::crypt::size_t data_
         {
             return state::null;
         }
+        else if (iv_length != (Nk * 4U)) // Nk is in 32-bit words not bytes
+        {
+            return state::insufficient_key_length;
+        }
     }
 
     #if defined(_MSC_VER)
     #  pragma warning( pop )
     #endif
 
-    encrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
+    encrypt_impl(data, data_length, iv, iv_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
     return state::success;
 }
 
