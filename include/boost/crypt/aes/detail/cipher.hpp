@@ -129,8 +129,9 @@ public:
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter key, boost::crypt::size_t key_length) noexcept -> boost::crypt::state;
 
-    template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt(ForwardIter data, boost::crypt::size_t data_length = Nk) noexcept -> boost::crypt::state;
+    template <boost::crypt::aes::cipher_mode mode, typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt(ForwardIter1 data, boost::crypt::size_t data_length = Nk,
+                                                   ForwardIter2 iv = nullptr, boost::crypt::size_t iv_length = 0U) noexcept -> boost::crypt::state;
 
     template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt(ForwardIter data, boost::crypt::size_t data_length = Nk) noexcept -> boost::crypt::state;
@@ -269,8 +270,9 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter buffer, boost::crypt::size_t
 }
 
 template <boost::crypt::size_t Nr>
-template <boost::crypt::aes::cipher_mode mode, typename ForwardIter>
-constexpr auto cipher<Nr>::encrypt(ForwardIter data, boost::crypt::size_t data_length) noexcept -> boost::crypt::state
+template <boost::crypt::aes::cipher_mode mode, typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::encrypt(ForwardIter1 data, boost::crypt::size_t data_length,
+                                   ForwardIter2 iv, boost::crypt::size_t iv_length) noexcept -> boost::crypt::state
 {
     if (utility::is_null(data) || data_length == 0U)
     {
@@ -280,6 +282,23 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter data, boost::crypt::size_t data_l
     {
         return state::uninitialized;
     }
+
+    #if defined(_MSC_VER)
+    #  pragma warning( push )
+    #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
+    #endif
+
+    BOOST_CRYPT_IF_CONSTEXPR (mode != aes::cipher_mode::ecb)
+    {
+        if (utility::is_null(iv) || iv_length == 0U)
+        {
+            return state::null;
+        }
+    }
+
+    #if defined(_MSC_VER)
+    #  pragma warning( pop )
+    #endif
 
     encrypt_impl(data, data_length, boost::crypt::integral_constant<aes::cipher_mode, mode>{});
     return state::success;
