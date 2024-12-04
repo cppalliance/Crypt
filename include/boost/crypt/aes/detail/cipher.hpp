@@ -120,6 +120,10 @@ private:
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void;
 
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size, const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cbc>&) noexcept -> void;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr cipher() noexcept = default;
@@ -317,6 +321,77 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     while (buffer_size >= state_complete_size)
     {
         inv_cipher_impl(buffer);
+        buffer_size -= state_complete_size;
+        buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+    }
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::cbc>&) noexcept -> void
+{
+    // In CBC mode:
+    // P_1 = CIPHInv_K(C_1) xor IV
+    // P_J = CIPHInv_K(C_j) xor C_j-1
+    //
+    // Therefore we need to carry forward 2 different blocks at the same time
+
+    constexpr auto state_complete_size {Nb * Nb};
+    boost::crypt::array<boost::crypt::uint8_t, state_complete_size> carry_forward_1 {};
+    boost::crypt::array<boost::crypt::uint8_t, state_complete_size> carry_forward_2 {};
+
+    for (boost::crypt::size_t i {}; i < carry_forward_1.size(); ++i)
+    {
+        carry_forward_1[i] = buffer[i];
+    }
+
+    inv_cipher_impl(buffer);
+    for (boost::crypt::size_t i {}; i < iv_size; ++i)
+    {
+        buffer[i] ^= iv[i];
+    }
+
+    buffer_size -= state_complete_size;
+    buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+
+    boost::crypt::size_t counter {};
+    while (buffer_size >= state_complete_size)
+    {
+        if (counter & 1U)
+        {
+            for (boost::crypt::size_t i {}; i < carry_forward_1.size(); ++i)
+            {
+                carry_forward_1[i] = buffer[i];
+            }
+        }
+        else
+        {
+            for (boost::crypt::size_t i {}; i < carry_forward_2.size(); ++i)
+            {
+                carry_forward_2[i] = buffer[i];
+            }
+        }
+
+        inv_cipher_impl(buffer);
+
+        if (counter & 1U)
+        {
+            for (boost::crypt::size_t i {}; i < carry_forward_2.size(); ++i)
+            {
+                buffer[i] ^= carry_forward_2[i];
+            }
+        }
+        else
+        {
+            for (boost::crypt::size_t i {}; i < carry_forward_1.size(); ++i)
+            {
+                buffer[i] ^= carry_forward_1[i];
+            }
+        }
+
+        ++counter;
         buffer_size -= state_complete_size;
         buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
     }
