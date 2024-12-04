@@ -49,10 +49,12 @@ void cbc_test()
 
     constexpr boost::crypt::array<boost::crypt::uint8_t, 16> iv {key};
 
-    boost::crypt::array<boost::crypt::uint8_t, 16> plaintext = {
-        0xf3, 0x44, 0x81, 0xec, 0x3c, 0xc6, 0x27, 0xba,
-        0xcd, 0x5d, 0xc3, 0xfb, 0x08, 0xf2, 0x73, 0xe6
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> plaintext_start = {
+            0xf3, 0x44, 0x81, 0xec, 0x3c, 0xc6, 0x27, 0xba,
+            0xcd, 0x5d, 0xc3, 0xfb, 0x08, 0xf2, 0x73, 0xe6
     };
+
+    auto plaintext {plaintext_start};
 
     constexpr boost::crypt::array<boost::crypt::uint8_t, 16> ciphertext = {
         0x03, 0x36, 0x76, 0x3e, 0x96, 0x6d, 0x92, 0x59,
@@ -63,6 +65,8 @@ void cbc_test()
     BOOST_TEST(gen.init(key, key.size()) == boost::crypt::state::success);
     BOOST_TEST(gen.encrypt<boost::crypt::aes::cipher_mode::cbc>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size()) == boost::crypt::state::success);
     BOOST_TEST(plaintext == ciphertext);
+    BOOST_TEST(gen.decrypt<boost::crypt::aes::cipher_mode::cbc>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size()) == boost::crypt::state::success);
+    BOOST_TEST(plaintext == plaintext_start);
 }
 
 void cbc_mmt_test()
