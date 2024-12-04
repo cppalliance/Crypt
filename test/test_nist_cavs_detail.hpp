@@ -2164,10 +2164,20 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
         auto ciphertext {test_vector.ciphertext};
 
         AESType aes;
-        if (mode == boost::crypt::aes::cipher_mode::ecb)
+
+        #ifdef _MSC_VER
+        #  pragma warning( push )
+        #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
+        #endif
+
+        BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::ecb)
         {
             aes.init(test_vector.key.begin(), test_vector.key.size());
         }
+
+        #ifdef _MSC_VER
+        #  pragma warning( pop )
+        #endif
 
         if (count < total_tests / 2U)
         {
@@ -2209,10 +2219,20 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
         auto ciphertext {test_vector.ciphertext};
 
         AESType aes;
-        if (mode == boost::crypt::aes::cipher_mode::ecb)
+
+        #ifdef _MSC_VER
+        #  pragma warning( push )
+        #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
+        #endif
+
+        BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::ecb)
         {
             aes.init(test_vector.key.begin(), test_vector.key.size());
         }
+
+        #ifdef _MSC_VER
+        #  pragma warning( pop )
+        #endif
 
         if (count < total_tests / 2U)
         {
@@ -2254,10 +2274,20 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
         auto ciphertext {test_vector.ciphertext};
 
         AESType aes;
-        if (mode == boost::crypt::aes::cipher_mode::ecb)
+
+        #ifdef _MSC_VER
+        #  pragma warning( push )
+        #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
+        #endif
+
+        BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::ecb)
         {
             aes.init(test_vector.key.begin(), test_vector.key.size());
         }
+
+        #ifdef _MSC_VER
+        #  pragma warning( pop )
+        #endif
 
         if (count < total_tests / 2U)
         {
