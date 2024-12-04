@@ -2215,10 +2215,7 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
 
         AESType aes;
 
-        BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::ecb)
-        {
-            aes.init(test_vector.key.begin(), test_vector.key.size());
-        }
+        aes.init(test_vector.key.begin(), test_vector.key.size());
 
         if (count < total_tests / 2U)
         {
