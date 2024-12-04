@@ -346,6 +346,19 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
 {
     boost::crypt::array<boost::crypt::uint8_t, 4> temp {};
 
+    // Since we take pointers or iterators the sign of the offset can be incorrect
+    #if defined(__GNUC__) && __GNUC__ >= 5
+    #  pragma GCC diagnostic push
+    #  pragma GCC diagnostic ignored "-Wconversion"
+    #  pragma GCC diagnostic ignored "-Wsign-conversion"
+    #elif defined(__clang__)
+    #  pragma clang diagnostic push
+    #  pragma clang diagnostic ignored "-Wsign-conversion"
+    #elif defined(_MSC_VER)
+    #  pragma warning( push )
+    #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
+    #endif
+
     for (boost::crypt::size_t i {}; i < Nk; ++i)
     {
         const auto k {i * 4U};
@@ -354,14 +367,6 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
         round_key[k + 2U] = key[k + 2U];
         round_key[k + 3U] = key[k + 3U];
     }
-
-    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
-    #  pragma GCC diagnostic push
-    #  pragma GCC diagnostic ignored "-Wconversion"
-    #elif defined(_MSC_VER)
-    #  pragma warning( push )
-    #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
-    #endif
 
     for (boost::crypt::size_t i {Nk}; i < Nb * (Nr + 1); ++i)
     {
@@ -392,8 +397,10 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto cipher<Nr>::key_expansion(ForwardIterator
         round_key[j + 3U] = round_key[l + 3U] ^ temp[3];
     }
 
-    #if defined(__GNUC__) && __GNUC__ >= 7 && __GNUC__ <= 9
+    #if defined(__GNUC__) && __GNUC__ >= 5
     #  pragma GCC diagnostic pop
+    #elif defined(__clang__)
+    #  pragma clang diagnostic pop
     #elif defined(_MSC_VER)
     #  pragma warning( pop )
     #endif
