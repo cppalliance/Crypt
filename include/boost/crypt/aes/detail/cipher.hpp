@@ -287,21 +287,17 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 
     cipher_impl(buffer);
     buffer_size -= state_complete_size;
-    buffer += state_complete_size;
 
     while (buffer_size >= state_complete_size)
     {
-        cipher_impl(buffer);
-        buffer_size -= state_complete_size;
-        if (buffer_size >= state_complete_size)
+        for (boost::crypt::size_t i {}; i < state_complete_size; ++i)
         {
-            for (boost::crypt::size_t i {}; i < state_complete_size; ++i)
-            {
-                buffer[state_complete_size + i] ^= buffer[i];
-            }
+            buffer[state_complete_size + i] ^= buffer[i];
         }
 
         buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+        cipher_impl(buffer);
+        buffer_size -= state_complete_size;
     }
 }
 
