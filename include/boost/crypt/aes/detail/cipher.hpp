@@ -114,7 +114,7 @@ private:
 
     template <typename ForwardIter1, typename ForwardIter2>
     BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
-                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cbc>&) noexcept -> void;
 
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
@@ -251,6 +251,15 @@ constexpr auto cipher<Nr>::inv_cipher_impl(ForwardIter buffer) noexcept -> void
     }
 }
 
+#if defined(__GNUC__) && __GNUC__ >= 5
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wconversion"
+#  pragma GCC diagnostic ignored "-Wsign-conversion"
+#elif defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t,
@@ -265,19 +274,10 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     }
 }
 
-#if defined(__GNUC__) && __GNUC__ >= 5
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wconversion"
-#  pragma GCC diagnostic ignored "-Wsign-conversion"
-#elif defined(__clang__)
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-Wsign-conversion"
-#endif
-
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
-                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        ForwardIter2 iv, boost::crypt::size_t,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::cbc>&) noexcept -> void
 {
     // In CBC mode:
@@ -305,12 +305,6 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         buffer_size -= state_complete_size;
     }
 }
-
-#if defined(__GNUC__) && __GNUC__ >= 5
-#  pragma GCC diagnostic pop
-#elif defined(__clang__)
-#  pragma clang diagnostic pop
-#endif
 
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
@@ -397,6 +391,12 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     }
 }
 
+#if defined(__GNUC__) && __GNUC__ >= 5
+#  pragma GCC diagnostic pop
+#elif defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
+
 template <boost::crypt::size_t Nr>
 template <boost::crypt::aes::cipher_mode mode, typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::encrypt(ForwardIter1 data, boost::crypt::size_t data_length,
@@ -422,7 +422,7 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter1 data, boost::crypt::size_t data_
         {
             return state::null;
         }
-        else if (iv_length != (Nk * 4U)) // Nk is in 32-bit words not bytes
+        else if (iv_length < (Nb * Nb))
         {
             return state::insufficient_key_length;
         }
@@ -461,7 +461,7 @@ constexpr auto cipher<Nr>::decrypt(ForwardIter1 data, boost::crypt::size_t data_
         {
             return state::null;
         }
-        else if (iv_length != (Nk * 4U)) // Nk is in 32-bit words not bytes
+        else if (iv_length < (Nb * Nb))
         {
             return state::insufficient_key_length;
         }
