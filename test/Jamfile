@@ -148,3 +148,4 @@ run test_nist_cavs_aes192_mmt.cpp ;
 run test_nist_cavs_aes192_mct.cpp ;
 
 run test_nist_cavs_aes256_kat.cpp ;
+run test_nist_cavs_aes256_mmt.cpp ;
