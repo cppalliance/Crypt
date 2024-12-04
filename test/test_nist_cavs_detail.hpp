@@ -2149,6 +2149,11 @@ auto test_vectors_drbg_pr_true(const nist::cavs::test_vector_container_drbg_pr_t
     return result_is_ok;
 }
 
+#ifdef _MSC_VER
+#  pragma warning( push )
+#  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
+#endif
+
 template <boost::crypt::aes::cipher_mode mode, typename AESType>
 auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vectors) -> bool
 {
@@ -2162,32 +2167,21 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
     {
         auto plaintext {test_vector.plaintext};
         auto ciphertext {test_vector.ciphertext};
+        const auto iv {test_vector.iv};
 
         AESType aes;
 
-        #ifdef _MSC_VER
-        #  pragma warning( push )
-        #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
-        #endif
-
-        BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::ecb)
-        {
-            aes.init(test_vector.key.begin(), test_vector.key.size());
-        }
-
-        #ifdef _MSC_VER
-        #  pragma warning( pop )
-        #endif
+        aes.init(test_vector.key.begin(), test_vector.key.size());
 
         if (count < total_tests / 2U)
         {
             // Encrypt Path
-            aes.template encrypt<mode>(plaintext.begin(), plaintext.size());
+            aes.template encrypt<mode>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size());
         }
         else
         {
             // Decrypt Path
-            aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size());
+            aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size(), iv.begin(), iv.size());
         }
 
         if (plaintext != ciphertext)
@@ -2217,32 +2211,24 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
     {
         auto plaintext {test_vector.plaintext};
         auto ciphertext {test_vector.ciphertext};
+        const auto iv {test_vector.iv};
 
         AESType aes;
-
-        #ifdef _MSC_VER
-        #  pragma warning( push )
-        #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
-        #endif
 
         BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::ecb)
         {
             aes.init(test_vector.key.begin(), test_vector.key.size());
         }
 
-        #ifdef _MSC_VER
-        #  pragma warning( pop )
-        #endif
-
         if (count < total_tests / 2U)
         {
             // Encrypt Path
-            aes.template encrypt<mode>(plaintext.begin(), plaintext.size());
+            aes.template encrypt<mode>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size());
         }
         else
         {
             // Decrypt Path
-            aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size());
+            aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size(), iv.begin(), iv.size());
         }
 
         if (plaintext != ciphertext)
@@ -2275,19 +2261,7 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
 
         AESType aes;
 
-        #ifdef _MSC_VER
-        #  pragma warning( push )
-        #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
-        #endif
-
-        BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::ecb)
-        {
-            aes.init(test_vector.key.begin(), test_vector.key.size());
-        }
-
-        #ifdef _MSC_VER
-        #  pragma warning( pop )
-        #endif
+        aes.init(test_vector.key.begin(), test_vector.key.size());
 
         if (count < total_tests / 2U)
         {
@@ -2319,6 +2293,10 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
 
     return result_is_ok;
 }
+
+#ifdef _MSC_VER
+#  pragma warning( pop )
+#endif
 
 } // namespace cavs
 } // namespace nist
