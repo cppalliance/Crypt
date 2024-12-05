@@ -286,6 +286,7 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // C1 = CIPH_k(P1 xor IV)
     // Cj = CIPH_k(P_j xor C_j-1)
     const auto initial_buffer_size {buffer_size};
+    const auto initial_buffer {buffer};
 
     if (iv_size != 0U)
     {
@@ -318,9 +319,11 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     }
 
     // Cache the value of IV for the next round
-    for (boost::crypt::size_t i {}; i < state_total_size; ++i)
+    // Need to get the values from the end of the buffer
+    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
     {
-        current_iv[i] = buffer[initial_buffer_size - buffer_size - state_total_size + i];
+        const auto offset {initial_buffer_size - buffer_size - state_total_size + i};
+        current_iv[i] = initial_buffer[offset];
     }
 }
 
