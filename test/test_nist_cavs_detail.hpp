@@ -2255,6 +2255,7 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
     {
         auto plaintext {test_vector.plaintext};
         auto ciphertext {test_vector.ciphertext};
+        const auto iv {test_vector.iv};
 
         AESType aes;
 
@@ -2263,7 +2264,8 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
         if (count < total_tests / 2U)
         {
             // Encrypt Path
-            for (int i {}; i < 1000; ++i)
+            aes.template encrypt<mode>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size());
+            for (int i {1}; i < 1000; ++i)
             {
                 aes.template encrypt<mode>(plaintext.begin(), plaintext.size());
             }
@@ -2271,7 +2273,8 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
         else
         {
             // Decrypt Path
-            for (int i {}; i < 1000; ++i)
+            aes.template decrypt<mode>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size());
+            for (int i {1}; i < 1000; ++i)
             {
                 aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size());
             }
