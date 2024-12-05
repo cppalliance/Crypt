@@ -279,16 +279,26 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
-                                        ForwardIter2 iv, boost::crypt::size_t,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::cbc>&) noexcept -> void
 {
     // In CBC mode:
     // C1 = CIPH_k(P1 xor IV)
     // Cj = CIPH_k(P_j xor C_j-1)
-    
+
+    if (iv_size != 0U)
+    {
+        initial_iv = true;
+        BOOST_CRYPT_ASSERT(iv_size >= state_total_size);
+        for (boost::crypt::size_t i {}; i < state_total_size; ++i)
+        {
+            current_iv[i] = iv[i];
+        }
+    }
+
     for (boost::crypt::size_t i {}; i < state_total_size; ++i)
     {
-        buffer[i] ^= iv[i];
+        buffer[i] ^= current_iv[i];
     }
 
     cipher_impl(buffer);
