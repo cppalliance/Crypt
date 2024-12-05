@@ -401,6 +401,16 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         buffer_size -= state_total_size;
         buffer += static_cast<boost::crypt::ptrdiff_t>(state_total_size);
     }
+
+    // Store the next carry in case the caller is doing discontinuous decryption
+    if (counter & 1U)
+    {
+        current_iv = carry_forward_1;
+    }
+    else
+    {
+        current_iv = carry_forward_2;
+    }
 }
 
 #if defined(__GNUC__) && __GNUC__ >= 5
@@ -434,9 +444,16 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter1 data, boost::crypt::size_t data_
         {
             return state::null;
         }
-        else if (iv_length < (Nb * Nb) && !initial_iv)
+        else if (iv_length < (Nb * Nb))
         {
-            return state::insufficient_key_length;
+            if (!initial_iv)
+            {
+                return state::insufficient_key_length;
+            }
+            else
+            {
+                iv_length = 0;
+            }
         }
     }
 
