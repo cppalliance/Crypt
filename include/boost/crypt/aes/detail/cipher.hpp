@@ -540,6 +540,8 @@ constexpr auto cipher<Nr>::destroy() noexcept
     }
     round_key.fill(0x00);
     initialized = false;
+    current_iv.fill(0x00);
+    initial_iv = false;
 }
 
 // The transformation of words in which the four bytes of the word
