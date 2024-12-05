@@ -76,7 +76,9 @@ private:
 
     boost::crypt::array<boost::crypt::array<boost::crypt::uint8_t, Nb>, Nb> state {};
     boost::crypt::array<boost::crypt::uint8_t, key_expansion_size> round_key {};
+    boost::crypt::array<boost::crypt::uint8_t, Nb * Nb> current_iv {};
     bool initialized {false};
+    bool initial_iv {false};
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto rot_word(boost::crypt::array<boost::crypt::uint8_t, 4>& temp) noexcept -> void;
 
@@ -342,9 +344,22 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     }
 
     inv_cipher_impl(buffer);
-    for (boost::crypt::size_t i {}; i < iv_size; ++i)
+
+    // We need to capture the initial iv if we have not done so already
+    // This is carried state such as in the CAVS MCT testing
+    if (iv_size != 0U)
     {
-        buffer[i] ^= iv[i];
+        initial_iv = true;
+        BOOST_CRYPT_ASSERT(iv_size >= current_iv.size());
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        {
+            current_iv[i] = iv[i];
+        }
+    }
+
+    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+    {
+        buffer[i] ^= current_iv[i];
     }
 
     buffer_size -= state_complete_size;
@@ -422,7 +437,7 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter1 data, boost::crypt::size_t data_
         {
             return state::null;
         }
-        else if (iv_length < (Nb * Nb))
+        else if (iv_length < (Nb * Nb) && !initial_iv)
         {
             return state::insufficient_key_length;
         }
