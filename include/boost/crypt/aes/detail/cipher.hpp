@@ -74,9 +74,10 @@ private:
                                                               Nr == 12 ? 208 :
                                                               Nr == 14 ? 240 : 0};
 
+    static constexpr boost::crypt::size_t state_total_size {Nb * Nb};
     boost::crypt::array<boost::crypt::array<boost::crypt::uint8_t, Nb>, Nb> state {};
     boost::crypt::array<boost::crypt::uint8_t, key_expansion_size> round_key {};
-    boost::crypt::array<boost::crypt::uint8_t, Nb * Nb> current_iv {};
+    boost::crypt::array<boost::crypt::uint8_t, state_total_size> current_iv {};
     bool initialized {false};
     bool initial_iv {false};
 
@@ -267,12 +268,11 @@ template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
 {
-    constexpr auto state_complete_size {Nb * Nb};
-    while (buffer_size >= state_complete_size)
+    while (buffer_size >= state_total_size)
     {
         cipher_impl(buffer);
-        buffer_size -= state_complete_size;
-        buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+        buffer_size -= state_total_size;
+        buffer += static_cast<boost::crypt::ptrdiff_t>(state_total_size);
     }
 }
 
@@ -285,26 +285,25 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // In CBC mode:
     // C1 = CIPH_k(P1 xor IV)
     // Cj = CIPH_k(P_j xor C_j-1)
-
-    constexpr auto state_complete_size {Nb * Nb};
-    for (boost::crypt::size_t i {}; i < state_complete_size; ++i)
+    
+    for (boost::crypt::size_t i {}; i < state_total_size; ++i)
     {
         buffer[i] ^= iv[i];
     }
 
     cipher_impl(buffer);
-    buffer_size -= state_complete_size;
+    buffer_size -= state_total_size;
 
-    while (buffer_size >= state_complete_size)
+    while (buffer_size >= state_total_size)
     {
-        for (boost::crypt::size_t i {}; i < state_complete_size; ++i)
+        for (boost::crypt::size_t i {}; i < state_total_size; ++i)
         {
-            buffer[state_complete_size + i] ^= buffer[i];
+            buffer[state_total_size + i] ^= buffer[i];
         }
 
-        buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+        buffer += static_cast<boost::crypt::ptrdiff_t>(state_total_size);
         cipher_impl(buffer);
-        buffer_size -= state_complete_size;
+        buffer_size -= state_total_size;
     }
 }
 
@@ -313,12 +312,11 @@ template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
 {
-    constexpr auto state_complete_size {Nb * Nb};
-    while (buffer_size >= state_complete_size)
+    while (buffer_size >= state_total_size)
     {
         inv_cipher_impl(buffer);
-        buffer_size -= state_complete_size;
-        buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+        buffer_size -= state_total_size;
+        buffer += static_cast<boost::crypt::ptrdiff_t>(state_total_size);
     }
 }
 
@@ -333,10 +331,9 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // P_J = CIPHInv_K(C_j) xor C_j-1
     //
     // Therefore we need to carry forward 2 different blocks at the same time
-
-    constexpr auto state_complete_size {Nb * Nb};
-    boost::crypt::array<boost::crypt::uint8_t, state_complete_size> carry_forward_1 {};
-    boost::crypt::array<boost::crypt::uint8_t, state_complete_size> carry_forward_2 {};
+    
+    boost::crypt::array<boost::crypt::uint8_t, state_total_size> carry_forward_1 {};
+    boost::crypt::array<boost::crypt::uint8_t, state_total_size> carry_forward_2 {};
 
     for (boost::crypt::size_t i {}; i < carry_forward_1.size(); ++i)
     {
@@ -362,11 +359,11 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         buffer[i] ^= current_iv[i];
     }
 
-    buffer_size -= state_complete_size;
-    buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+    buffer_size -= state_total_size;
+    buffer += static_cast<boost::crypt::ptrdiff_t>(state_total_size);
 
     boost::crypt::size_t counter {};
-    while (buffer_size >= state_complete_size)
+    while (buffer_size >= state_total_size)
     {
         if (counter & 1U)
         {
@@ -401,8 +398,8 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         }
 
         ++counter;
-        buffer_size -= state_complete_size;
-        buffer += static_cast<boost::crypt::ptrdiff_t>(state_complete_size);
+        buffer_size -= state_total_size;
+        buffer += static_cast<boost::crypt::ptrdiff_t>(state_total_size);
     }
 }
 
