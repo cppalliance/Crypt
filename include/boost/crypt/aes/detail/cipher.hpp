@@ -285,6 +285,7 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // In CBC mode:
     // C1 = CIPH_k(P1 xor IV)
     // Cj = CIPH_k(P_j xor C_j-1)
+    const auto initial_buffer_size {buffer_size};
 
     if (iv_size != 0U)
     {
@@ -314,6 +315,12 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         buffer += static_cast<boost::crypt::ptrdiff_t>(state_total_size);
         cipher_impl(buffer);
         buffer_size -= state_total_size;
+    }
+
+    // Cache the value of IV for the next round
+    for (boost::crypt::size_t i {}; i < state_total_size; ++i)
+    {
+        current_iv[i] = buffer[initial_buffer_size - buffer_size - state_total_size + i];
     }
 }
 
@@ -450,11 +457,11 @@ constexpr auto cipher<Nr>::encrypt(ForwardIter1 data, boost::crypt::size_t data_
 
     BOOST_CRYPT_IF_CONSTEXPR (mode != aes::cipher_mode::ecb)
     {
-        if (utility::is_null(iv) || iv_length == 0U)
+        if ((utility::is_null(iv) || iv_length == 0U) && !initial_iv)
         {
             return state::null;
         }
-        else if (iv_length < (Nb * Nb))
+        else if (iv_length < state_total_size)
         {
             if (!initial_iv)
             {
@@ -496,13 +503,20 @@ constexpr auto cipher<Nr>::decrypt(ForwardIter1 data, boost::crypt::size_t data_
 
     BOOST_CRYPT_IF_CONSTEXPR (mode != aes::cipher_mode::ecb)
     {
-        if (utility::is_null(iv) || iv_length == 0U)
+        if ((utility::is_null(iv) || iv_length == 0U) && !initial_iv)
         {
             return state::null;
         }
-        else if (iv_length < (Nb * Nb))
+        else if (iv_length < state_total_size)
         {
-            return state::insufficient_key_length;
+            if (!initial_iv)
+            {
+                return state::insufficient_key_length;
+            }
+            else
+            {
+                iv_length = 0;
+            }
         }
     }
 
