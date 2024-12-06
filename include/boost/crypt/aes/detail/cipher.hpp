@@ -361,7 +361,7 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         current_iv[i] = iv[i];
     }
 
-    while (buffer_size > 0)
+    while (buffer_size >= state_total_size)
     {
         cipher_impl(current_iv.begin());
 
@@ -503,7 +503,7 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         current_iv[i] = iv[i];
     }
 
-    while (buffer_size > 0)
+    while (buffer_size >= state_total_size)
     {
         cipher_impl(current_iv.begin());
 
