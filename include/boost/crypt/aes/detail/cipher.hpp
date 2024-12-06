@@ -140,7 +140,7 @@ private:
     template <typename ForwardIter1, typename ForwardIter2>
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
-                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ofc>&) noexcept -> void;
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void;
 
 public:
 
@@ -355,26 +355,26 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // C_j* = P_j xor O_j
     // C*_n = P*_n xor MSB_u(O_n)
 
+    // Make an initial copy of the IV
+    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+    {
+        current_iv[i] = iv[i];
+    }
+
     while (buffer_size > 0)
     {
-        cipher_impl(iv);
+        cipher_impl(current_iv);
 
         // We now have two paths, ciphered IV goes to generate the next block and gets xored with current block
         // to recover the C1
         for (boost::crypt::size_t i {}; i < buffer_size; ++i)
         {
             // Generate the ciphertext
-            buffer[i] ^= iv[i];
+            buffer[i] ^= current_iv[i];
         }
 
         buffer += state_total_size;
         buffer_size -= state_total_size;
-    }
-
-    // Save the state of the iv
-    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
-    {
-        current_iv[i] = iv[i];
     }
 }
 
@@ -497,26 +497,26 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // P_j* = C_j xor O_j
     // P_n = C*_n xor MSB_u(O_n)
 
+    // Make an initial copy of the IV
+    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+    {
+        current_iv[i] = iv[i];
+    }
+
     while (buffer_size > 0)
     {
-        inv_cipher_impl(iv);
+        inv_cipher_impl(current_iv);
 
         // We now have two paths, ciphered IV goes to generate the next block and gets xored with current block
         // to recover the C1
         for (boost::crypt::size_t i {}; i < buffer_size; ++i)
         {
             // Recover the plaintext
-            buffer[i] ^= iv[i];
+            buffer[i] ^= current_iv[i];
         }
 
         buffer += state_total_size;
         buffer_size -= state_total_size;
-    }
-
-    // Save the state of the iv
-    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
-    {
-        current_iv[i] = iv[i];
     }
 }
 
