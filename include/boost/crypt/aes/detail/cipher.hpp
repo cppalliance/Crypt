@@ -139,7 +139,7 @@ private:
 
     template <typename ForwardIter1, typename ForwardIter2>
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
-                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void;
 
 public:
@@ -487,7 +487,7 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
-                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        ForwardIter2 iv, boost::crypt::size_t,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void
 {
     // OFB decryption:
