@@ -367,7 +367,7 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 
         // We now have two paths, ciphered IV goes to generate the next block and gets xored with current block
         // to recover the C1
-        for (boost::crypt::size_t i {}; i < buffer_size; ++i)
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
         {
             // Generate the ciphertext
             buffer[i] ^= current_iv[i];
@@ -505,11 +505,11 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 
     while (buffer_size > 0)
     {
-        inv_cipher_impl(current_iv.begin());
+        cipher_impl(current_iv.begin());
 
         // We now have two paths, ciphered IV goes to generate the next block and gets xored with current block
         // to recover the C1
-        for (boost::crypt::size_t i {}; i < buffer_size; ++i)
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
         {
             // Recover the plaintext
             buffer[i] ^= current_iv[i];
