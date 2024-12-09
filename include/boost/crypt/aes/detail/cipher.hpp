@@ -476,11 +476,11 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // Store the next carry in case the caller is doing discontinuous decryption
     if (counter & 1U)
     {
-        current_iv = carry_forward_1;
+        current_iv = carry_forward_2;
     }
     else
     {
-        current_iv = carry_forward_2;
+        current_iv = carry_forward_1;
     }
 }
 
