@@ -124,7 +124,7 @@ private:
 
     template <typename ForwardIter1, typename ForwardIter2>
     BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
-                                                        ForwardIter2 iv, boost::crypt::size_t,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void;
 
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
@@ -139,7 +139,7 @@ private:
 
     template <typename ForwardIter1, typename ForwardIter2>
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
-                                                        ForwardIter2 iv, boost::crypt::size_t,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void;
 
 public:
@@ -345,7 +345,7 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
-                                        ForwardIter2 iv, boost::crypt::size_t,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void
 {
     // In OFB mode:
@@ -356,9 +356,12 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // C*_n = P*_n xor MSB_u(O_n)
 
     // Make an initial copy of the IV
-    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+    if (iv_size >= current_iv.size())
     {
-        current_iv[i] = iv[i];
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        {
+            current_iv[i] = iv[i];
+        }
     }
 
     while (buffer_size >= state_total_size)
@@ -487,7 +490,7 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
-                                        ForwardIter2 iv, boost::crypt::size_t,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void
 {
     // OFB decryption:
@@ -497,10 +500,13 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     // P_j* = C_j xor O_j
     // P_n = C*_n xor MSB_u(O_n)
 
-    // Make an initial copy of the IV
-    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+    if (iv_size >= current_iv.size())
     {
-        current_iv[i] = iv[i];
+        // Make an initial copy of the IV
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        {
+            current_iv[i] = iv[i];
+        }
     }
 
     while (buffer_size >= state_total_size)
