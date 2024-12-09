@@ -2271,7 +2271,7 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
                     aes.template encrypt<mode>(plaintext.begin(), plaintext.size());
                 }
             }
-            else BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cbc)
+            else
             {
                 std::array<std::vector<uint8_t>, 1000> PT {};
                 PT[0] = plaintext;
