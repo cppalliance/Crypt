@@ -164,3 +164,4 @@ run test_nist_cavs_aes256_kat_cbc.cpp ;
 run test_nist_cavs_aes256_mmt_cbc.cpp ;
 run test_nist_cavs_aes256_mct_cbc.cpp ;
 run test_nist_cavs_aes256_kat_ofb.cpp ;
+run test_nist_cavs_aes256_mmt_ofb.cpp ;
