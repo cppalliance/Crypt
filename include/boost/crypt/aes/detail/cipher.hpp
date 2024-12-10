@@ -147,6 +147,11 @@ private:
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void;
 
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>&) noexcept -> void;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr cipher() noexcept = default;
@@ -582,6 +587,55 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 
         buffer += state_total_size;
         buffer_size -= state_total_size;
+    }
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>&) noexcept -> void
+{
+    if (iv_size >= current_iv.size())
+    {
+        // Make an initial copy of the IV
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        {
+            current_iv[i] = iv[i];
+        }
+    }
+
+    while (buffer_size >= 2*state_total_size)
+    {
+        inv_cipher_impl(current_iv.begin());
+
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        {
+            // Generate the ciphertext
+            buffer[i] ^= current_iv[i];
+        }
+
+        // The decrement function is just bignum sub
+        for (boost::crypt::size_t i {current_iv.size()}; i <= 0; --i)
+        {
+            current_iv[i] -= static_cast<boost::crypt::uint8_t>(1);
+            if (current_iv[i] != static_cast<boost::crypt::uint8_t>(255))
+            {
+                break;
+            }
+        }
+
+        buffer += state_total_size;
+        buffer_size -= state_total_size;
+    }
+
+    // During the final iteration we don't decrement iv
+    inv_cipher_impl(current_iv.begin());
+
+    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+    {
+        // Generate the ciphertext
+        buffer[i] ^= current_iv[i];
     }
 }
 
