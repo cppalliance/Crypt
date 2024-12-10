@@ -127,6 +127,11 @@ private:
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void;
 
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>&) noexcept -> void;
+
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
                                                         ForwardIter2, boost::crypt::size_t,
@@ -141,6 +146,11 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ofb>&) noexcept -> void;
+
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>&) noexcept -> void;
 
 public:
 
@@ -383,6 +393,59 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>&) noexcept -> void
+{
+    // In CTR mode:
+    // O_j = CIPH_k(T_j)
+    // C_j* = P_j xor O_j
+    // C*_n = P*_n xor MSB_u(O_n)
+
+    // Make an initial copy of the IV
+    if (iv_size >= current_iv.size())
+    {
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        {
+            current_iv[i] = iv[i];
+        }
+    }
+
+    while (buffer_size >= state_total_size)
+    {
+        auto iv_copy {current_iv};
+        cipher_impl(iv_copy.begin());
+
+        for (boost::crypt::size_t i {}; i < iv_copy.size(); ++i)
+        {
+            // Generate the ciphertext
+            buffer[i] ^= iv_copy[i];
+        }
+
+        // The increment function is just bignum addition
+        for (boost::crypt::size_t i {current_iv.size()}; i <= 0; --i)
+        {
+            if (current_iv[i] != static_cast<boost::crypt::uint8_t>(0xFF))
+            {
+                current_iv[i] += static_cast<boost::crypt::uint8_t>(1);
+                break;
+            }
+            else
+            {
+                current_iv[i] = static_cast<boost::crypt::uint8_t>(0x00);
+            }
+        }
+
+        buffer += state_total_size;
+        buffer_size -= state_total_size;
+    }
+
+    // We should not be reusing information
+    current_iv.fill(0x00);
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
 {
@@ -524,6 +587,16 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         buffer += state_total_size;
         buffer_size -= state_total_size;
     }
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>&) noexcept -> void
+{
+    // CTR encrypt and decrypt is a symmetric operation
+    encrypt_impl(buffer, buffer_size, iv, iv_size, integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>{});
 }
 
 #if defined(__GNUC__) && __GNUC__ >= 5

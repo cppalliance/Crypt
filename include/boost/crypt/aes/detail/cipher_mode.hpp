@@ -17,6 +17,7 @@ enum class cipher_mode : boost::crypt::uint8_t
     ecb,    // Electronic Codebook
     cbc,    // Cipher Block Chaining
     ofb,    // Output Feedback Mode
+    ctr,    // Counter Mode
 };
 
 } // namespace aes

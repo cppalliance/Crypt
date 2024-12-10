@@ -168,3 +168,9 @@ run test_nist_cavs_aes256_mct_cbc.cpp ;
 run test_nist_cavs_aes256_kat_ofb.cpp ;
 run test_nist_cavs_aes256_mmt_ofb.cpp ;
 run test_nist_cavs_aes256_mct_ofb.cpp ;
+
+# Note these CTR test are not official but they offer decent coverage,
+# by proving we can roundtrip the provided text
+run test_nist_cavs_aes128_mmt_ctr.cpp ;
+run test_nist_cavs_aes192_mmt_ctr.cpp ;
+run test_nist_cavs_aes256_mmt_ctr.cpp ;
