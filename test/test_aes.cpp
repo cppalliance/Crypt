@@ -197,7 +197,10 @@ void ctr_test()
 
     BOOST_TEST(gen.init(key, key.size()) == boost::crypt::state::success);
     BOOST_TEST(gen.encrypt<boost::crypt::aes::cipher_mode::ctr>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size()) == boost::crypt::state::success);
-    BOOST_TEST(gen.decrypt<boost::crypt::aes::cipher_mode::ctr>(plaintext.begin(), plaintext.size()) == boost::crypt::state::success);
+
+    BOOST_TEST(plaintext != original_message);
+
+    BOOST_TEST(gen.decrypt<boost::crypt::aes::cipher_mode::ctr>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size()) == boost::crypt::state::success);
 
     BOOST_TEST(plaintext == original_message);
 

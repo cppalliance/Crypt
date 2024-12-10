@@ -411,7 +411,7 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         }
     }
 
-    while (buffer_size >= 2*state_total_size)
+    while (buffer_size >= state_total_size)
     {
         auto iv_copy {current_iv};
         cipher_impl(iv_copy.begin());
@@ -436,15 +436,8 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         buffer_size -= state_total_size;
     }
 
-    // During the final iteration we don't increment iv
-    auto iv_copy {current_iv};
-    cipher_impl(iv_copy.begin());
-
-    for (boost::crypt::size_t i {}; i < iv_copy.size(); ++i)
-    {
-        // Generate the ciphertext
-        buffer[i] ^= iv_copy[i];
-    }
+    // We should not be reusing information
+    current_iv.fill(0x00);
 }
 
 template <boost::crypt::size_t Nr>
@@ -598,49 +591,8 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>&) noexcept -> void
 {
-    if (iv_size >= current_iv.size())
-    {
-        // Make an initial copy of the IV
-        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
-        {
-            current_iv[i] = iv[i];
-        }
-    }
-
-    while (buffer_size >= 2*state_total_size)
-    {
-        auto iv_copy {current_iv};
-        inv_cipher_impl(iv_copy.begin());
-
-        for (boost::crypt::size_t i {}; i < iv_copy.size(); ++i)
-        {
-            // Generate the ciphertext
-            buffer[i] ^= iv_copy[i];
-        }
-
-        // The decrement function is just bignum sub
-        for (boost::crypt::size_t i {current_iv.size()}; i <= 0; --i)
-        {
-            current_iv[i] -= static_cast<boost::crypt::uint8_t>(1);
-            if (current_iv[i] != static_cast<boost::crypt::uint8_t>(255))
-            {
-                break;
-            }
-        }
-
-        buffer += state_total_size;
-        buffer_size -= state_total_size;
-    }
-
-    // During the final iteration we don't decrement iv
-    auto iv_copy {current_iv};
-    inv_cipher_impl(iv_copy.begin());
-
-    for (boost::crypt::size_t i {}; i < iv_copy.size(); ++i)
-    {
-        // Generate the ciphertext
-        buffer[i] ^= iv_copy[i];
-    }
+    // CTR encrypt and decrypt is a symmetric operation
+    encrypt_impl(buffer, buffer_size, iv, iv_size, integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>{});
 }
 
 #if defined(__GNUC__) && __GNUC__ >= 5
@@ -714,7 +666,7 @@ constexpr auto cipher<Nr>::decrypt(ForwardIter1 data, boost::crypt::size_t data_
     #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
     #endif
 
-    BOOST_CRYPT_IF_CONSTEXPR (mode != aes::cipher_mode::ecb && mode != aes::cipher_mode::ctr)
+    BOOST_CRYPT_IF_CONSTEXPR (mode != aes::cipher_mode::ecb)
     {
         if ((utility::is_null(iv) || iv_length == 0U) && !initial_iv)
         {
