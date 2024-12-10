@@ -2164,8 +2164,7 @@ auto test_vectors_aes_ctr(const nist::cavs::test_vector_container_aes &test_vect
     BOOST_TEST(!test_vectors.empty());
 
     bool result_is_ok { true };
-
-    const auto total_tests {test_vectors.size()};
+    
     std::size_t count {};
     for (const auto& test_vector : test_vectors)
     {
