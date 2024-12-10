@@ -425,10 +425,14 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         // The increment function is just bignum addition
         for (boost::crypt::size_t i {current_iv.size()}; i <= 0; --i)
         {
-            current_iv[i] += static_cast<boost::crypt::uint8_t>(1);
-            if (current_iv[i] != static_cast<boost::crypt::uint8_t>(0))
+            if (current_iv[i] != static_cast<boost::crypt::uint8_t>(0xFF))
             {
+                current_iv[i] += static_cast<boost::crypt::uint8_t>(1);
                 break;
+            }
+            else
+            {
+                current_iv[i] = static_cast<boost::crypt::uint8_t>(0x00);
             }
         }
 
