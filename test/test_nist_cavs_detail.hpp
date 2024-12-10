@@ -2152,6 +2152,7 @@ auto test_vectors_drbg_pr_true(const nist::cavs::test_vector_container_drbg_pr_t
 #ifdef _MSC_VER
 #  pragma warning( push )
 #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
+#  pragma warning( disable : 4702 ) // Unreachable code in CTR paths
 #endif
 
 namespace detail {
@@ -2201,46 +2202,48 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
     {
         return detail::test_vectors_aes_ctr<AESType>(test_vectors);
     }
-
-    BOOST_TEST(!test_vectors.empty());
-
-    bool result_is_ok { true };
-
-    const auto total_tests {test_vectors.size()};
-    std::size_t count {};
-    for (const auto& test_vector : test_vectors)
+    else
     {
-        auto plaintext {test_vector.plaintext};
-        auto ciphertext {test_vector.ciphertext};
-        const auto iv {test_vector.iv};
+        BOOST_TEST(!test_vectors.empty());
 
-        AESType aes;
+        bool result_is_ok {true};
 
-        aes.init(test_vector.key.begin(), test_vector.key.size());
-
-        if (count < total_tests / 2U)
+        const auto total_tests {test_vectors.size()};
+        std::size_t count {};
+        for (const auto &test_vector: test_vectors)
         {
-            // Encrypt Path
-            aes.template encrypt<mode>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size());
-        }
-        else
-        {
-            // Decrypt Path
-            aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size(), iv.begin(), iv.size());
+            auto plaintext {test_vector.plaintext};
+            auto ciphertext {test_vector.ciphertext};
+            const auto iv {test_vector.iv};
+
+            AESType aes;
+
+            aes.init(test_vector.key.begin(), test_vector.key.size());
+
+            if (count < total_tests / 2U)
+            {
+                // Encrypt Path
+                aes.template encrypt<mode>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size());
+            }
+            else
+            {
+                // Decrypt Path
+                aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size(), iv.begin(), iv.size());
+            }
+
+            if (plaintext != ciphertext)
+            {
+                // LCOV_EXCL_START
+                result_is_ok = false;
+                std::cerr << "Error with vector: " << count << std::endl;
+                // LCOV_EXCL_STOP
+            }
+
+            ++count;
         }
 
-        if (plaintext != ciphertext)
-        {
-            // LCOV_EXCL_START
-            result_is_ok = false;
-            std::cerr << "Error with vector: " << count << std::endl;
-            // LCOV_EXCL_STOP
-        }
-
-        ++count;
+        return result_is_ok;
     }
-
-    return result_is_ok;
 }
 
 template <boost::crypt::aes::cipher_mode mode, typename AESType>
@@ -2250,46 +2253,48 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
     {
         return detail::test_vectors_aes_ctr<AESType>(test_vectors);
     }
-
-    BOOST_TEST(!test_vectors.empty());
-
-    bool result_is_ok { true };
-
-    const auto total_tests {test_vectors.size()};
-    std::size_t count {};
-    for (const auto& test_vector : test_vectors)
+    else
     {
-        auto plaintext {test_vector.plaintext};
-        auto ciphertext {test_vector.ciphertext};
-        const auto iv {test_vector.iv};
+        BOOST_TEST(!test_vectors.empty());
 
-        AESType aes;
+        bool result_is_ok {true};
 
-        aes.init(test_vector.key.begin(), test_vector.key.size());
-
-        if (count < total_tests / 2U)
+        const auto total_tests {test_vectors.size()};
+        std::size_t count {};
+        for (const auto &test_vector: test_vectors)
         {
-            // Encrypt Path
-            aes.template encrypt<mode>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size());
-        }
-        else
-        {
-            // Decrypt Path
-            aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size(), iv.begin(), iv.size());
+            auto plaintext {test_vector.plaintext};
+            auto ciphertext {test_vector.ciphertext};
+            const auto iv {test_vector.iv};
+
+            AESType aes;
+
+            aes.init(test_vector.key.begin(), test_vector.key.size());
+
+            if (count < total_tests / 2U)
+            {
+                // Encrypt Path
+                aes.template encrypt<mode>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size());
+            }
+            else
+            {
+                // Decrypt Path
+                aes.template decrypt<mode>(ciphertext.begin(), ciphertext.size(), iv.begin(), iv.size());
+            }
+
+            if (plaintext != ciphertext)
+            {
+                // LCOV_EXCL_START
+                result_is_ok = false;
+                std::cerr << "Error with vector: " << count << std::endl;
+                // LCOV_EXCL_STOP
+            }
+
+            ++count;
         }
 
-        if (plaintext != ciphertext)
-        {
-            // LCOV_EXCL_START
-            result_is_ok = false;
-            std::cerr << "Error with vector: " << count << std::endl;
-            // LCOV_EXCL_STOP
-        }
-
-        ++count;
+        return result_is_ok;
     }
-
-    return result_is_ok;
 }
 
 template <boost::crypt::aes::cipher_mode mode, typename AESType>
