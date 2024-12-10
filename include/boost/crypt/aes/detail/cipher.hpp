@@ -413,12 +413,13 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 
     while (buffer_size >= 2*state_total_size)
     {
-        cipher_impl(current_iv.begin());
+        auto iv_copy {current_iv};
+        cipher_impl(iv_copy.begin());
 
-        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        for (boost::crypt::size_t i {}; i < iv_copy.size(); ++i)
         {
             // Generate the ciphertext
-            buffer[i] ^= current_iv[i];
+            buffer[i] ^= iv_copy[i];
         }
 
         // The increment function is just bignum addition
@@ -436,12 +437,13 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     }
 
     // During the final iteration we don't increment iv
-    cipher_impl(current_iv.begin());
+    auto iv_copy {current_iv};
+    cipher_impl(iv_copy.begin());
 
-    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+    for (boost::crypt::size_t i {}; i < iv_copy.size(); ++i)
     {
         // Generate the ciphertext
-        buffer[i] ^= current_iv[i];
+        buffer[i] ^= iv_copy[i];
     }
 }
 
@@ -607,12 +609,13 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 
     while (buffer_size >= 2*state_total_size)
     {
-        inv_cipher_impl(current_iv.begin());
+        auto iv_copy {current_iv};
+        inv_cipher_impl(iv_copy.begin());
 
-        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        for (boost::crypt::size_t i {}; i < iv_copy.size(); ++i)
         {
             // Generate the ciphertext
-            buffer[i] ^= current_iv[i];
+            buffer[i] ^= iv_copy[i];
         }
 
         // The decrement function is just bignum sub
@@ -630,12 +633,13 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     }
 
     // During the final iteration we don't decrement iv
-    inv_cipher_impl(current_iv.begin());
+    auto iv_copy {current_iv};
+    inv_cipher_impl(iv_copy.begin());
 
-    for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+    for (boost::crypt::size_t i {}; i < iv_copy.size(); ++i)
     {
         // Generate the ciphertext
-        buffer[i] ^= current_iv[i];
+        buffer[i] ^= iv_copy[i];
     }
 }
 
@@ -710,7 +714,7 @@ constexpr auto cipher<Nr>::decrypt(ForwardIter1 data, boost::crypt::size_t data_
     #  pragma warning( disable : 4127 ) // Conditional expression is constant (which is true before C++17 in BOOST_CRYPT_IF_CONSTEXPR)
     #endif
 
-    BOOST_CRYPT_IF_CONSTEXPR (mode != aes::cipher_mode::ecb)
+    BOOST_CRYPT_IF_CONSTEXPR (mode != aes::cipher_mode::ecb && mode != aes::cipher_mode::ctr)
     {
         if ((utility::is_null(iv) || iv_length == 0U) && !initial_iv)
         {
