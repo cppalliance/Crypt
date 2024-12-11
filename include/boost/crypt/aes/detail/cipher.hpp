@@ -185,6 +185,11 @@ private:
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cfb64>&) noexcept -> void;
 
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cfb128>&) noexcept -> void;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr cipher() noexcept = default;
@@ -775,6 +780,15 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::cfb64>&) noexcept -> void
 {
     generic_cfb_decrypt_impl<8>(buffer, buffer_size, iv, iv_size);
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::cfb128>&) noexcept -> void
+{
+    generic_cfb_decrypt_impl<16>(buffer, buffer_size, iv, iv_size);
 }
 
 #if defined(__GNUC__) && __GNUC__ >= 5
