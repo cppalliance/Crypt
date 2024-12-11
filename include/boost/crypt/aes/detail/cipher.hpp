@@ -145,6 +145,11 @@ private:
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cfb8>&) noexcept -> void;
 
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cfb64>&) noexcept -> void;
+
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
                                                         ForwardIter2, boost::crypt::size_t,
@@ -569,6 +574,15 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::cfb8>&) noexcept -> void
 {
     generic_cfb_encrypt_impl<1>(buffer, buffer_size, iv, iv_size);
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::cfb64>&) noexcept -> void
+{
+    generic_cfb_encrypt_impl<8>(buffer, buffer_size, iv, iv_size);
 }
 
 template <boost::crypt::size_t Nr>
