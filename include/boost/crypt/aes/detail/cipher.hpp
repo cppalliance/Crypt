@@ -112,6 +112,10 @@ private:
     template <typename ForwardIter>
     BOOST_CRYPT_GPU_ENABLED constexpr auto inv_cipher_impl(ForwardIter buffer) noexcept -> void;
 
+    template <boost::crypt::size_t cfb_size, typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto generic_cfb_encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                                    ForwardIter2 iv, boost::crypt::size_t iv_size) noexcept -> void;
+
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
                                                         ForwardIter2, boost::crypt::size_t,
@@ -213,6 +217,50 @@ constexpr auto cipher<Nr>::init(ForwardIter key, boost::crypt::size_t key_length
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wsign-conversion"
 #endif
+
+template <boost::crypt::size_t Nr>
+template <boost::crypt::size_t cfb_size, typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::generic_cfb_encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                    ForwardIter2 iv, boost::crypt::size_t iv_size) noexcept -> void
+{
+    // In CFB modes
+    // I1 = IV
+    // I_j = LSB_b-s(I_j-1) | C#_j-1    for j = 2, 3, ..., n
+    // O_j = CIPH_k(I_j)                for j = 1, 2, ..., n
+    // C#_j = P#_j xor MSB_s(O_j)       for j = 1, 2, ..., n
+
+    // Make an initial copy of the IV
+    if (iv_size >= current_iv.size())
+    {
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        {
+            current_iv[i] = iv[i];
+        }
+    }
+
+    auto iv_copy {current_iv};
+    while (buffer_size)
+    {
+        cipher_impl(iv_copy.begin());
+
+        for (boost::crypt::size_t i {}; i < cfb_size; ++i)
+        {
+            buffer[0] ^= iv_copy[0];
+        }
+
+        for (boost::crypt::size_t i {}; i < current_iv.size() - cfb_size; ++i)
+        {
+            iv_copy[i] = current_iv[i];
+        }
+        for (boost::crypt::size_t i {current_iv.size() - cfb_size}, buffer_i {}; i < current_iv.size(); ++i, ++buffer_i)
+        {
+            iv_copy[i] = buffer[buffer_i];
+        }
+
+        buffer_size -= cfb_size;
+        buffer += cfb_size;
+    }
+}
 
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter>
@@ -460,37 +508,7 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::cfb8>&) noexcept -> void
 {
-    // In CFB modes
-    // I1 = IV
-    // I_j = LSB_b-s(I_j-1) | C#_j-1    for j = 2, 3, ..., n
-    // O_j = CIPH_k(I_j)                for j = 1, 2, ..., n
-    // C#_j = P#_j xor MSB_s(O_j)       for j = 1, 2, ..., n
-
-    // Make an initial copy of the IV
-    if (iv_size >= current_iv.size())
-    {
-        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
-        {
-            current_iv[i] = iv[i];
-        }
-    }
-
-    auto iv_copy {current_iv};
-    while (buffer_size)
-    {
-        cipher_impl(iv_copy.begin());
-        buffer[0] ^= iv_copy[0];
-
-        for (boost::crypt::size_t i {}; i < current_iv.size() - 1U; ++i)
-        {
-            iv_copy[i] = current_iv[i];
-        }
-
-        iv_copy.back() = buffer[0];
-
-        --buffer_size;
-        ++buffer;
-    }
+    generic_cfb_encrypt_impl<1>(buffer, buffer_size, iv, iv_size);
 }
 
 template <boost::crypt::size_t Nr>
