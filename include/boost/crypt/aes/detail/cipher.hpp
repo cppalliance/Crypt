@@ -205,6 +205,15 @@ constexpr auto cipher<Nr>::init(ForwardIter key, boost::crypt::size_t key_length
     return state::success;
 }
 
+#if defined(__GNUC__) && __GNUC__ >= 5
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wconversion"
+#  pragma GCC diagnostic ignored "-Wsign-conversion"
+#elif defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
+
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter>
 constexpr auto cipher<Nr>::cipher_impl(ForwardIter buffer) noexcept -> void
@@ -288,15 +297,6 @@ constexpr auto cipher<Nr>::inv_cipher_impl(ForwardIter buffer) noexcept -> void
         }
     }
 }
-
-#if defined(__GNUC__) && __GNUC__ >= 5
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wconversion"
-#  pragma GCC diagnostic ignored "-Wsign-conversion"
-#elif defined(__clang__)
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-Wsign-conversion"
-#endif
 
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
