@@ -271,7 +271,7 @@ constexpr auto cipher<Nr>::generic_cfb_encrypt_impl(ForwardIter1 buffer, boost::
 
         for (boost::crypt::size_t i {}; i < cfb_size; ++i)
         {
-            buffer[0] ^= iv_copy[0];
+            buffer[i] ^= iv_copy[i];
         }
 
         for (boost::crypt::size_t i {}; i < current_iv.size() - cfb_size; ++i)
