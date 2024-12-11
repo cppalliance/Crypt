@@ -227,6 +227,8 @@ template <boost::crypt::size_t cfb_size, typename ForwardIter1, typename Forward
 constexpr auto cipher<Nr>::generic_cfb_encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
                                                     ForwardIter2 iv, boost::crypt::size_t iv_size) noexcept -> void
 {
+    static_assert(cfb_size == 1 || cfb_size == 8 || cfb_size == 16, "Only CFB8, 64, and 128 are supported");
+
     // In CFB modes
     // I1 = IV
     // I_j = LSB_b-s(I_j-1) | C#_j-1    for j = 2, 3, ..., n
@@ -271,6 +273,8 @@ template <boost::crypt::size_t cfb_size, typename ForwardIter1, typename Forward
 constexpr auto cipher<Nr>::generic_cfb_decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
                                                     ForwardIter2 iv, boost::crypt::size_t iv_size) noexcept -> void
 {
+    static_assert(cfb_size == 1 || cfb_size == 8 || cfb_size == 16, "Only CFB8, 64, and 128 are supported");
+
     // CFB Decryption
     // I1 = IV
     // I_j = LSB_b-s(I_j-1) | C#_j-1    for j = 2, 3, ..., n
