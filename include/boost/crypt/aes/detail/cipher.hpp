@@ -670,7 +670,7 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
     }
 
     auto iv_copy {current_iv};
-    cipher_impl(iv_copy);
+    cipher_impl(iv_copy.begin());
 
     boost::crypt::uint8_t carried_byte {};
     while (buffer_size)
@@ -678,7 +678,11 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
         carried_byte = buffer[0];
         buffer[0] ^= iv_copy[0];
 
-        iv_copy = current_iv;
+        for (boost::crypt::size_t i {}; i < current_iv.size() - 1U; ++i)
+        {
+            iv_copy[i] = current_iv[i];
+        }
+
         iv_copy.back() = carried_byte;
         cipher_impl(iv_copy);
 
