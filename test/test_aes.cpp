@@ -242,6 +242,36 @@ void ctr_mmt_test()
     gen.destroy();
 }
 
+void cfb8_test()
+{
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> key = {
+            0x10, 0xa5, 0x88, 0x69, 0xd7, 0x4b, 0xe5, 0xa3,
+            0x74, 0xcf, 0x86, 0x7c, 0xfb, 0x47, 0x38, 0x59
+    };
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 16> iv = {
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 1> plaintext_original = {
+            0x00
+    };
+
+    auto plaintext {plaintext_original};
+
+    constexpr boost::crypt::array<boost::crypt::uint8_t, 1> ciphertext = {
+            0x6d
+    };
+
+    boost::crypt::aes128 gen;
+    BOOST_TEST(gen.init(key, key.size()) == boost::crypt::state::success);
+    BOOST_TEST(gen.encrypt<boost::crypt::aes::cipher_mode::cfb8>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size()) == boost::crypt::state::success);
+    BOOST_TEST(plaintext == ciphertext);
+    BOOST_TEST(gen.decrypt<boost::crypt::aes::cipher_mode::cfb8>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size()) == boost::crypt::state::success);
+    BOOST_TEST(plaintext == plaintext_original);
+}
+
 int main()
 {
     basic_aes128_test();
@@ -251,6 +281,7 @@ int main()
     ofb_mmt_test();
     ctr_test();
     ctr_mmt_test();
+    cfb8_test();
 
     return boost::report_errors();
 }
