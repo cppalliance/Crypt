@@ -268,6 +268,8 @@ void cfb8_test()
     BOOST_TEST(gen.init(key, key.size()) == boost::crypt::state::success);
     BOOST_TEST(gen.encrypt<boost::crypt::aes::cipher_mode::cfb8>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size()) == boost::crypt::state::success);
     BOOST_TEST(plaintext == ciphertext);
+    BOOST_TEST(gen.decrypt<boost::crypt::aes::cipher_mode::cfb8>(plaintext.begin(), plaintext.size(), iv.begin(), iv.size()) == boost::crypt::state::success);
+    BOOST_TEST(plaintext == plaintext_original);
 }
 
 int main()
