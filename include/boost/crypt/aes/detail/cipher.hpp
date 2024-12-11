@@ -157,6 +157,11 @@ private:
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>&) noexcept -> void;
 
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cfb8>&) noexcept -> void;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr cipher() noexcept = default;
@@ -641,6 +646,45 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 {
     // CTR encrypt and decrypt is a symmetric operation
     encrypt_impl(buffer, buffer_size, iv, iv_size, integral_constant<aes::cipher_mode, aes::cipher_mode::ctr>{});
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::cfb8>&) noexcept -> void
+{
+    // CFB Decryption
+    // I1 = IV
+    // I_j = LSB_b-s(I_j-1) | C#_j-1    for j = 2, 3, ..., n
+    // O_j = CIPH_k(I_j)                for j = 1, 2, ..., n
+    // P#_j = C#_j xor MSB_s(O_j)       for j = 1, 2, ..., n
+
+    if (iv_size >= current_iv.size())
+    {
+        // Make an initial copy of the IV
+        for (boost::crypt::size_t i {}; i < current_iv.size(); ++i)
+        {
+            current_iv[i] = iv[i];
+        }
+    }
+
+    auto iv_copy {current_iv};
+    cipher_impl(iv_copy);
+
+    boost::crypt::uint8_t carried_byte {};
+    while (buffer_size)
+    {
+        carried_byte = buffer[0];
+        buffer[0] ^= iv_copy[0];
+
+        iv_copy = current_iv;
+        iv_copy.back() = carried_byte;
+        cipher_impl(iv_copy);
+
+        --buffer_size;
+        ++buffer;
+    }
 }
 
 #if defined(__GNUC__) && __GNUC__ >= 5
