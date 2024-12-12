@@ -165,6 +165,7 @@ run test_nist_cavs_aes192_mct_ofb.cpp ;
 run test_nist_cavs_aes192_kat_cfb8.cpp ;
 run test_nist_cavs_aes192_mmt_cfb8.cpp ;
 run test_nist_cavs_aes192_kat_cfb128.cpp ;
+run test_nist_cavs_aes192_mmt_cfb128.cpp ;
 
 run test_nist_cavs_aes256_kat_ecb.cpp ;
 run test_nist_cavs_aes256_mmt_ecb.cpp ;
