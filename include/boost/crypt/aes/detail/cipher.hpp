@@ -317,9 +317,11 @@ constexpr auto cipher<Nr>::generic_cfb_decrypt_impl(ForwardIter1 buffer, boost::
     }
 
     auto iv_copy {current_iv};
+    auto iv_min1 {iv_copy};
     cipher_impl(iv_copy.begin());
 
     boost::crypt::array<boost::crypt::uint8_t, cfb_size> carried_byte {};
+
     while (buffer_size)
     {
         for (boost::crypt::size_t i {}; i < cfb_size; ++i)
@@ -334,18 +336,21 @@ constexpr auto cipher<Nr>::generic_cfb_decrypt_impl(ForwardIter1 buffer, boost::
 
         for (boost::crypt::size_t i {}; i < current_iv.size() - cfb_size; ++i)
         {
-            iv_copy[i] = current_iv[i];
+            iv_copy[i] = iv_min1[i + cfb_size];
         }
         for (boost::crypt::size_t i {current_iv.size() - cfb_size}, buffer_i {}; i < current_iv.size(); ++i, ++buffer_i)
         {
             iv_copy[i] = carried_byte[buffer_i];
         }
 
+        iv_min1 = iv_copy;
         cipher_impl(iv_copy.begin());
 
         buffer_size -= cfb_size;
         buffer += cfb_size;
     }
+
+    current_iv = iv_min1;
 }
 
 template <boost::crypt::size_t Nr>
