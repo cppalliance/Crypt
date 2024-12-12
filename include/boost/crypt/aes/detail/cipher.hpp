@@ -274,11 +274,13 @@ constexpr auto cipher<Nr>::generic_cfb_encrypt_impl(ForwardIter1 buffer, boost::
             buffer[i] ^= iv_copy[i];
         }
 
-        for (boost::crypt::size_t i {}; i < current_iv.size() - cfb_size; ++i)
+        // We now need (b-s) bits | s bits as the next input
+        // First we shift the values in iv_copy and then add in the contents of the buffer
+        for (boost::crypt::size_t i {}; i < iv_copy.size() - cfb_size; ++i)
         {
-            iv_copy[i] = current_iv[i];
+            iv_copy[i] = iv_copy[i + cfb_size];
         }
-        for (boost::crypt::size_t i {current_iv.size() - cfb_size}, buffer_i {}; i < current_iv.size(); ++i, ++buffer_i)
+        for (boost::crypt::size_t i {iv_copy.size() - cfb_size}, buffer_i {}; i < iv_copy.size(); ++i, ++buffer_i)
         {
             iv_copy[i] = buffer[buffer_i];
         }
@@ -286,6 +288,9 @@ constexpr auto cipher<Nr>::generic_cfb_encrypt_impl(ForwardIter1 buffer, boost::
         buffer_size -= cfb_size;
         buffer += cfb_size;
     }
+
+    // Store the last block for MCT mode
+    current_iv = iv_copy;
 }
 
 template <boost::crypt::size_t Nr>
