@@ -579,7 +579,7 @@ public:
                               [&key_input]()
                               {
                                   const auto byte_data { detail::convert_hex_string_to_byte_container(key_input) };
-                                  return key_type (byte_data.cbegin(),   byte_data.cend());
+                                  return key_type (byte_data.cbegin(),   byte_data.cend() - 1U);
                               }()
                       },
               iv
@@ -587,7 +587,7 @@ public:
                               [&iv_input]()
                               {
                                   const auto byte_data { detail::convert_hex_string_to_byte_container(iv_input) };
-                                  return iv_type (byte_data.cbegin(), byte_data.cend());
+                                  return iv_type (byte_data.cbegin(), byte_data.cend() - 1U);
                               }()
                       },
               plaintext
@@ -595,7 +595,7 @@ public:
                               [&plaintext_input]()
                               {
                                   const auto byte_data { detail::convert_hex_string_to_byte_container(plaintext_input) };
-                                  return plaintext_type (byte_data.cbegin(), byte_data.cend());
+                                  return plaintext_type (byte_data.cbegin(), byte_data.cend() - 1U);
                               }()
                       },
               ciphertext
@@ -603,7 +603,7 @@ public:
                               [&ciphertext_input]()
                               {
                                   const auto byte_data { detail::convert_hex_string_to_byte_container(ciphertext_input) };
-                                  return ciphertext_type (byte_data.cbegin(), byte_data.cend());
+                                  return ciphertext_type (byte_data.cbegin(), byte_data.cend() - 1U);
                               }()
                       }
     { }
@@ -1574,9 +1574,16 @@ auto parse_file_aes(const std::string& test_vectors_filename, std::deque<test_ob
                 if (!plaintext.empty() && !ciphertext.empty())
                 {
                     // Add the new test object to v.
-                    const test_object_aes test_obj(key, iv, plaintext, ciphertext);
-
-                    test_vectors_to_get.push_back(test_obj);
+                    if (!iv.empty())
+                    {
+                        const test_object_aes test_obj(key, iv, plaintext, ciphertext);
+                        test_vectors_to_get.push_back(test_obj);
+                    }
+                    else
+                    {
+                        const test_object_aes test_obj(key, plaintext, ciphertext);
+                        test_vectors_to_get.push_back(test_obj);
+                    }
 
                     key.clear();
                     iv.clear();
