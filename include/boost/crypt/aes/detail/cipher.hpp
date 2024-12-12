@@ -274,11 +274,11 @@ constexpr auto cipher<Nr>::generic_cfb_encrypt_impl(ForwardIter1 buffer, boost::
             buffer[i] ^= iv_copy[i];
         }
 
-        // We now need (b-s) bits | s bits as the next input
+        // We now need (b-s) bits of IV | s bits of cipher text
         // First we shift the values in iv_copy and then add in the contents of the buffer
         for (boost::crypt::size_t i {}; i < iv_copy.size() - cfb_size; ++i)
         {
-            iv_copy[i] = iv_copy[i + cfb_size];
+            iv_copy[i] = current_iv[i + cfb_size];
         }
         for (boost::crypt::size_t i {iv_copy.size() - cfb_size}, buffer_i {}; i < iv_copy.size(); ++i, ++buffer_i)
         {
