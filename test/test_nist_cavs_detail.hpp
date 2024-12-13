@@ -2226,6 +2226,12 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
 
             BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cfb8 || mode == boost::crypt::aes::cipher_mode::cfb128)
             {
+                if (plaintext.empty() || ciphertext.empty() || iv.empty() || key.empty())
+                {
+                    std::cerr << "Bad parse with vector: " << count << std::endl;
+                    continue;
+                }
+
                 plaintext.pop_back();
                 ciphertext.pop_back();
                 iv.pop_back();
@@ -2286,6 +2292,12 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
 
             BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cfb8 || mode == boost::crypt::aes::cipher_mode::cfb128)
             {
+                if (plaintext.empty() || ciphertext.empty() || iv.empty() || key.empty())
+                {
+                    std::cerr << "Bad parse with vector: " << count << std::endl;
+                    continue;
+                }
+
                 plaintext.pop_back();
                 ciphertext.pop_back();
                 iv.pop_back();
@@ -2340,6 +2352,12 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
 
         BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cfb8 || mode == boost::crypt::aes::cipher_mode::cfb128)
         {
+            if (plaintext.empty() || ciphertext.empty() || iv.empty() || key.empty())
+            {
+                std::cerr << "Bad parse with vector: " << count << std::endl;
+                continue;
+            }
+            
             plaintext.pop_back();
             ciphertext.pop_back();
             iv.pop_back();
