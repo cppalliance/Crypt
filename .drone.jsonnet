@@ -1,4 +1,5 @@
 # Copyright 2022, 2023 Peter Dimov
+# Copyright 2024 Matt Borland
 # Distributed under the Boost Software License, Version 1.0.
 # https://www.boost.org/LICENSE_1_0.txt
 
@@ -99,35 +100,28 @@ local windows_pipeline(name, image, environment, arch = "amd64") =
 [
 
     linux_pipeline(
-        "Linux 18.04 GCC 8 32/64",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++-8', CXXSTD: '03,11,14,17', ADDRMD: '32,64' },
-        "g++-8-multilib",
-    ),
-
-    linux_pipeline(
         "Linux 20.04 GCC 9* 32/64",
         "cppalliance/droneubuntu2004:1",
         { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03,11,14,17,2a', ADDRMD: '32,64' },
     ),
 
     linux_pipeline(
-        "Linux 20.04 GCC 9* ARM64",
-        "cppalliance/droneubuntu2004:multiarch",
+        "Linux 22.04 GCC ARM64",
+        "cppalliance/droneubuntu2204:multiarch",
         { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03,11,14,17,2a' },
         arch="arm64",
     ),
 
     linux_pipeline(
-        "Linux 20.04 GCC 9* ARM64 - ASAN",
-        "cppalliance/droneubuntu2004:multiarch",
+        "Linux 22.04 GCC ARM64 - ASAN",
+        "cppalliance/droneubuntu2204:multiarch",
         { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03,11,14,17,2a' } + asan,
         arch="arm64",
     ),
 
     linux_pipeline(
-        "Linux 20.04 GCC 9* S390x",
-        "cppalliance/droneubuntu2004:multiarch",
+        "Linux 22.04 GCC 9 S390x",
+        "cppalliance/droneubuntu2204:multiarch",
         { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03,11,14,17,2a' },
         arch="s390x",
     ),
@@ -140,7 +134,7 @@ local windows_pipeline(name, image, environment, arch = "amd64") =
     ),
 
     linux_pipeline(
-        "Linux 22.04 GCC 11* 32/64",
+        "Linux 22.04 GCC 11 32/64",
         "cppalliance/droneubuntu2204:1",
         { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03,11,14,17,2a', ADDRMD: '32,64' },
     ),
@@ -234,90 +228,6 @@ local windows_pipeline(name, image, environment, arch = "amd64") =
         "cppalliance/droneubuntu2404:1",
         { TOOLSET: 'gcc', COMPILER: 'g++-14', CXXSTD: '03,11,14,17,20,23', ADDRMD: '64', CXXFLAGS: "-fexcess-precision=fast", CXXSTDDIALECT: "gnu" },
         "g++-14-multilib",
-    ),
-
-    linux_pipeline(
-        "Linux 18.04 GCC 7* 32 03",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03', ADDRMD: '32' },
-        "nload",
-    ),
-
-    linux_pipeline(
-        "Linux 18.04 GCC 7* 32 11",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '11', ADDRMD: '32' },
-        "nload",
-    ),
-
-    linux_pipeline(
-        "Linux 18.04 GCC 7* 32 14",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '14', ADDRMD: '32' },
-        "nload",
-    ),
-
-    linux_pipeline(
-        "Linux 18.04 GCC 7* 32 17",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '17', ADDRMD: '32' },
-        "nload",
-    ),
-
-    linux_pipeline(
-        "Linux 18.04 GCC 7* 64 03",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03', ADDRMD: '64' },
-        "nload",
-    ),
-
-    linux_pipeline(
-        "Linux 18.04 GCC 7* 64 11",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '11', ADDRMD: '64' },
-        "nload",
-    ),
-
-    linux_pipeline(
-        "Linux 18.04 GCC 7* 64 14",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '14', ADDRMD: '64' },
-        "nload",
-    ),
-
-    linux_pipeline(
-        "Linux 18.04 GCC 7* 64 17",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '17', ADDRMD: '64' },
-        "nload",
-    ),
-
-    linux_pipeline(
-        "Linux 18.04 Clang 6.0",
-        "cppalliance/droneubuntu1804:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-6.0', CXXSTD: '03,11,14,17' },
-        "clang-6.0",
-    ),
-
-    linux_pipeline(
-        "Linux 20.04 Clang 7",
-        "cppalliance/droneubuntu2004:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-7', CXXSTD: '03,11,14,17' },
-        "clang-7",
-    ),
-
-    linux_pipeline(
-        "Linux 20.04 Clang 8",
-        "cppalliance/droneubuntu2004:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-8', CXXSTD: '03,11,14,17' },
-        "clang-8",
-    ),
-
-    linux_pipeline(
-        "Linux 20.04 Clang 9",
-        "cppalliance/droneubuntu2004:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-9', CXXSTD: '03,11,14,17,2a' },
-        "clang-9",
     ),
 
     linux_pipeline(
