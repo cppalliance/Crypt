@@ -2,9 +2,7 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
-#define BOOST_CRYPT_ENABLE_MD5
-
-#include <boost/crypt/hash/md5.hpp>
+#include <boost/crypt2/hash/sha1.hpp>
 
 auto main() -> int
 {
