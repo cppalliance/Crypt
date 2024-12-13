@@ -26,6 +26,8 @@ void clear_mem(cuda::std::span<T> ptr)
 
 #else
 
+#ifndef BOOST_CRYPT_BUILD_MODULE
+
 #include <span>
 #include <type_traits>
 #include <cstring>
@@ -33,6 +35,8 @@ void clear_mem(cuda::std::span<T> ptr)
 
 #ifdef _WIN32
 #include <WinBase.h>
+#endif
+
 #endif
 
 namespace boost::crypt::detail {
@@ -44,15 +48,20 @@ inline constexpr memset_span_t default_memset = [](std::span<std::byte> s) const
     std::fill(s.begin(), s.end(), std::byte{0x00});
 };
 
-// Note: volatile and constexpr are mutually exclusive, so we need separate functions
-static volatile memset_span_t runtime_memset_func = [](std::span<std::byte> s)
+// Define the runtime function separately with external linkage
+inline void runtime_memset_impl(std::span<std::byte> s)
 {
     #ifdef _WIN32
     SecureZeroMemory(s.data(), s.size());
+    #elif defined(BOOST_CRYPT_BUILD_MODULE)
+    std::memset(s.data(), 0x00, s.size_bytes());
     #else
     memset_s(s.data(), s.size_bytes(), 0x00, s.size_bytes());
     #endif
-};
+}
+
+// Now use the named function instead of lambda
+inline volatile memset_span_t runtime_memset_func = runtime_memset_impl;
 
 constexpr void clear_mem(std::span<std::byte> data)
 {
