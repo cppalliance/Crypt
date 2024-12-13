@@ -100,37 +100,24 @@ local windows_pipeline(name, image, environment, arch = "amd64") =
 [
 
     linux_pipeline(
-        "Linux 20.04 GCC 9* 32/64",
-        "cppalliance/droneubuntu2004:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03,11,14,17,2a', ADDRMD: '32,64' },
-    ),
-
-    linux_pipeline(
-        "Linux 22.04 GCC ARM64",
+        "Linux 22.04 GCC 11 ARM64",
         "cppalliance/droneubuntu2204:multiarch",
         { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03,11,14,17,2a' },
         arch="arm64",
     ),
 
     linux_pipeline(
-        "Linux 22.04 GCC ARM64 - ASAN",
+        "Linux 22.04 GCC 11 ARM64 - ASAN",
         "cppalliance/droneubuntu2204:multiarch",
         { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03,11,14,17,2a' } + asan,
         arch="arm64",
     ),
 
     linux_pipeline(
-        "Linux 22.04 GCC 9 S390x",
+        "Linux 22.04 GCC 11 S390x",
         "cppalliance/droneubuntu2204:multiarch",
         { TOOLSET: 'gcc', COMPILER: 'g++', CXXSTD: '03,11,14,17,2a' },
         arch="s390x",
-    ),
-
-    linux_pipeline(
-        "Linux 20.04 GCC 10 32/64",
-        "cppalliance/droneubuntu2004:1",
-        { TOOLSET: 'gcc', COMPILER: 'g++-10', CXXSTD: '03,11,14,17,20', ADDRMD: '32,64' },
-        "g++-10-multilib",
     ),
 
     linux_pipeline(
@@ -231,48 +218,6 @@ local windows_pipeline(name, image, environment, arch = "amd64") =
     ),
 
     linux_pipeline(
-        "Linux 20.04 Clang 10",
-        "cppalliance/droneubuntu2004:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-10', CXXSTD: '03,11,14,17,2a' },
-        "clang-10",
-    ),
-
-    linux_pipeline(
-        "Linux 20.04 Clang 11",
-        "cppalliance/droneubuntu2004:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-11', CXXSTD: '03,11,14,17,2a' },
-        "clang-11",
-    ),
-
-    linux_pipeline(
-        "Linux 20.04 Clang 12",
-        "cppalliance/droneubuntu2004:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-12', CXXSTD: '03,11,14,17,2a' },
-        "clang-12",
-    ),
-
-    linux_pipeline(
-        "Linux 22.04 Clang 13",
-        "cppalliance/droneubuntu2204:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-13', CXXSTD: '03,11,14,17,20' },
-        "clang-13",
-    ),
-
-    linux_pipeline(
-        "Linux 22.04 Clang 14 UBSAN",
-        "cppalliance/droneubuntu2204:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-14', CXXSTD: '03,11,14,17,20,2b' } + ubsan,
-        "clang-14",
-    ),
-
-    linux_pipeline(
-        "Linux 22.04 Clang 14 ASAN",
-        "cppalliance/droneubuntu2204:1",
-        { TOOLSET: 'clang', COMPILER: 'clang++-14', CXXSTD: '03,11,14,17,20,2b' } + asan,
-        "clang-14",
-    ),
-
-    linux_pipeline(
         "Linux 22.04 Clang 15",
         "cppalliance/droneubuntu2204:1",
         { TOOLSET: 'clang', COMPILER: 'clang++-15', CXXSTD: '03,11,14,17,20,2b' },
@@ -326,18 +271,6 @@ local windows_pipeline(name, image, environment, arch = "amd64") =
         { TOOLSET: 'clang', COMPILER: 'clang++-19', CXXSTD: '03,11,14,17,20,2b' } + asan,
         "clang-19",
         ["deb http://apt.llvm.org/noble/ llvm-toolchain-noble-19 main"],
-    ),
-
-    macos_pipeline(
-        "MacOS 12.4 Xcode 13.4.1 UBSAN",
-        { TOOLSET: 'clang', COMPILER: 'clang++', CXXSTD: '03,11,14,17,20,2b' } + ubsan,
-        xcode_version = "13.4.1", osx_version = "monterey", arch = "arm64",
-    ),
-
-    macos_pipeline(
-        "MacOS 12.4 Xcode 13.4.1 ASAN",
-        { TOOLSET: 'clang', COMPILER: 'clang++', CXXSTD: '03,11,14,17,20,2b' } + asan,
-        xcode_version = "13.4.1", osx_version = "monterey", arch = "arm64",
     ),
 
     windows_pipeline(
