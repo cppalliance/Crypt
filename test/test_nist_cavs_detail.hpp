@@ -579,7 +579,7 @@ public:
                               [&key_input]()
                               {
                                   const auto byte_data { detail::convert_hex_string_to_byte_container(key_input) };
-                                  return key_type (byte_data.cbegin(),   byte_data.cend() - 1U);
+                                  return key_type (byte_data.cbegin(),   byte_data.cend());
                               }()
                       },
               iv
@@ -587,7 +587,7 @@ public:
                               [&iv_input]()
                               {
                                   const auto byte_data { detail::convert_hex_string_to_byte_container(iv_input) };
-                                  return iv_type (byte_data.cbegin(), byte_data.cend() - 1U);
+                                  return iv_type (byte_data.cbegin(), byte_data.cend());
                               }()
                       },
               plaintext
@@ -595,7 +595,7 @@ public:
                               [&plaintext_input]()
                               {
                                   const auto byte_data { detail::convert_hex_string_to_byte_container(plaintext_input) };
-                                  return plaintext_type (byte_data.cbegin(), byte_data.cend() - 1U);
+                                  return plaintext_type (byte_data.cbegin(), byte_data.cend());
                               }()
                       },
               ciphertext
@@ -603,7 +603,7 @@ public:
                               [&ciphertext_input]()
                               {
                                   const auto byte_data { detail::convert_hex_string_to_byte_container(ciphertext_input) };
-                                  return ciphertext_type (byte_data.cbegin(), byte_data.cend() - 1U);
+                                  return ciphertext_type (byte_data.cbegin(), byte_data.cend());
                               }()
                       }
     { }
@@ -2221,11 +2221,20 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
         {
             auto plaintext {test_vector.plaintext};
             auto ciphertext {test_vector.ciphertext};
-            const auto iv {test_vector.iv};
+            auto iv {test_vector.iv};
+            auto key {test_vector.key};
+
+            BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cfb8 || mode == boost::crypt::aes::cipher_mode::cfb128)
+            {
+                plaintext.pop_back();
+                ciphertext.pop_back();
+                iv.pop_back();
+                key.pop_back();
+            }
 
             AESType aes;
 
-            aes.init(test_vector.key.begin(), test_vector.key.size());
+            aes.init(key.begin(), key.size());
 
             if (count < total_tests / 2U)
             {
@@ -2272,11 +2281,20 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
         {
             auto plaintext {test_vector.plaintext};
             auto ciphertext {test_vector.ciphertext};
-            const auto iv {test_vector.iv};
+            auto iv {test_vector.iv};
+            auto key {test_vector.key};
+
+            BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cfb8 || mode == boost::crypt::aes::cipher_mode::cfb128)
+            {
+                plaintext.pop_back();
+                ciphertext.pop_back();
+                iv.pop_back();
+                key.pop_back();
+            }
 
             AESType aes;
 
-            aes.init(test_vector.key.begin(), test_vector.key.size());
+            aes.init(key.begin(), key.size());
 
             if (count < total_tests / 2U)
             {
@@ -2317,11 +2335,20 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
     {
         auto plaintext {test_vector.plaintext};
         auto ciphertext {test_vector.ciphertext};
-        const auto iv {test_vector.iv};
+        auto iv {test_vector.iv};
+        auto key {test_vector.key};
+
+        BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cfb8 || mode == boost::crypt::aes::cipher_mode::cfb128)
+        {
+            plaintext.pop_back();
+            ciphertext.pop_back();
+            iv.pop_back();
+            key.pop_back();
+        }
 
         AESType aes;
 
-        aes.init(test_vector.key.begin(), test_vector.key.size());
+        aes.init(key.begin(), key.size());
 
         if (count < total_tests / 2U)
         {
