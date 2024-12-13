@@ -36,6 +36,12 @@
 #  define BOOST_CRYPT_GPU_DEVICE_ENABLED
 #endif
 
+#ifdef BOOST_CRYPT_BUILD_MODULE
+#  define BOOST_CRYPT_EXPORT export
+#else
+#  define BOOST_CRYPT_EXPORT
+#endif
+
 // See: https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#hardware-implementation
 #if defined(_WIN32) || defined(BOOST_CRYPT_HAS_CUDA)
 
