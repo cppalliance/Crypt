@@ -29,9 +29,11 @@ void clear_mem(cuda::std::span<T> ptr)
 #ifndef BOOST_CRYPT_BUILD_MODULE
 
 #include <span>
+#include <bit>
 #include <type_traits>
 #include <cstring>
 #include <cstddef>
+#include <cstdint>
 
 #ifdef _WIN32
 #include <WinBase.h>
@@ -72,6 +74,34 @@ constexpr void clear_mem(std::span<std::byte> data)
     else
     {
         runtime_memset_func(data);
+    }
+}
+
+using generic_meset_t = void(*)(void*, size_t);
+
+inline void generic_runtime_memset_func_impl(void* ptr, size_t size)
+{
+    #ifdef _WIN32
+    SecureZeroMemory(ptr, size);
+    #elif defined(BOOST_CRYPT_BUILD_MODULE)
+    std::memset(ptr, 0, size);
+    #else
+    memset_s(ptr, size, 0, size);
+    #endif
+}
+
+inline volatile generic_meset_t generic_runtime_memset_func = generic_runtime_memset_func_impl;
+
+template <typename T>
+constexpr void clear_mem(std::span<T> data)
+{
+    if (std::is_constant_evaluated())
+    {
+        std::fill(data.begin(), data.end(), 0);
+    }
+    else
+    {
+        generic_runtime_memset_func_impl(data.data(), data.size_bytes());
     }
 }
 
