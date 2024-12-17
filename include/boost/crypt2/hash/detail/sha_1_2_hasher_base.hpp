@@ -26,7 +26,6 @@
 #include <cuda/std/cstddef>
 #include <cuda/std/concepts>
 #include <cuda/std/ranges>
-#include <thrust/fill.h>
 
 #endif
 
@@ -40,7 +39,6 @@ using std::size_t;
 using std::uint32_t;
 using std::array;
 using std::byte;
-using std::fill;
 using std::span;
 using std::ranges::sized_range;
 using std::ranges::output_range;
@@ -64,7 +62,6 @@ using cuda::std::is_trivially_copyable_v;
 using cuda::std::as_bytes;
 using cuda::std::as_writable_bytes;
 using cuda::std::forward;
-using thrust::fill;
 
 #endif
 
