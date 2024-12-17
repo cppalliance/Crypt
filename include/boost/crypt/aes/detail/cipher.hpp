@@ -150,6 +150,11 @@ private:
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cfb64>&) noexcept -> void;
 
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cfb128>&) noexcept -> void;
+
     template <typename ForwardIter1, typename ForwardIter2 = boost::crypt::uint8_t*>
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
                                                         ForwardIter2, boost::crypt::size_t,
@@ -179,6 +184,11 @@ private:
     BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
                                                         ForwardIter2 iv, boost::crypt::size_t iv_size,
                                                         const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cfb64>&) noexcept -> void;
+
+    template <typename ForwardIter1, typename ForwardIter2>
+    BOOST_CRYPT_GPU_ENABLED constexpr auto decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                                        const boost::crypt::integral_constant<aes::cipher_mode, aes::cipher_mode::cfb128>&) noexcept -> void;
 
 public:
 
@@ -257,18 +267,21 @@ constexpr auto cipher<Nr>::generic_cfb_encrypt_impl(ForwardIter1 buffer, boost::
     auto iv_copy {current_iv};
     while (buffer_size)
     {
+        const auto iv_imin1 {iv_copy};
         cipher_impl(iv_copy.begin());
 
         for (boost::crypt::size_t i {}; i < cfb_size; ++i)
         {
-            buffer[0] ^= iv_copy[0];
+            buffer[i] ^= iv_copy[i];
         }
 
-        for (boost::crypt::size_t i {}; i < current_iv.size() - cfb_size; ++i)
+        // We now need (b-s) bits of IV | s bits of cipher text
+        // First we shift the values in iv_copy and then add in the contents of the buffer
+        for (boost::crypt::size_t i {}; i < iv_copy.size() - cfb_size; ++i)
         {
-            iv_copy[i] = current_iv[i];
+            iv_copy[i] = iv_imin1[i + cfb_size];
         }
-        for (boost::crypt::size_t i {current_iv.size() - cfb_size}, buffer_i {}; i < current_iv.size(); ++i, ++buffer_i)
+        for (boost::crypt::size_t i {iv_copy.size() - cfb_size}, buffer_i {}; i < iv_copy.size(); ++i, ++buffer_i)
         {
             iv_copy[i] = buffer[buffer_i];
         }
@@ -276,6 +289,9 @@ constexpr auto cipher<Nr>::generic_cfb_encrypt_impl(ForwardIter1 buffer, boost::
         buffer_size -= cfb_size;
         buffer += cfb_size;
     }
+
+    // Store the last block for MCT mode
+    current_iv = iv_copy;
 }
 
 template <boost::crypt::size_t Nr>
@@ -301,9 +317,11 @@ constexpr auto cipher<Nr>::generic_cfb_decrypt_impl(ForwardIter1 buffer, boost::
     }
 
     auto iv_copy {current_iv};
+    auto iv_min1 {iv_copy};
     cipher_impl(iv_copy.begin());
 
     boost::crypt::array<boost::crypt::uint8_t, cfb_size> carried_byte {};
+
     while (buffer_size)
     {
         for (boost::crypt::size_t i {}; i < cfb_size; ++i)
@@ -318,18 +336,21 @@ constexpr auto cipher<Nr>::generic_cfb_decrypt_impl(ForwardIter1 buffer, boost::
 
         for (boost::crypt::size_t i {}; i < current_iv.size() - cfb_size; ++i)
         {
-            iv_copy[i] = current_iv[i];
+            iv_copy[i] = iv_min1[i + cfb_size];
         }
         for (boost::crypt::size_t i {current_iv.size() - cfb_size}, buffer_i {}; i < current_iv.size(); ++i, ++buffer_i)
         {
             iv_copy[i] = carried_byte[buffer_i];
         }
 
+        iv_min1 = iv_copy;
         cipher_impl(iv_copy.begin());
 
         buffer_size -= cfb_size;
         buffer += cfb_size;
     }
+
+    current_iv = iv_min1;
 }
 
 template <boost::crypt::size_t Nr>
@@ -592,6 +613,15 @@ constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_
 
 template <boost::crypt::size_t Nr>
 template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::encrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::cfb128>&) noexcept -> void
+{
+    generic_cfb_encrypt_impl<16>(buffer, buffer_size, iv, iv_size);
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
 constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size, ForwardIter2, boost::crypt::size_t,
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::ecb>&) noexcept -> void
 {
@@ -761,6 +791,15 @@ constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_
                                         const integral_constant<aes::cipher_mode, aes::cipher_mode::cfb64>&) noexcept -> void
 {
     generic_cfb_decrypt_impl<8>(buffer, buffer_size, iv, iv_size);
+}
+
+template <boost::crypt::size_t Nr>
+template <typename ForwardIter1, typename ForwardIter2>
+constexpr auto cipher<Nr>::decrypt_impl(ForwardIter1 buffer, boost::crypt::size_t buffer_size,
+                                        ForwardIter2 iv, boost::crypt::size_t iv_size,
+                                        const integral_constant<aes::cipher_mode, aes::cipher_mode::cfb128>&) noexcept -> void
+{
+    generic_cfb_decrypt_impl<16>(buffer, buffer_size, iv, iv_size);
 }
 
 #if defined(__GNUC__) && __GNUC__ >= 5

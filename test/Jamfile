@@ -148,6 +148,12 @@ run test_nist_cavs_aes128_mct_cbc.cpp ;
 run test_nist_cavs_aes128_kat_ofb.cpp ;
 run test_nist_cavs_aes128_mmt_ofb.cpp ;
 run test_nist_cavs_aes128_mct_ofb.cpp ;
+run test_nist_cavs_aes128_kat_cfb8.cpp ;
+run test_nist_cavs_aes128_mmt_cfb8.cpp ;
+run test_nist_cavs_aes128_mct_cfb8.cpp ;
+run test_nist_cavs_aes128_kat_cfb128.cpp ;
+run test_nist_cavs_aes128_mmt_cfb128.cpp ;
+run test_nist_cavs_aes128_mct_cfb128.cpp ;
 
 run test_nist_cavs_aes192_kat_ecb.cpp ;
 run test_nist_cavs_aes192_mmt_ecb.cpp ;
@@ -158,6 +164,12 @@ run test_nist_cavs_aes192_mct_cbc.cpp ;
 run test_nist_cavs_aes192_kat_ofb.cpp ;
 run test_nist_cavs_aes192_mmt_ofb.cpp ;
 run test_nist_cavs_aes192_mct_ofb.cpp ;
+run test_nist_cavs_aes192_kat_cfb8.cpp ;
+run test_nist_cavs_aes192_mmt_cfb8.cpp ;
+run test_nist_cavs_aes192_mct_cfb8.cpp ;
+run test_nist_cavs_aes192_kat_cfb128.cpp ;
+run test_nist_cavs_aes192_mmt_cfb128.cpp ;
+run test_nist_cavs_aes192_mct_cfb128.cpp ;
 
 run test_nist_cavs_aes256_kat_ecb.cpp ;
 run test_nist_cavs_aes256_mmt_ecb.cpp ;
@@ -168,6 +180,12 @@ run test_nist_cavs_aes256_mct_cbc.cpp ;
 run test_nist_cavs_aes256_kat_ofb.cpp ;
 run test_nist_cavs_aes256_mmt_ofb.cpp ;
 run test_nist_cavs_aes256_mct_ofb.cpp ;
+run test_nist_cavs_aes256_kat_cfb8.cpp ;
+run test_nist_cavs_aes256_mmt_cfb8.cpp ;
+run test_nist_cavs_aes256_mct_cfb8.cpp ;
+run test_nist_cavs_aes256_kat_cfb128.cpp ;
+run test_nist_cavs_aes256_mmt_cfb128.cpp ;
+run test_nist_cavs_aes256_mct_cfb128.cpp ;
 
 # Note these CTR test are not official but they offer decent coverage,
 # by proving we can roundtrip the provided text

@@ -1574,9 +1574,16 @@ auto parse_file_aes(const std::string& test_vectors_filename, std::deque<test_ob
                 if (!plaintext.empty() && !ciphertext.empty())
                 {
                     // Add the new test object to v.
-                    const test_object_aes test_obj(key, iv, plaintext, ciphertext);
-
-                    test_vectors_to_get.push_back(test_obj);
+                    if (!iv.empty())
+                    {
+                        const test_object_aes test_obj(key, iv, plaintext, ciphertext);
+                        test_vectors_to_get.push_back(test_obj);
+                    }
+                    else
+                    {
+                        const test_object_aes test_obj(key, plaintext, ciphertext);
+                        test_vectors_to_get.push_back(test_obj);
+                    }
 
                     key.clear();
                     iv.clear();
@@ -2214,11 +2221,26 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
         {
             auto plaintext {test_vector.plaintext};
             auto ciphertext {test_vector.ciphertext};
-            const auto iv {test_vector.iv};
+            auto iv {test_vector.iv};
+            auto key {test_vector.key};
+
+            BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cfb8 || mode == boost::crypt::aes::cipher_mode::cfb128)
+            {
+                if (plaintext.empty() || ciphertext.empty() || iv.empty() || key.empty())
+                {
+                    std::cerr << "Bad parse with vector: " << count << std::endl;
+                    continue;
+                }
+
+                plaintext.pop_back();
+                ciphertext.pop_back();
+                iv.pop_back();
+                key.pop_back();
+            }
 
             AESType aes;
 
-            aes.init(test_vector.key.begin(), test_vector.key.size());
+            aes.init(key.begin(), key.size());
 
             if (count < total_tests / 2U)
             {
@@ -2265,11 +2287,26 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
         {
             auto plaintext {test_vector.plaintext};
             auto ciphertext {test_vector.ciphertext};
-            const auto iv {test_vector.iv};
+            auto iv {test_vector.iv};
+            auto key {test_vector.key};
+
+            BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cfb8 || mode == boost::crypt::aes::cipher_mode::cfb128)
+            {
+                if (plaintext.empty() || ciphertext.empty() || iv.empty() || key.empty())
+                {
+                    std::cerr << "Bad parse with vector: " << count << std::endl;
+                    continue;
+                }
+
+                plaintext.pop_back();
+                ciphertext.pop_back();
+                iv.pop_back();
+                key.pop_back();
+            }
 
             AESType aes;
 
-            aes.init(test_vector.key.begin(), test_vector.key.size());
+            aes.init(key.begin(), key.size());
 
             if (count < total_tests / 2U)
             {
@@ -2310,11 +2347,26 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
     {
         auto plaintext {test_vector.plaintext};
         auto ciphertext {test_vector.ciphertext};
-        const auto iv {test_vector.iv};
+        auto iv {test_vector.iv};
+        auto key {test_vector.key};
+
+        BOOST_CRYPT_IF_CONSTEXPR (mode == boost::crypt::aes::cipher_mode::cfb8 || mode == boost::crypt::aes::cipher_mode::cfb128)
+        {
+            if (plaintext.empty() || ciphertext.empty() || iv.empty() || key.empty())
+            {
+                std::cerr << "Bad parse with vector: " << count << std::endl;
+                continue;
+            }
+            
+            plaintext.pop_back();
+            ciphertext.pop_back();
+            iv.pop_back();
+            key.pop_back();
+        }
 
         AESType aes;
 
-        aes.init(test_vector.key.begin(), test_vector.key.size());
+        aes.init(key.begin(), key.size());
 
         if (count < total_tests / 2U)
         {
