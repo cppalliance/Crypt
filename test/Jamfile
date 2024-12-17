@@ -40,7 +40,7 @@ project : requirements
   <toolset>clang:<warnings-as-errors>on
   <toolset>gcc:<warnings-as-errors>on
 
-  [ requires cxx14_decltype_auto cxx14_generic_lambdas cxx14_return_type_deduction cxx14_variable_templates cxx14_constexpr ]
+  [ requires cxx20_hdr_version cxx20_hdr_concepts cxx20_hdr_span cxx20_hdr_source_location cxx20_hdr_ranges ]
   ;
 
 

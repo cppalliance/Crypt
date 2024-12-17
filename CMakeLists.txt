@@ -14,7 +14,7 @@ add_library(Boost::crypt ALIAS boost_crypt)
 
 target_include_directories(boost_crypt INTERFACE include)
 
-target_compile_features(boost_crypt INTERFACE cxx_std_14)
+target_compile_features(boost_crypt INTERFACE cxx_std_20)
 
 if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
 
