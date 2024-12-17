@@ -15,8 +15,7 @@ if(HAVE_BOOST_TEST)
         enable_language(CUDA)
         set(CMAKE_CUDA_EXTENSIONS OFF)
 
-        boost_test_jamfile(FILE nvcc_jamfile LINK_LIBRARIES Boost::crypt CUDA::thrust
-                CUDA::cudart INCLUDE_DIRECTORIES ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} )
+        boost_test_jamfile(FILE nvcc_jamfile LINK_LIBRARIES Boost::crypt ${CUDA_LIBRARIES} INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS} )
 
     elseif (BOOST_CRYPT_ENABLE_NVRTC)
 
