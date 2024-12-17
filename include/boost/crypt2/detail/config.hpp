@@ -12,6 +12,7 @@
 #  define BOOST_CRYPT_GPU_ENABLED __host__ __device__
 #  define BOOST_CRYPT_GPU_HOST_ENABLED __host__
 #  define BOOST_CRYPT_GPU_DEVICE_ENABLED __device__
+#  define BOOST_CRYPT_GPU_ENABLED_CONSTEXPR __host__ __device__
 #endif
 
 #ifdef __CUDACC_RTC__
@@ -26,6 +27,10 @@
 
 #ifndef BOOST_CRYPT_GPU_ENABLED
 #  define BOOST_CRYPT_GPU_ENABLED
+#endif
+
+#ifndef BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+#  define BOOST_CRYPT_GPU_ENABLED_CONSTEXPR constexpr
 #endif
 
 #ifndef BOOST_CRYPT_GPU_HOST_ENABLED

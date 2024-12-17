@@ -26,16 +26,16 @@ private:
 
     friend class hash_detail::sha_1_2_hasher_base<20U, 5U>;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_message_block() noexcept -> void override;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_message_block() noexcept -> void override;
 
 public:
 
-    BOOST_CRYPT_GPU_ENABLED constexpr sha1_hasher() noexcept { init(); }
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha1_hasher() noexcept { init(); }
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
 };
 
-constexpr auto sha1_hasher::init() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1_hasher::init() noexcept -> void
 {
     hash_detail::sha_1_2_hasher_base<20U, 5U>::base_init();
 
@@ -58,7 +58,7 @@ using cuda::std::rotl;
 using cuda::std::array;
 #endif
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto round1(uint32_t& A,
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round1(uint32_t& A,
                                               uint32_t& B,
                                               uint32_t& C,
                                               uint32_t& D,
@@ -73,7 +73,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto round1(uint32_t& A,
     A = temp;
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto round2(uint32_t& A,
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round2(uint32_t& A,
                                               uint32_t& B,
                                               uint32_t& C,
                                               uint32_t& D,
@@ -88,7 +88,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto round2(uint32_t& A,
     A = temp;
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto round3(uint32_t& A,
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round3(uint32_t& A,
                                               uint32_t& B,
                                               uint32_t& C,
                                               uint32_t& D,
@@ -103,7 +103,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto round3(uint32_t& A,
     A = temp;
 }
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto round4(uint32_t& A,
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round4(uint32_t& A,
                                               uint32_t& B,
                                               uint32_t& C,
                                               uint32_t& D,
@@ -121,7 +121,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto round4(uint32_t& A,
 } // Namespace sha1_detail
 
 // See definitions from the RFC on the rounds
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_message_block() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1_hasher::process_message_block() noexcept -> void
 {
     using namespace sha1_detail;
 
@@ -248,7 +248,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_message_block() noex
 #ifndef BOOST_CRYPT_HAS_CUDA
 
 // One shot functions
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(std::span<const std::byte> data) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1(std::span<const std::byte> data) noexcept -> sha1_hasher::return_type
 {
     sha1_hasher hasher;
     hasher.process_bytes(data);
@@ -305,7 +305,7 @@ BOOST_CRYPT_EXPORT inline auto sha1_file(const T& filepath)
 #else
 
 // One shot functions
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(cuda::std::span<const cuda::std::byte> data) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED auto sha1(cuda::std::span<const cuda::std::byte> data) noexcept -> sha1_hasher::return_type
 {
     sha1_hasher hasher;
     hasher.process_bytes(data);

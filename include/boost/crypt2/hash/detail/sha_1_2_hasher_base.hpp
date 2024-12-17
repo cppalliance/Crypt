@@ -77,9 +77,9 @@ public:
 protected:
 
     // Each hasher needs to process their own message block in their own way
-    BOOST_CRYPT_GPU_ENABLED virtual constexpr auto process_message_block() noexcept -> void = 0;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR virtual auto process_message_block() noexcept -> void = 0;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto pad_message() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto pad_message() noexcept -> void;
 
     array<uint32_t, intermediate_hash_size> intermediate_hash_ {};
     array<byte, block_size> buffer_ {};
@@ -89,26 +89,26 @@ protected:
     bool computed_ {};
     bool corrupted_ {};
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto update(span<const byte> data) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(span<const byte> data) noexcept -> state;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest_impl(span<byte, digest_size> data);
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest_impl(span<byte, digest_size> data);
 
 public:
 
     using return_type = array<byte, digest_size>;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr sha_1_2_hasher_base() noexcept { base_init(); }
-    BOOST_CRYPT_GPU_ENABLED constexpr ~sha_1_2_hasher_base() noexcept { destroy(); }
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_1_2_hasher_base() noexcept { base_init(); }
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha_1_2_hasher_base() noexcept { destroy(); }
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(span<const byte> data) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(span<const byte> data) noexcept -> state;
 
     template <sized_range Range>
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(Range&& data) noexcept -> state;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto finalize() noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 
-    [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest(span<byte, digest_size> data) noexcept -> void;
+    [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() noexcept -> return_type;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(span<byte, digest_size> data) noexcept -> void;
 
     template <typename Range>
     BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) noexcept -> void
@@ -116,8 +116,8 @@ public:
                  sized_range<Range> &&
                  is_trivially_copyable_v<range_value_t<Range>>;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto base_init() noexcept -> void;
-    BOOST_CRYPT_GPU_ENABLED constexpr auto destroy() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto base_init() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto destroy() noexcept -> void;
 };
 
 template <size_t digest_size, size_t intermediate_hash_size>
@@ -142,7 +142,7 @@ auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest_impl(span<byte, digest_size> data)
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest_impl(span<byte, digest_size> data)
 {
     if (corrupted_)
     {
@@ -162,14 +162,14 @@ constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_dig
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
 sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(span<byte, digest_size> data) noexcept -> void
 {
     get_digest_impl(data);
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
 sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept -> sha_1_2_hasher_base::return_type
 {
     return_type digest {};
@@ -178,7 +178,7 @@ sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept 
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::finalize() noexcept -> state
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::finalize() noexcept -> state
 {
     if (corrupted_)
     {
@@ -200,7 +200,7 @@ constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::finaliz
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::pad_message() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::pad_message() noexcept -> void
 {
     // 448 bits out of 512
     constexpr size_t message_length_start_index {56U};
@@ -261,13 +261,13 @@ auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(Siz
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(span<const byte> data) noexcept -> state
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(span<const byte> data) noexcept -> state
 {
     return update(data);
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(span<const byte> data) noexcept -> state
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(span<const byte> data) noexcept -> state
 {
     if (data.empty())
     {
@@ -311,7 +311,7 @@ constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::destroy() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::destroy() noexcept -> void
 {
     using boost::crypt::detail::clear_mem;
 
@@ -325,7 +325,7 @@ constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::destroy
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::base_init() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::base_init() noexcept -> void
 {
     intermediate_hash_.fill(0U);
     buffer_.fill(static_cast<byte>(0));
