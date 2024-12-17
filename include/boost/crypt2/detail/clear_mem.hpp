@@ -34,6 +34,7 @@ void clear_mem(cuda::std::span<T> ptr)
 #include <cstring>
 #include <cstddef>
 #include <cstdint>
+#include <algorithm>
 
 #endif
 
