@@ -24,6 +24,8 @@
 #include <cuda/std/array>
 #include <cuda/std/cstdint>
 #include <cuda/std/cstddef>
+#include <cuda/std/concepts>
+#include <cuda/std/ranges>
 #include <thrust/fill.h>
 
 #endif
