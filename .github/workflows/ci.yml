@@ -57,9 +57,8 @@ jobs:
           - { compiler: clang-17,  cxxstd: '11,14,17,20',    os: ubuntu-24.04 }
           - { compiler: clang-18,  cxxstd: '11,14,17,20,23,2c', os: ubuntu-24.04 }
 
-          # libc++
           - { name: Clang w/ sanitizers, sanitize: yes,
-              compiler: clang-17,  cxxstd: '03,11,14,17,20', os: ubuntu-24.04, stdlib: libc++, install: 'clang-17 libc++-17-dev libc++abi-17-dev' }
+              compiler: clang-18,  cxxstd: '03,11,14,17,20', os: ubuntu-24.04 }
 
           - { name: MacOS w/ clang and sanitizers,
               compiler: clang,     cxxstd: '03,11,14,17,20,2b', os: macos-13, sanitize: yes }
