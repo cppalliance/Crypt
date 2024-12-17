@@ -11,10 +11,12 @@ if(HAVE_BOOST_TEST)
 
         message(STATUS "Building boost.crypt with CUDA")
         find_package(CUDA REQUIRED)
+        find_package(CUDAToolkit REQUIRED)
         enable_language(CUDA)
         set(CMAKE_CUDA_EXTENSIONS OFF)
 
-        boost_test_jamfile(FILE nvcc_jamfile LINK_LIBRARIES Boost::crypt ${CUDA_LIBRARIES} INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS} )
+        boost_test_jamfile(FILE nvcc_jamfile LINK_LIBRARIES Boost::crypt CUDA::thrust
+                CUDA::cudart INCLUDE_DIRECTORIES ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} )
 
     elseif (BOOST_CRYPT_ENABLE_NVRTC)
 
