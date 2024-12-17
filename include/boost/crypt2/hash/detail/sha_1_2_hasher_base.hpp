@@ -267,7 +267,7 @@ constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process
 template <size_t digest_size, size_t intermediate_hash_size>
 constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(span<const byte> data) noexcept -> state
 {
-    if (data.size() == 0U)
+    if (data.empty())
     {
         return state::success;
     }
