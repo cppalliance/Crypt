@@ -35,10 +35,6 @@ void clear_mem(cuda::std::span<T> ptr)
 #include <cstddef>
 #include <cstdint>
 
-#ifdef _WIN32
-#include <WinBase.h>
-#endif
-
 #endif
 
 namespace boost::crypt::detail {
@@ -53,11 +49,7 @@ inline constexpr memset_span_t default_memset = [](std::span<std::byte> s) const
 // Define the runtime function separately with external linkage
 inline void runtime_memset_impl(std::span<std::byte> s)
 {
-    #ifdef _WIN32
-    SecureZeroMemory(s.data(), s.size());
-    #else
     std::memset(s.data(), 0x00, s.size_bytes());
-    #endif
 }
 
 // Now use the named function instead of lambda
@@ -79,11 +71,7 @@ using generic_meset_t = void(*)(void*, size_t);
 
 inline void generic_runtime_memset_func_impl(void* ptr, size_t size)
 {
-    #ifdef _WIN32
-    SecureZeroMemory(ptr, size);
-    #else
     std::memset(ptr, 0, size);
-    #endif
 }
 
 inline volatile generic_meset_t generic_runtime_memset_func = generic_runtime_memset_func_impl;
