@@ -25,22 +25,22 @@ jobs:
     runs-on: gpu-runner-1
 
     steps:
-      - uses: Jimver/cuda-toolkit@v0.2.19
-        id: cuda-toolkit
-        with:
-          cuda: '12.6.0'
-          method: 'network'
-
-      - name: Output CUDA information
-        run: |
-          echo "Installed cuda version is: ${{steps.cuda-toolkit.outputs.cuda}}"+
-          echo "Cuda install location: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
-          nvcc -V
       - uses: actions/checkout@v4
 
       - name: Install Packages
         run: |
-          sudo apt-get install -y cmake make
+          sudo apt-get install -y cmake make wget
+
+      - name: Install CUDA
+        run: |
+          wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+          sudo dpkg -i cuda-keyring_1.1-1_all.deb
+          sudo apt-get update
+          sudo apt-get install -y cuda-toolkit
+          echo "PATH=/usr/local/cuda-12.6/bin:${PATH}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=/usr/local/cuda-12.6/lib64:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          echo "CUDA_PATH=/usr/local/cuda-12.6" >> $GITHUB_ENV
+
       - name: Setup Boost
         run: |
           echo GITHUB_REPOSITORY: $GITHUB_REPOSITORY
@@ -61,15 +61,24 @@ jobs:
           cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
           git submodule update --init tools/boostdep
           python3 tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
+
       - name: Configure
         run: |
           cd ../boost-root
           mkdir __build__ && cd __build__
-          cmake -DBOOST_INCLUDE_LIBRARIES=$LIBRARY -DBUILD_TESTING=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DBOOST_CRYPT_ENABLE_CUDA=1 -DCMAKE_CUDA_ARCHITECTURES=70 -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-12.5 ..
+          cmake -DBOOST_INCLUDE_LIBRARIES=$LIBRARY \
+                -DBUILD_TESTING=ON \
+                -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.6/bin/nvcc \
+                -DBOOST_CRYPT_ENABLE_CUDA=1 \
+                -DCMAKE_CUDA_ARCHITECTURES=70 \
+                -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-12.6 \
+                -DCUDA_PATH=/usr/local/cuda-12.6 ..
+
       - name: Build tests
         run: |
           cd ../boost-root/__build__
           cmake --build . --target tests -j $(nproc)
+
       - name: Run tests
         run: |
           cd ../boost-root/__build__
