@@ -87,7 +87,7 @@ protected:
     bool computed_ {};
     bool corrupted_ {};
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto update(span<byte> data) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto update(span<const byte> data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest_impl(span<byte, digest_size> data);
 
@@ -98,7 +98,7 @@ public:
     BOOST_CRYPT_GPU_ENABLED constexpr sha_1_2_hasher_base() noexcept { base_init(); }
     BOOST_CRYPT_GPU_ENABLED constexpr ~sha_1_2_hasher_base() noexcept { destroy(); }
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(span<byte> data) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(span<const byte> data) noexcept -> state;
 
     template <sized_range Range>
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(Range&& data) noexcept -> state;
@@ -171,7 +171,8 @@ constexpr auto
 sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept -> sha_1_2_hasher_base::return_type
 {
     return_type digest {};
-    return get_digest_impl(digest);
+    get_digest_impl(digest);
+    return digest;
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
@@ -246,18 +247,25 @@ template <size_t digest_size, size_t intermediate_hash_size>
 template <sized_range SizedRange>
 auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(SizedRange&& data) noexcept -> state
 {
-    auto data_span {span(forward<SizedRange>(data))};
-    update(as_bytes(data_span));
+    // Clang warns -Wunqualified-std-cast-call with just the using statement
+    // so we must change context this way
+    #ifndef BOOST_CRYPT_HAS_CUDA
+    auto data_span {span(std::forward<SizedRange>(data))};
+    #else
+    auto data_span {span(cuda::std::forward<SizedRange>(data))};
+    #endif
+
+    return update(as_bytes(data_span));
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(span<byte> data) noexcept -> state
+constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(span<const byte> data) noexcept -> state
 {
     return update(data);
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
-constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(span<byte> data) noexcept -> state
+constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(span<const byte> data) noexcept -> state
 {
     if (data.size() == 0U)
     {
@@ -296,6 +304,8 @@ constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(
             buffer_index_ = 0U;
         }
     }
+
+    return state::success;
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
@@ -303,7 +313,7 @@ constexpr auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::destroy
 {
     using boost::crypt::detail::clear_mem;
 
-    clear_mem(intermediate_hash_);
+    intermediate_hash_.fill(0U);
     clear_mem(buffer_);
     buffer_index_ = 0U;
     low_ = 0U;
