@@ -58,7 +58,7 @@ const std::array<std::tuple<std::string, std::array<uint16_t, 20>>, 7> test_valu
                     std::array<std::uint16_t, 20>{0xe0, 0xc0, 0x94, 0xe8, 0x67, 0xef, 0x46, 0xc3, 0x50, 0xef,
                                                   0x54, 0xa7, 0xf5, 0x9d, 0xd6, 0x0b, 0xed, 0x92, 0xae, 0x83}),
 };
-/*
+
 void basic_tests()
 {
     for (const auto& test_value : test_values)
@@ -100,7 +100,6 @@ void string_test()
 
 void string_view_test()
 {
-    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
     for (const auto& test_value : test_values)
     {
         const std::string string_message {std::get<0>(test_value)};
@@ -109,7 +108,7 @@ void string_view_test()
         const auto valid_result {std::get<1>(test_value)};
         for (std::size_t i {}; i < message_result.size(); ++i)
         {
-            if (!BOOST_TEST_EQ(message_result[i], valid_result[i]))
+            if (!BOOST_TEST(message_result[i] == static_cast<byte>(valid_result[i])))
             {
                 // LCOV_EXCL_START
                 std::cerr << "Failure with: " << std::get<0>(test_value) << '\n';
@@ -118,43 +117,7 @@ void string_view_test()
             }
         }
     }
-    #endif
 }
-
-void bad_input()
-{
-    const auto null_message {boost::crypt::sha1(static_cast<const char*>(nullptr))};
-    BOOST_TEST(null_message[0] == byte{});
-    BOOST_TEST(null_message[1] == byte{});
-    BOOST_TEST(null_message[2] == byte{});
-    BOOST_TEST(null_message[3] == byte{});
-
-    const auto null_message_len {boost::crypt::sha1(static_cast<const char*>(nullptr), 100)};
-    BOOST_TEST(null_message_len[0] == byte{});
-    BOOST_TEST(null_message_len[1] == byte{});
-    BOOST_TEST(null_message_len[2] == byte{});
-    BOOST_TEST(null_message_len[3] == byte{});
-
-    const auto unsigned_null_message {boost::crypt::sha1(static_cast<const std::uint8_t*>(nullptr))};
-    BOOST_TEST(unsigned_null_message[0] == byte{});
-    BOOST_TEST(unsigned_null_message[1] == byte{});
-    BOOST_TEST(unsigned_null_message[2] == byte{});
-    BOOST_TEST(unsigned_null_message[3] == byte{});
-
-    const auto unsigned_null_message_len {boost::crypt::sha1(static_cast<const std::uint8_t*>(nullptr), 100)};
-    BOOST_TEST(unsigned_null_message_len[0] == byte{});
-    BOOST_TEST(unsigned_null_message_len[1] == byte{});
-    BOOST_TEST(unsigned_null_message_len[2] == byte{});
-    BOOST_TEST(unsigned_null_message_len[3] == byte{});
-
-    std::string test_str {"Test string"};
-    const auto reveresed_input {boost::crypt::detail::sha1(test_str.end(), test_str.begin())};
-    BOOST_TEST_EQ(reveresed_input[0], byte{});
-    BOOST_TEST_EQ(reveresed_input[1], byte{});
-    BOOST_TEST_EQ(reveresed_input[2], byte{});
-    BOOST_TEST_EQ(reveresed_input[3], byte{});
-}
-*/
 
 void test_class()
 {
@@ -181,104 +144,14 @@ void test_class()
         hasher.init();
     }
 }
-/*
-template <typename T>
-void test_random_values()
-{
-    constexpr std::size_t max_str_len {65535U};
-    std::mt19937_64 rng(42);
-    std::uniform_int_distribution<std::size_t> str_len(1, max_str_len - 1);
 
-    char* str {new char[max_str_len]};
-
-    for (std::size_t i {}; i < 1024; ++i)
-    {
-        std::memset(str, '\0', max_str_len);
-        const std::size_t current_str_len {str_len(rng)};
-        boost::crypt::generate_random_string(str, current_str_len);
-        const auto uuid_res {get_boost_uuid_result(str, current_str_len)};
-
-        // boost::crypt::array is implicitly convertible to std::array
-        const std::array<std::uint8_t, 20> crypt_res = boost::crypt::sha1(str, current_str_len);
-
-        for (std::size_t j {}; j < crypt_res.size(); ++j)
-        {
-            if (!BOOST_TEST_EQ(uuid_res[j], crypt_res[j]))
-            {
-                // LCOV_EXCL_START
-                std::cerr << "Failure with string: " << str << std::endl;
-                break;
-                // LCOV_EXCL_STOP
-            }
-        }
-    }
-
-    delete[] str;
-}
-
-template <typename T>
-void test_random_piecewise_values()
-{
-    constexpr std::size_t max_str_len {65535U};
-    std::mt19937_64 rng(42);
-    std::uniform_int_distribution<std::size_t> str_len(1, max_str_len - 1);
-
-    char* str {new char[max_str_len]};
-    char* str_2 {new char[max_str_len]};
-
-    for (std::size_t i {}; i < 1024; ++i)
-    {
-        boost::uuids::detail::sha1 boost_hasher;
-        boost::crypt::sha1_hasher sha1_hasher;
-
-        std::memset(str, '\0', max_str_len);
-        std::memset(str_2, '\0', max_str_len);
-
-        const std::size_t current_str_len {str_len(rng)};
-        boost::crypt::generate_random_string(str, current_str_len);
-        boost::crypt::generate_random_string(str_2, current_str_len);
-
-        boost_hasher.process_bytes(str, current_str_len);
-        boost_hasher.process_bytes(str_2, current_str_len);
-        boost_hasher.process_byte(52); // "4"
-        unsigned char digest[20];
-        boost_hasher.get_digest(digest);
-
-        std::array<unsigned char, 20> uuid_res {};
-        for (std::size_t j {}; j < 20U; ++j)
-        {
-            uuid_res[j] = digest[j];
-        }
-
-        sha1_hasher.process_bytes(str, current_str_len);
-        sha1_hasher.process_bytes(str_2, current_str_len);
-        sha1_hasher.process_byte(52); // "4"
-        const auto crypt_res {sha1_hasher.get_digest()};
-
-        for (std::size_t j {}; j < crypt_res.size(); ++j)
-        {
-            if (!BOOST_TEST_EQ(uuid_res[j], crypt_res[j]))
-            {
-                // LCOV_EXCL_START
-                std::cerr << "Failure with string: " << str << std::endl;
-                break;
-                // LCOV_EXCL_STOP
-            }
-        }
-    }
-
-    delete[] str;
-    delete[] str_2;
-}
-
-template <typename T>
-void test_file(T filename, const std::array<std::uint16_t, 20>& res)
+void test_file(const std::string& filename, const std::array<std::uint16_t, 20>& res)
 {
     const auto crypt_res {boost::crypt::sha1_file(filename)};
 
     for (std::size_t j {}; j < crypt_res.size(); ++j)
     {
-        if (!BOOST_TEST_EQ(res[j], crypt_res[j]))
+        if (!BOOST_TEST(static_cast<std::byte>(res[j]) == crypt_res[j]))
         {
             // LCOV_EXCL_START
             std::cerr << "Failure with file: " << filename << std::endl;
@@ -288,8 +161,7 @@ void test_file(T filename, const std::array<std::uint16_t, 20>& res)
     }
 }
 
-template <typename T>
-void test_invalid_file(T filename)
+void test_invalid_file(const std::string& filename)
 {
     constexpr std::array<std::uint16_t, 20> res{};
 
@@ -297,7 +169,7 @@ void test_invalid_file(T filename)
 
     for (std::size_t j {}; j < crypt_res.size(); ++j)
     {
-        if (!BOOST_TEST_EQ(res[j], crypt_res[j]))
+        if (!BOOST_TEST(static_cast<std::byte>(res[j]) == static_cast<std::byte>(crypt_res[j])))
         {
             // LCOV_EXCL_START
             std::cerr << "Failure with file: " << filename << std::endl;
@@ -371,15 +243,10 @@ void files_test()
     #endif
 
     const auto invalid_filename = "broken.bin";
-    test_invalid_file(invalid_filename);
+    BOOST_TEST_THROWS(test_invalid_file(invalid_filename), std::runtime_error);
 
     const std::string str_invalid_filename {invalid_filename};
-    test_invalid_file(str_invalid_filename);
-
-    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
-    const std::string_view str_view_invalid_filename {str_invalid_filename};
-    test_invalid_file(str_view_invalid_filename);
-    #endif
+    BOOST_TEST_THROWS(test_invalid_file(str_invalid_filename), std::runtime_error);
 
     // On macOS 15
     // sha1 test_file_2.txt
@@ -388,102 +255,19 @@ void files_test()
                                                   0x47, 0x99, 0xb4, 0x7b, 0xd9, 0x25, 0x5a, 0xc9, 0xcb, 0x65};
 
     test_file(filename_2, res_2);
-
-    const char* test_null_file = nullptr;
-    test_invalid_file(test_null_file);
 }
 
-void test_invalid_state()
-{
-    boost::crypt::sha1_hasher hasher;
-    auto current_state = hasher.process_bytes("test", 4);
-    BOOST_TEST(current_state == boost::crypt::state::success);
-
-    hasher.get_digest();
-
-    const auto bad_state = hasher.process_bytes("test", 4);
-    BOOST_TEST(bad_state == boost::crypt::state::state_error);
-
-    const auto digest = hasher.get_digest();
-
-    for (const auto& val : digest)
-    {
-        BOOST_TEST_EQ(val, static_cast<std::uint8_t>(0));
-    }
-
-    hasher.init();
-
-    current_state = hasher.process_bytes("test", 4);
-    BOOST_TEST(current_state == boost::crypt::state::success);
-    const char* ptr = nullptr;
-    current_state = hasher.process_bytes(ptr, 4);
-    BOOST_TEST(current_state == boost::crypt::state::null);
-
-    const char16_t* ptr16 = nullptr;
-    current_state = hasher.process_bytes(ptr16, 4);
-    BOOST_TEST(current_state == boost::crypt::state::null);
-
-    const char32_t* ptr32 = nullptr;
-    current_state = hasher.process_bytes(ptr32, 4);
-    BOOST_TEST(current_state == boost::crypt::state::null);
-
-    const wchar_t* wptr = nullptr;
-    current_state = hasher.process_bytes(wptr, 4);
-    BOOST_TEST(current_state == boost::crypt::state::null);
-}
-
-// This ends up being completely calculated in a constexpr fashion so Codecov complains
-// LCOV_EXCL_START
-void test_span()
-{
-    #ifdef BOOST_CRYPT_HAS_SPAN
-
-    // "abc" in hex
-    const std::byte vals[] = {std::byte{0x61}, std::byte{0x62}, std::byte{0x63}};
-    std::span<const std::byte> byte_span {vals};
-    const auto expected_res = std::array<std::uint16_t, 20>{0xA9, 0x99, 0x3E, 0x36, 0x47, 0x06, 0x81, 0x6A, 0xBA, 0x3E,
-                                                            0x25, 0x71, 0x78, 0x50, 0xC2, 0x6C, 0x9C, 0xD0, 0xD8, 0x9D};
-    const auto res = boost::crypt::sha1(byte_span);
-
-    for (std::size_t i {}; i < res.size(); ++i)
-    {
-        BOOST_TEST_EQ(res[i], expected_res[i]);
-    }
-
-    #endif // BOOST_CRYPT_HAS_SPAN
-}
-// LCOV_EXCL_STOP
-*/
 int main()
 {
-    /*
     basic_tests();
     string_test();
     string_view_test();
-    bad_input();
-     */
     test_class();
-    /*
-    test_random_values<char>();
-    test_random_piecewise_values<char>();
-
-    test_random_values<char16_t>();
-    test_random_piecewise_values<char16_t>();
-
-    test_random_values<char32_t>();
-    test_random_piecewise_values<char32_t>();
-
-    test_random_values<wchar_t>();
-    test_random_piecewise_values<wchar_t>();
 
     // The Windows file system returns a different result than on UNIX platforms
     #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
     files_test();
     #endif
 
-    test_invalid_state();
-
-    test_span();
-    */
     return boost::report_errors();
 }
