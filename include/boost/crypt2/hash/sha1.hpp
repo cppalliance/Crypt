@@ -294,13 +294,9 @@ auto sha1_file_impl(detail::file_reader<block_size>& reader) -> sha1_hasher::ret
 
 } // namespace detail
 
-BOOST_CRYPT_EXPORT inline auto sha1_file(std::string_view filepath)
-{
-    detail::file_reader<64U> reader(filepath);
-    return detail::sha1_file_impl(reader);
-}
-
-BOOST_CRYPT_EXPORT inline auto sha1_file(std::filesystem::path filepath)
+template <typename T>
+BOOST_CRYPT_EXPORT inline auto sha1_file(const T& filepath)
+    requires std::is_convertible_v<T, std::string>
 {
     detail::file_reader<64U> reader(filepath);
     return detail::sha1_file_impl(reader);

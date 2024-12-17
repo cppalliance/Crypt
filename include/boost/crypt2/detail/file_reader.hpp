@@ -35,17 +35,14 @@ private:
     buffer_type buffer_{};
 
 public:
-    explicit file_reader(std::string_view filename)
+    template <typename T>
+    explicit file_reader(const T& filename)
+        requires std::is_convertible_v<T, std::string>
             : fd_(std::string{filename}, std::ios::binary | std::ios::in)
-    {
-        validate_file(filename);
-    }
-
-    explicit file_reader(const std::filesystem::path& filename)
-            : fd_(filename, std::ios::binary | std::ios::in)
-    {
-        validate_file(filename.string());
-    }
+        {
+            const std::string filename_str {filename};
+            validate_file(filename_str);
+        }
 
     // Rule of 5
     file_reader(const file_reader&) = delete;
