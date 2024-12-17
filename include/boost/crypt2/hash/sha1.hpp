@@ -265,6 +265,14 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED auto sha1(SizedRange&& data) noexcept
 
 namespace detail {
 
+// Error: the two-parameter std::span construction is unsafe as it can introduce mismatch between buffer size and the bound information [-Werror,-Wunsafe-buffer-usage-in-container]
+// Since this is the way the file streams report sizing information we must use it
+// If a bad read occurs an exception is thrown so there's little risk of a bad region
+#if defined(__clang__) && __clang_major__ >= 19
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+#endif
+
 template <std::size_t block_size = 64U>
 auto sha1_file_impl(detail::file_reader<block_size>& reader) -> sha1_hasher::return_type
 {
@@ -279,6 +287,10 @@ auto sha1_file_impl(detail::file_reader<block_size>& reader) -> sha1_hasher::ret
 
     return hasher.get_digest();
 }
+
+#if defined(__clang__) && __clang_major__ >= 19
+#pragma clang diagnostic pop
+#endif
 
 } // namespace detail
 
