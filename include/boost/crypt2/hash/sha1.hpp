@@ -25,7 +25,7 @@ private:
 
     friend class hash_detail::sha_1_2_hasher_base<20U, 5U>;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_message_block() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED constexpr auto process_message_block() noexcept -> void override;
 
 public:
 
@@ -243,6 +243,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto sha1_hasher::process_message_block() noex
 
     buffer_index_ = 0U;
 }
+
 
 
 } // Namespace boost::crypt
