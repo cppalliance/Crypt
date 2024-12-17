@@ -55,10 +55,8 @@ inline void runtime_memset_impl(std::span<std::byte> s)
 {
     #ifdef _WIN32
     SecureZeroMemory(s.data(), s.size());
-    #elif defined(BOOST_CRYPT_BUILD_MODULE)
-    std::memset(s.data(), 0x00, s.size_bytes());
     #else
-    memset_s(s.data(), s.size_bytes(), 0x00, s.size_bytes());
+    std::memset(s.data(), 0x00, s.size_bytes());
     #endif
 }
 
@@ -83,10 +81,8 @@ inline void generic_runtime_memset_func_impl(void* ptr, size_t size)
 {
     #ifdef _WIN32
     SecureZeroMemory(ptr, size);
-    #elif defined(BOOST_CRYPT_BUILD_MODULE)
-    std::memset(ptr, 0, size);
     #else
-    memset_s(ptr, size, 0, size);
+    std::memset(ptr, 0, size);
     #endif
 }
 
