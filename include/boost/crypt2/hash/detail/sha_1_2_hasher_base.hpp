@@ -105,7 +105,7 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED constexpr auto finalize() noexcept -> state;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
+    [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
     BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest(span<byte, digest_size> data) noexcept -> void;
 
     template <typename Range>
