@@ -3,7 +3,7 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/crypt/hash/sha1.hpp>
+#include <boost/crypt2/hash/sha1.hpp>
 #include "cuda_managed_ptr.hpp"
 #include "stopwatch.hpp"
 #include "generate_random_strings.hpp"
@@ -14,7 +14,7 @@
 
 #include <cuda_runtime.h>
 
-using digest_type = boost::crypt::array<boost::crypt::uint8_t, 20>;
+using digest_type = cuda::std::array<cuda::std::byte, 20>;
 
 // The kernel function
 __global__ void cuda_test(char** in, digest_type* out, int numElements)
@@ -23,7 +23,8 @@ __global__ void cuda_test(char** in, digest_type* out, int numElements)
 
     if (i < numElements)
     {
-        out[i] = boost::crypt::sha1(in[i]);
+        auto in_span {cuda::std::span(in[i], 64)};
+        out[i] = boost::crypt::sha1(in_span);
     }
 }
 
@@ -59,7 +60,7 @@ int main()
 
         // Launch the Vector Add CUDA Kernel
         int threadsPerBlock = 256;
-        int blocksPerGrid =(numElements + threadsPerBlock - 1) / threadsPerBlock;
+        int blocksPerGrid = (numElements + threadsPerBlock - 1) / threadsPerBlock;
         std::cout << "CUDA kernel launch with " << blocksPerGrid << " blocks of " << threadsPerBlock << " threads" << std::endl;
 
         watch w;
