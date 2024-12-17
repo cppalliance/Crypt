@@ -99,10 +99,6 @@ private:
 
 } // Namespace boost::crypt::detail
 
-#else
-
-#error "CUDA does not support reading from file"
-
 #endif // BOOST_CRYPT_HAS_CUDA
 
 #endif //BOOST_CRYPT_UTILITY_FILE_HPP
