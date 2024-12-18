@@ -82,6 +82,7 @@ jobs:
                 -DCUDA_PATH=/usr/local/cuda-12.6 \
                 -DCMAKE_VERBOSE_MAKEFILE=ON \
                 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+                -DCMAKE_CUDA_FLAGS="-std=c++20" \
                 .. \
                 --debug-output
 
