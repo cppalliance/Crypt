@@ -52,7 +52,7 @@ using std::forward;
 
 #else
 
-using cuda::std::size_t
+using cuda::std::size_t;
 using cuda::std::uint32_t;
 using cuda::std::array;
 using cuda::std::byte;
