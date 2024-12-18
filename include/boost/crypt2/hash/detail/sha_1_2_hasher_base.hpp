@@ -9,7 +9,7 @@
 #include <boost/crypt2/detail/clear_mem.hpp>
 #include <boost/crypt2/state.hpp>
 
-#ifndef BOOST_CRYPT_BUILD_MODULE
+#if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
 
 #include <span>
 #include <array>

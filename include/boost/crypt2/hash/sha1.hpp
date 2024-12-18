@@ -13,7 +13,7 @@
 #if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
 #include <bit>
 #include <cstdint>
-#else
+#elif defined(BOOST_CRYPT_HAS_CUDA)
 #include <cuda/std/bit>
 #include <cuda/std/cstdint>
 #endif
