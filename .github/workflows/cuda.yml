@@ -96,7 +96,7 @@ jobs:
       - name: Build tests
         run: |
           cd ../boost-root/__build__
-          cmake --build . --target tests -j $(nproc)
+          cmake --build . --target tests -j $(nproc) --verbose
 
       - name: Run tests
         run: |
