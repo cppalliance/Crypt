@@ -10,6 +10,7 @@
 #ifdef BOOST_CRYPT_HAS_CUDA
 
 #include <cuda/std/span>
+#include <cuda/std/array>
 // There is no real secure memset here
 namespace boost::crypt::detail {
 
@@ -22,6 +23,13 @@ void clear_mem(cuda::std::span<T> ptr)
     }
 }
 
+template <typename T>
+void clear_mem(T& arr)
+{
+    for (auto& byte : arr)
+    {
+        byte = static_cast<T>(0);
+    }
 }
 
 #else
