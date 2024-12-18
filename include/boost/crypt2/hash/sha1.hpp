@@ -48,7 +48,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1_hasher::init() noexcept -> void
 
 namespace sha1_detail {
 
-#ifndef BOOST_CRYPT_HAS_GPU
+#ifndef BOOST_CRYPT_HAS_CUDA
 using std::uint32_t;
 using std::rotl;
 using std::array;
