@@ -25,9 +25,9 @@
 #include <cuda/std/array>
 #include <cuda/std/cstdint>
 #include <cuda/std/cstddef>
+#include <cuda/std/type_traits>
 #include <cuda/std/concepts>
 #include <cuda/std/ranges>
-#include <cuda/std/type_traits>
 
 #endif
 
