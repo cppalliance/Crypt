@@ -15,6 +15,7 @@
 #include <array>
 #include <ranges>
 #include <algorithm>
+#include <type_traits>
 #include <cstdint>
 #include <cstddef>
 
@@ -26,6 +27,7 @@
 #include <cuda/std/cstddef>
 #include <cuda/std/concepts>
 #include <cuda/std/ranges>
+#include <cuda/std/type_traits>
 
 #endif
 
@@ -50,7 +52,7 @@ using std::forward;
 
 #else
 
-using size_t = unsigned long;
+using cuda::std::size_t
 using cuda::std::uint32_t;
 using cuda::std::array;
 using cuda::std::byte;
