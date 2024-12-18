@@ -128,16 +128,29 @@ auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&
 {
     using value_type = range_value_t<Range>;
 
-    auto data_span {span<value_type>(forward<Range>(data))};
+    #ifndef BOOST_CRYPT_HAS_CUDA
+    auto data_span {std::span<value_type>(std::forward<Range>(data))};
+    #else
+    auto data_span {cuda::std::span<value_type>(cuda::std::forward<Range>(data))};
+    #endif
 
     if (data_span.size() * sizeof(value_type) < digest_size) {
         return;
     }
 
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+    #endif
+
     get_digest_impl(span<byte, digest_size>(
             as_writable_bytes(data_span).data(),
             digest_size
     ));
+
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic pop
+    #endif
 }
 
 template <size_t digest_size, size_t intermediate_hash_size>
