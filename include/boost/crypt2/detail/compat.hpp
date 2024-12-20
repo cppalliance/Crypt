@@ -19,6 +19,7 @@
 #include <type_traits>
 #include <cstdint>
 #include <cstddef>
+#include <utility>
 
 namespace boost::crypt::compat {
     namespace detail = std;
@@ -33,6 +34,7 @@ namespace boost::crypt::compat {
 #include <cuda/std/type_traits>
 #include <cuda/std/concepts>
 #include <cuda/std/ranges>
+#include <cuda/std/utility>
 
 namespace boost::crypt::compat {
     namespace detail = cuda::std;
@@ -69,11 +71,32 @@ constexpr auto as_writable_bytes(span<T> s) noexcept
 }
 
 // Type traits
+template <typename T>
+inline constexpr bool is_trivially_copyable_v = detail::is_trivially_copyable_v<T>;
 
-// Concepts
+// Ranges concepts and utilities
+template <typename R>
+concept sized_range = detail::ranges::sized_range<R>;
+
+template <typename R, typename T>
+concept output_range = detail::ranges::output_range<R, T>;
+
+template <typename R>
+using range_value_t = detail::ranges::range_value_t<R>;
 
 // Utilities
-
+template <typename T>
+constexpr auto forward(detail::remove_reference_t<T>& t) noexcept -> T&&
+{
+    return detail::forward<T>(t);
 }
+
+template <typename T>
+constexpr auto forward(detail::remove_reference_t<T>&& t) noexcept -> T&&
+{
+    return detail::forward<T>(detail::move(t));
+}
+
+} // namespace boost::crypt::compat
 
 #endif // BOOST_CRYPT2_DETAIL_COMPAT_HPP
