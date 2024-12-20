@@ -10,12 +10,26 @@ if(HAVE_BOOST_TEST)
     if (BOOST_CRYPT_ENABLE_CUDA)
 
         message(STATUS "Building boost.crypt with CUDA")
-        find_package(CUDA REQUIRED)
         find_package(CUDAToolkit REQUIRED)
         enable_language(CUDA)
         set(CMAKE_CUDA_EXTENSIONS OFF)
+        set(CMAKE_CXX_STANDARD 20)
+        set(CMAKE_CXX_STANDARD_REQUIRED ON)
+        set(CMAKE_CXX_EXTENSIONS OFF)
 
-        boost_test_jamfile(FILE nvcc_jamfile LINK_LIBRARIES Boost::crypt ${CUDA_LIBRARIES} INCLUDE_DIRECTORIES ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} COMPILE_OPTIONS --expt-relaxed-constexpr -std=c++20 -Xcompiler -std=c++20 -MMD )
+        set(CMAKE_CUDA_STANDARD 20)
+        set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+        set(CMAKE_CUDA_EXTENSIONS OFF)
+
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+
+        boost_test_jamfile(
+                FILE nvcc_jamfile
+                LINK_LIBRARIES Boost::crypt CUDA::cudart
+                INCLUDE_DIRECTORIES ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+                COMPILE_OPTIONS
+                --expt-relaxed-constexpr  # Device code relaxed constexpr
+        )
 
     elseif (BOOST_CRYPT_ENABLE_NVRTC)
 
