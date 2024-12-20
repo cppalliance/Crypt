@@ -71,6 +71,9 @@ constexpr auto as_writable_bytes(span<T> s) noexcept
 }
 
 // Type traits
+using true_type = detail::true_type;
+using false_type = detail::false_type;
+
 template <typename T>
 inline constexpr bool is_trivially_copyable_v = detail::is_trivially_copyable_v<T>;
 
@@ -95,6 +98,58 @@ template <typename T>
 constexpr auto forward(detail::remove_reference_t<T>&& t) noexcept -> T&&
 {
     return detail::forward<T>(detail::move(t));
+}
+
+// Helper functions
+template<typename T>
+struct is_span : detail::false_type {};
+
+template<typename T, size_t Extent>
+struct is_span<detail::span<T, Extent>> : detail::true_type {};
+
+template<typename T, size_t Extent>
+struct is_span<const detail::span<T, Extent>> : detail::true_type {};
+
+// Helper variable template
+template<typename T>
+inline constexpr bool is_span_v = is_span<T>::value;
+
+// Add remove_cvref type trait if not available
+template<typename T>
+using remove_cvref_t = detail::remove_cv_t<detail::remove_reference_t<T>>;
+
+template <typename R>
+constexpr auto make_span(R&& r)
+{
+    if constexpr (is_span_v<detail::remove_cvref_t<R>>)
+    {
+        return detail::forward<R>(r);
+    }
+    else
+    {
+        #ifdef BOOST_CRYPT_HAS_CUDA
+        return cuda::std::span(detail::forward<R>(r));
+        #else
+        return std::span(detail::forward<R>(r));
+        #endif
+    }
+}
+
+template <typename R>
+constexpr auto make_span(R& r)
+{
+    if constexpr (is_span_v<detail::remove_cvref_t<R>>)
+    {
+        return r;
+    }
+    else
+    {
+        #ifdef BOOST_CRYPT_HAS_CUDA
+        return cuda::std::span(r);
+        #else
+        return std::span(r);
+        #endif
+    }
 }
 
 } // namespace boost::crypt::compat
