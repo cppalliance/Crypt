@@ -6,72 +6,17 @@
 #define BOOST_CRYPT_HASH_DETAIL_SHA_1_2_HASHER_BASE_HPP
 
 #include <boost/crypt2/detail/config.hpp>
+#include <boost/crypt2/detail/compat.hpp>
 #include <boost/crypt2/detail/clear_mem.hpp>
 #include <boost/crypt2/state.hpp>
 
-#if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
-
-#include <span>
-#include <array>
-#include <ranges>
-#include <algorithm>
-#include <type_traits>
-#include <cstdint>
-#include <cstddef>
-
-#elif defined(BOOST_CRYPT_HAS_CUDA)
-
-#include <cuda/std/span>
-#include <cuda/std/array>
-#include <cuda/std/cstdint>
-#include <cuda/std/cstddef>
-#include <cuda/std/type_traits>
-#include <cuda/std/concepts>
-#include <cuda/std/ranges>
-
-#endif
-
 namespace boost::crypt::hash_detail {
 
-// We need to inject these for ADL,
-// and make it trivial to switch between CUDA and regular modes
-#ifndef BOOST_CRYPT_HAS_CUDA
-
-using std::size_t;
-using std::uint32_t;
-using std::array;
-using std::byte;
-using std::span;
-using std::ranges::sized_range;
-using std::ranges::output_range;
-using std::ranges::range_value_t;
-using std::is_trivially_copyable_v;
-using std::as_bytes;
-using std::as_writable_bytes;
-using std::forward;
-
-#else
-
-using cuda::std::size_t;
-using cuda::std::uint32_t;
-using cuda::std::array;
-using cuda::std::byte;
-using cuda::std::span;
-using cuda::std::ranges::sized_range;
-using cuda::std::ranges::output_range;
-using cuda::std::ranges::range_value_t;
-using cuda::std::is_trivially_copyable_v;
-using cuda::std::as_bytes;
-using cuda::std::as_writable_bytes;
-using cuda::std::forward;
-
-#endif
-
-template <size_t digest_size, size_t intermediate_hash_size>
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 class sha_1_2_hasher_base
 {
 public:
-    static constexpr size_t block_size {64U};
+    static constexpr compat::size_t block_size {64U};
 
 protected:
 
@@ -80,61 +25,58 @@ protected:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto pad_message() noexcept -> void;
 
-    array<uint32_t, intermediate_hash_size> intermediate_hash_ {};
-    array<byte, block_size> buffer_ {};
-    size_t buffer_index_ {};
-    size_t low_ {};
-    size_t high_ {};
+    compat::array<compat::uint32_t, intermediate_hash_size> intermediate_hash_ {};
+    compat::array<compat::byte, block_size> buffer_ {};
+    compat::size_t buffer_index_ {};
+    compat::size_t low_ {};
+    compat::size_t high_ {};
     bool computed_ {};
     bool corrupted_ {};
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(span<const byte> data) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest_impl(span<byte, digest_size> data);
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest_impl(compat::span<compat::byte, digest_size> data);
 
 public:
 
-    using return_type = array<byte, digest_size>;
+    using return_type = compat::array<compat::byte, digest_size>;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_1_2_hasher_base() noexcept { base_init(); }
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha_1_2_hasher_base() noexcept { destroy(); }
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(span<const byte> data) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
 
-    template <sized_range Range>
+    template <compat::sized_range Range>
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(Range&& data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 
     [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() noexcept -> return_type;
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(span<byte, digest_size> data) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte, digest_size> data) noexcept -> void;
 
     template <typename Range>
     BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) noexcept -> void
-        requires output_range<Range, range_value_t<Range>> &&
-                 sized_range<Range> &&
-                 is_trivially_copyable_v<range_value_t<Range>>;
+        requires compat::output_range<Range, compat::range_value_t<Range>> &&
+                 compat::sized_range<Range> &&
+                 compat::is_trivially_copyable_v<compat::range_value_t<Range>>;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto base_init() noexcept -> void;
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto destroy() noexcept -> void;
 };
 
-template <size_t digest_size, size_t intermediate_hash_size>
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 template <typename Range>
 auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&& data) noexcept -> void
-    requires output_range<Range, range_value_t<Range>> &&
-             sized_range<Range> &&
-             is_trivially_copyable_v<range_value_t<Range>>
+    requires compat::output_range<Range, compat::range_value_t<Range>> &&
+             compat::sized_range<Range> &&
+             compat::is_trivially_copyable_v<compat::range_value_t<Range>>
 {
-    using value_type = range_value_t<Range>;
+    using value_type = compat::range_value_t<Range>;
 
-    #ifndef BOOST_CRYPT_HAS_CUDA
-    auto data_span {std::span<value_type>(std::forward<Range>(data))};
-    #else
-    auto data_span {cuda::std::span<value_type>(cuda::std::forward<Range>(data))};
-    #endif
+    auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
 
-    if (data_span.size() * sizeof(value_type) < digest_size) {
+    if (data_span.size() * sizeof(value_type) < digest_size)
+    {
         return;
     }
 
@@ -143,8 +85,8 @@ auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&
     #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
     #endif
 
-    get_digest_impl(span<byte, digest_size>(
-            as_writable_bytes(data_span).data(),
+    get_digest_impl(compat::span<compat::byte, digest_size>(
+            compat::as_writable_bytes(data_span).data(),
             digest_size
     ));
 
@@ -153,8 +95,8 @@ auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&
     #endif
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest_impl(span<byte, digest_size> data)
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest_impl(compat::span<compat::byte, digest_size> data)
 {
     if (corrupted_)
     {
@@ -167,20 +109,20 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
 
     for (size_t i {}; i < data.size(); ++i)
     {
-        data[i] = static_cast<byte>(intermediate_hash_[i >> 2U] >> 8U * (3U - (i & 0x03U)));
+        data[i] = static_cast<compat::byte>(intermediate_hash_[i >> 2U] >> 8U * (3U - (i & 0x03U)));
     }
 
     return data;
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
-sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(span<byte, digest_size> data) noexcept -> void
+sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(compat::span<compat::byte, digest_size> data) noexcept -> void
 {
     get_digest_impl(data);
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
 sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept -> sha_1_2_hasher_base::return_type
 {
@@ -189,7 +131,7 @@ sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept 
     return digest;
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::finalize() noexcept -> state
 {
     if (corrupted_)
@@ -211,75 +153,68 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
     return state::success;
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::pad_message() noexcept -> void
 {
     // 448 bits out of 512
-    constexpr size_t message_length_start_index {56U};
+    constexpr compat::size_t message_length_start_index {56U};
 
     // We don't have enough space for everything we need
     if (buffer_index_ >= message_length_start_index)
     {
-        buffer_[buffer_index_++] = static_cast<byte>(0x80);
+        buffer_[buffer_index_++] = static_cast<compat::byte>(0x80);
         while (buffer_index_ < buffer_.size())
         {
-            buffer_[buffer_index_++] = static_cast<byte>(0x00);
+            buffer_[buffer_index_++] = static_cast<compat::byte>(0x00);
         }
 
         process_message_block();
 
         while (buffer_index_ < message_length_start_index)
         {
-            buffer_[buffer_index_++] = static_cast<byte>(0x00);
+            buffer_[buffer_index_++] = static_cast<compat::byte>(0x00);
         }
     }
     else
     {
-        buffer_[buffer_index_++] = static_cast<byte>(0x80);
+        buffer_[buffer_index_++] = static_cast<compat::byte>(0x80);
         while (buffer_index_ < message_length_start_index)
         {
-            buffer_[buffer_index_++] = static_cast<byte>(0x00);
+            buffer_[buffer_index_++] = static_cast<compat::byte>(0x00);
         }
     }
 
     // Add the message length to the end of the buffer
     // BOOST_CRYPT_ASSERT(buffer_index_ == message_length_start_index);
 
-    buffer_[56U] = static_cast<byte>(high_ >> 24U);
-    buffer_[57U] = static_cast<byte>(high_ >> 16U);
-    buffer_[58U] = static_cast<byte>(high_ >>  8U);
-    buffer_[59U] = static_cast<byte>(high_);
-    buffer_[60U] = static_cast<byte>(low_ >> 24U);
-    buffer_[61U] = static_cast<byte>(low_ >> 16U);
-    buffer_[62U] = static_cast<byte>(low_ >>  8U);
-    buffer_[63U] = static_cast<byte>(low_);
+    buffer_[56U] = static_cast<compat::byte>(high_ >> 24U);
+    buffer_[57U] = static_cast<compat::byte>(high_ >> 16U);
+    buffer_[58U] = static_cast<compat::byte>(high_ >>  8U);
+    buffer_[59U] = static_cast<compat::byte>(high_);
+    buffer_[60U] = static_cast<compat::byte>(low_ >> 24U);
+    buffer_[61U] = static_cast<compat::byte>(low_ >> 16U);
+    buffer_[62U] = static_cast<compat::byte>(low_ >>  8U);
+    buffer_[63U] = static_cast<compat::byte>(low_);
 
     process_message_block();
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
-template <sized_range SizedRange>
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
+template <compat::sized_range SizedRange>
 auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(SizedRange&& data) noexcept -> state
 {
-    // Clang warns -Wunqualified-std-cast-call with just the using statement
-    // so we must change context this way
-    #ifndef BOOST_CRYPT_HAS_CUDA
-    auto data_span {span(std::forward<SizedRange>(data))};
-    #else
-    auto data_span {span(cuda::std::forward<SizedRange>(data))};
-    #endif
-
-    return update(as_bytes(data_span));
+    auto data_span {compat::make_span(compat::forward<SizedRange>(data))};
+    return update(compat::as_bytes(data_span));
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(span<const byte> data) noexcept -> state
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(compat::span<const compat::byte> data) noexcept -> state
 {
     return update(data);
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(span<const byte> data) noexcept -> state
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(compat::span<const compat::byte> data) noexcept -> state
 {
     if (data.empty())
     {
@@ -322,7 +257,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
     return state::success;
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::destroy() noexcept -> void
 {
     using boost::crypt::detail::clear_mem;
@@ -336,11 +271,11 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
     corrupted_ = false;
 }
 
-template <size_t digest_size, size_t intermediate_hash_size>
+template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::base_init() noexcept -> void
 {
     intermediate_hash_.fill(0U);
-    buffer_.fill(static_cast<byte>(0));
+    buffer_.fill(static_cast<compat::byte>(0));
     buffer_index_ = 0U;
     low_ = 0U;
     high_ = 0U;
