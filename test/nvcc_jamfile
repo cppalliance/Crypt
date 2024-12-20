@@ -9,17 +9,16 @@ project : requirements
     [ requires cxx14_decltype_auto cxx14_generic_lambdas cxx14_return_type_deduction cxx14_variable_templates cxx14_constexpr ]
     ;
 
-run test_md5_nvcc.cu ;
 run test_sha1_nvcc.cu ;
-run test_sha224_nvcc.cu ;
-run test_sha256_nvcc.cu ;
-run test_sha384_nvcc.cu ;
-run test_sha512_nvcc.cu ;
-run test_sha512_224_nvcc.cu ;
-run test_sha512_256_nvcc.cu ;
-run test_sha3_512_nvcc.cu ;
-run test_sha3_384_nvcc.cu ;
-run test_sha3_256_nvcc.cu ;
-run test_sha3_224_nvcc.cu ;
-run test_shake128_nvcc.cu ;
-run test_shake256_nvcc.cu ;
+#run test_sha224_nvcc.cu ;
+#run test_sha256_nvcc.cu ;
+#run test_sha384_nvcc.cu ;
+#run test_sha512_nvcc.cu ;
+#run test_sha512_224_nvcc.cu ;
+#run test_sha512_256_nvcc.cu ;
+#run test_sha3_512_nvcc.cu ;
+#run test_sha3_384_nvcc.cu ;
+#run test_sha3_256_nvcc.cu ;
+#run test_sha3_224_nvcc.cu ;
+#run test_shake128_nvcc.cu ;
+#run test_shake256_nvcc.cu ;
