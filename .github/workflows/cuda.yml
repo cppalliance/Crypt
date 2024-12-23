@@ -41,21 +41,26 @@ jobs:
           echo "LD_LIBRARY_PATH=/usr/local/cuda-12.6/lib64:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           echo "CUDA_PATH=/usr/local/cuda-12.6" >> $GITHUB_ENV
 
+      # See: https://apt.kitware.com/
       - name: Install CMake from Kitware apt
         run: |
-          sudo rm -f /etc/apt/sources.list.d/kitware.list
-          sudo rm -f /etc/apt/keyrings/kitware-archive-keyring.gpg
-          
+         
           sudo apt-get update
-          sudo apt-get install -y ca-certificates gnupg wget
+          sudo apt-get install -y ca-certificates gpg gnupg wget
           
-          sudo mkdir -p /etc/apt/keyrings
+          test -f /usr/share/doc/kitware-archive-keyring/copyright ||
+          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
           
-          # Download and add the Kitware signing key
-          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+          echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ jammy main' | sudo tee /etc/apt/sources.list.d/kitware.list >/dev/null
+          sudo apt-get update
           
-          # Add the repository
-          echo "deb [signed-by=/etc/apt/trusted.gpg.d/kitware.gpg] https://apt.kitware.com/ubuntu/ jammy main" | sudo tee /etc/apt/sources.list.d/kitware.list
+          test -f /usr/share/doc/kitware-archive-keyring/copyright ||
+          sudo rm /usr/share/keyrings/kitware-archive-keyring.gpg
+          
+          sudo apt-get install -y kitware-archive-keyring
+          
+          echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ jammy-rc main' | sudo tee -a /etc/apt/sources.list.d/kitware.list >/dev/null
+          sudo apt-get update
           
           sudo apt-get update
           sudo apt-get install -y cmake
