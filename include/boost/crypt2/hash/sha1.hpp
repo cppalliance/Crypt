@@ -71,7 +71,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round2(compat::uint32_t& A,
                                               compat::uint32_t& E,
                                               compat::uint32_t  W)
 {
-    const auto temp {compat::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0x6ED9EBA1U};
+    const auto temp {compat::rotl(A, 5) + (B ^ C ^ D) + E + W + 0x6ED9EBA1U};
     E = D;
     D = C;
     C = compat::rotl(B, 30);
@@ -86,7 +86,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round3(compat::uint32_t& A,
                                               compat::uint32_t& E,
                                               compat::uint32_t  W)
 {
-    const auto temp {compat::rotl(A, 5U) + ((B & C) | (B & D) | (C & D)) + E + W + 0x8F1BBCDCU};
+    const auto temp {compat::rotl(A, 5) + ((B & C) | (B & D) | (C & D)) + E + W + 0x8F1BBCDCU};
     E = D;
     D = C;
     C = compat::rotl(B, 30);
@@ -101,7 +101,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round4(compat::uint32_t& A,
                                               compat::uint32_t& E,
                                               compat::uint32_t  W)
 {
-    const auto temp {compat::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0xCA62C1D6U};
+    const auto temp {compat::rotl(A, 5) + (B ^ C ^ D) + E + W + 0xCA62C1D6U};
     E = D;
     D = C;
     C = compat::rotl(B, 30);
