@@ -110,15 +110,15 @@ inline void generic_runtime_memset_func_impl(void* ptr, size_t size)
 inline volatile generic_meset_t generic_runtime_memset_func = generic_runtime_memset_func_impl;
 
 template <typename T>
-constexpr void clear_mem(std::span<T> data)
+constexpr void clear_mem(T& data)
 {
     if (std::is_constant_evaluated())
     {
-        std::fill(data.begin(), data.end(), 0);
+        std::fill(data.begin(), data.end(), static_cast<typename T::value_type>(0));
     }
     else
     {
-        generic_runtime_memset_func_impl(data.data(), data.size_bytes());
+        generic_runtime_memset_func_impl(data.data(), data.size());
     }
 }
 
