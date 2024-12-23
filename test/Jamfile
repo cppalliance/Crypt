@@ -36,6 +36,7 @@ project : requirements
   <toolset>clang:<cxxflags>-Wold-style-cast
   <toolset>clang:<cxxflags>-Wfloat-equal
   <toolset>clang-19:<cxxflags>-Wunsafe-buffer-usage
+  <toolset>clang-20:<cxxflags>-Wunsafe-buffer-usage
 
   <toolset>msvc:<warnings-as-errors>on
   <toolset>clang:<warnings-as-errors>on
