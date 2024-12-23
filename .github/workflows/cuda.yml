@@ -29,7 +29,7 @@ jobs:
 
       - name: Install Packages
         run: |
-          sudo apt-get install -y cmake make wget
+          sudo apt-get install -y wget
 
       - name: Install CUDA
         run: |
@@ -40,6 +40,40 @@ jobs:
           echo "PATH=/usr/local/cuda-12.6/bin:${PATH}" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=/usr/local/cuda-12.6/lib64:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           echo "CUDA_PATH=/usr/local/cuda-12.6" >> $GITHUB_ENV
+
+      - name: Install CMake from Kitware apt
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/kitware.list
+          sudo rm -f /etc/apt/keyrings/kitware-archive-keyring.gpg
+          
+          sudo apt-get update
+          sudo apt-get install -y ca-certificates gnupg wget dirmngr
+          
+          sudo mkdir -p /etc/apt/keyrings
+          
+          wget -O /tmp/kitware-archive-latest.asc https://apt.kitware.com/keys/kitware-archive-latest.asc
+          echo "Showing downloaded key file:"
+          gpg --show-keys /tmp/kitware-archive-latest.asc
+          
+          sudo gpg --dearmor /tmp/kitware-archive-latest.asc \
+            | sudo tee /etc/apt/keyrings/kitware-archive-keyring.gpg >/dev/null
+          
+          sudo sh -c 'echo "deb [signed-by=/etc/apt/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ jammy main" > /etc/apt/sources.list.d/kitware.list'
+          
+          # Attempt an update
+          sudo apt-get update || true  # might fail due to key issues
+          
+          # Force-add the key if needed
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1A127079A92F09ED || true
+          
+          sudo apt-get update
+          sudo apt-get install -y kitware-archive-keyring
+          sudo apt-get update
+          
+          sudo apt-get install -y cmake
+
+      - name: Check CMake
+        run: cmake --version
 
       - name: Setup Boost
         run: |
