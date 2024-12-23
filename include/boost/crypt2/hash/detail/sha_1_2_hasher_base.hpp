@@ -260,10 +260,8 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::destroy() noexcept -> void
 {
-    using boost::crypt::detail::clear_mem;
-
     intermediate_hash_.fill(0U);
-    clear_mem(buffer_);
+    detail::clear_mem(buffer_);
     buffer_index_ = 0U;
     low_ = 0U;
     high_ = 0U;
