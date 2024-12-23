@@ -32,7 +32,8 @@ jobs:
 
       - name: Install Packages
         run: |
-          sudo apt-get install -y wget cmake git python3 build-essential
+          apt-get update
+          apt-get install -y wget cmake git python3 build-essential
 
       - name: Setup Boost
         run: |
