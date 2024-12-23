@@ -3,6 +3,7 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <cuda_runtime.h>
 #include <boost/crypt2/hash/sha1.hpp>
 #include "cuda_managed_ptr.hpp"
 #include "stopwatch.hpp"
@@ -11,8 +12,7 @@
 #include <iomanip>
 #include <exception>
 #include <memory>
-
-#include <cuda_runtime.h>
+#include <span>
 
 using digest_type = cuda::std::array<cuda::std::byte, 20>;
 
@@ -81,7 +81,8 @@ int main()
         w.reset();
         for(int i = 0; i < numElements; ++i)
         {
-           results.emplace_back(boost::crypt::sha1(input_vector1[i]));
+           std::span<char> in(input_vector1[i], elementSize);
+           results.emplace_back(boost::crypt::sha1(in));
         }
         double t = w.elapsed();
 
