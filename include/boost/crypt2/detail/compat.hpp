@@ -225,10 +225,21 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto make_span(R& r)
 template <typename T>
 BOOST_CRYPT_GPU_ENABLED constexpr auto rotl(T val, int shift) noexcept
 {
+    // Some clangs incorrectly warn on shift being an int instead of an unsigned int
+    // C++ standard says shift is to be int
+    #ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wsign-conversion"
+    #endif
+
     #ifdef BOOST_CRYPT_HAS_CUDA
     return cuda::std::rotl(val, shift);
     #else
     return std::rotl(val, shift);
+    #endif
+
+    #ifdef __clang__
+    #pragma clang diagnostic pop
     #endif
 }
 
