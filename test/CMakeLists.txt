@@ -20,7 +20,7 @@ if(HAVE_BOOST_TEST)
         message(STATUS "Building boost.crypt tests without CUDA")
 
         boost_test_jamfile(
-                FILE jamfile
+                FILE Jamfile
                 LINK_LIBRARIES Boost::crypt Boost::core
         )
     endif()

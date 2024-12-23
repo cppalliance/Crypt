@@ -85,13 +85,6 @@ jobs:
                 .. \
                 --debug-output
 
-      - name: Display CMake Logs
-        if: failure()
-        run: |
-          cd ../boost-root/__build__
-          cat CMakeFiles/CMakeOutput.log
-          cat CMakeFiles/CMakeError.log
-
       - name: Build tests
         run: |
           cd ../boost-root/__build__
