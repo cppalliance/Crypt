@@ -163,20 +163,11 @@ void test_file(const std::string& filename, const std::array<std::uint16_t, 20>&
 
 void test_invalid_file(const std::string& filename)
 {
-    constexpr std::array<std::uint16_t, 20> res{};
+    constexpr std::array<std::byte, 20> res{};
 
     const auto crypt_res {boost::crypt::sha1_file(filename)};
 
-    for (std::size_t j {}; j < crypt_res.size(); ++j)
-    {
-        if (!BOOST_TEST(static_cast<std::byte>(res[j]) == static_cast<std::byte>(crypt_res[j])))
-        {
-            // LCOV_EXCL_START
-            std::cerr << "Failure with file: " << filename << std::endl;
-            break;
-            // LCOV_EXCL_STOP
-        }
-    }
+    BOOST_TEST(res == crypt_res);
 }
 
 void files_test()
