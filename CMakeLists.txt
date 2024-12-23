@@ -18,8 +18,13 @@ if(BOOST_CRYPT_ENABLE_CUDA)
 
     enable_language(CUDA)
 
-    set(CMAKE_CUDA_STANDARD 20)
+    # Let CMake think we want "CUDA17" so it won't fail:
+    set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+
+    # But actually pass C++20 to NVCC:
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --std=c++20")
+
     set(CMAKE_CUDA_EXTENSIONS OFF)
 
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
