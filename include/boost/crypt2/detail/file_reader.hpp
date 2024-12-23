@@ -55,14 +55,14 @@ public:
     {
         if (!fd_.good())
         {
-            throw std::runtime_error("Attempt to read from invalid file stream");
+            throw std::runtime_error("Attempt to read from invalid file stream"); // LCOV_EXCL_LINE
         }
 
         fd_.read(reinterpret_cast<char*>(buffer_.data()), block_size);
 
         if (fd_.bad())
         {
-            throw std::runtime_error("Error occurred while reading file");
+            throw std::runtime_error("Error occurred while reading file"); // LCOV_EXCL_LINE
         }
 
         return buffer_.begin();
@@ -92,7 +92,7 @@ private:
         }
         if (!fd_.good())
         {
-            throw std::runtime_error(std::string{"File stream not valid after opening: "} + std::string{filename});
+            throw std::runtime_error(std::string{"File stream not valid after opening: "} + std::string{filename}); // LCOV_EXCL_LINE
         }
     }
 };
