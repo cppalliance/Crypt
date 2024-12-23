@@ -223,7 +223,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto make_span(R& r)
 
 // bit
 template <typename T>
-BOOST_CRYPT_GPU_ENABLED constexpr auto rotl(T val, T shift) noexcept
+BOOST_CRYPT_GPU_ENABLED constexpr auto rotl(T val, int shift) noexcept
 {
     #ifdef BOOST_CRYPT_HAS_CUDA
     return cuda::std::rotl(val, shift);
