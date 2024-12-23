@@ -9,6 +9,7 @@
 
 #include <boost/crypt2/hash/detail/sha_1_2_hasher_base.hpp>
 #include <boost/crypt2/detail/file_reader.hpp>
+#include <boost/crypt2/detail/compat.hpp>
 
 #if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
 #include <bit>
@@ -48,72 +49,62 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1_hasher::init() noexcept -> void
 
 namespace sha1_detail {
 
-#ifndef BOOST_CRYPT_HAS_CUDA
-using std::uint32_t;
-using std::rotl;
-using std::array;
-#else
-using cuda::std::uint32_t;
-using cuda::std::rotl;
-using cuda::std::array;
-#endif
-
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round1(uint32_t& A,
-                                              uint32_t& B,
-                                              uint32_t& C,
-                                              uint32_t& D,
-                                              uint32_t& E,
-                                              uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round1(compat::uint32_t& A,
+                                              compat::uint32_t& B,
+                                              compat::uint32_t& C,
+                                              compat::uint32_t& D,
+                                              compat::uint32_t& E,
+                                              compat::uint32_t  W)
 {
-    const auto temp {rotl(A, 5U) + ((B & C) | ((~B) & D)) + E + W + 0x5A827999U};
+    const auto temp {compat::rotl(A, 5U) + ((B & C) | ((~B) & D)) + E + W + 0x5A827999U};
     E = D;
     D = C;
-    C = rotl(B, 30U);
+    C = compat::rotl(B, 30U);
     B = A;
     A = temp;
 }
 
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round2(uint32_t& A,
-                                              uint32_t& B,
-                                              uint32_t& C,
-                                              uint32_t& D,
-                                              uint32_t& E,
-                                              uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round2(compat::uint32_t& A,
+                                              compat::uint32_t& B,
+                                              compat::uint32_t& C,
+                                              compat::uint32_t& D,
+                                              compat::uint32_t& E,
+                                              compat::uint32_t  W)
 {
-    const auto temp {rotl(A, 5U) + (B ^ C ^ D) + E + W + 0x6ED9EBA1U};
+    const auto temp {compat::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0x6ED9EBA1U};
     E = D;
     D = C;
-    C = rotl(B, 30U);
+    C = compat::rotl(B, 30U);
     B = A;
     A = temp;
 }
 
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round3(uint32_t& A,
-                                              uint32_t& B,
-                                              uint32_t& C,
-                                              uint32_t& D,
-                                              uint32_t& E,
-                                              uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round3(compat::uint32_t& A,
+                                              compat::uint32_t& B,
+                                              compat::uint32_t& C,
+                                              compat::uint32_t& D,
+                                              compat::uint32_t& E,
+                                              compat::uint32_t  W)
 {
-    const auto temp {rotl(A, 5U) + ((B & C) | (B & D) | (C & D)) + E + W + 0x8F1BBCDCU};
+    const auto temp {compat::rotl(A, 5U) + ((B & C) | (B & D) | (C & D)) + E + W + 0x8F1BBCDCU};
     E = D;
     D = C;
-    C = rotl(B, 30U);
+    C = compat::rotl(B, 30U);
     B = A;
     A = temp;
 }
 
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round4(uint32_t& A,
-                                              uint32_t& B,
-                                              uint32_t& C,
-                                              uint32_t& D,
-                                              uint32_t& E,
-                                              uint32_t  W)
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto round4(compat::uint32_t& A,
+                                              compat::uint32_t& B,
+                                              compat::uint32_t& C,
+                                              compat::uint32_t& D,
+                                              compat::uint32_t& E,
+                                              compat::uint32_t  W)
 {
-    const auto temp {rotl(A, 5U) + (B ^ C ^ D) + E + W + 0xCA62C1D6U};
+    const auto temp {compat::rotl(A, 5U) + (B ^ C ^ D) + E + W + 0xCA62C1D6U};
     E = D;
     D = C;
-    C = rotl(B, 30U);
+    C = compat::rotl(B, 30U);
     B = A;
     A = temp;
 }
@@ -125,21 +116,21 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1_hasher::process_message_block() noex
 {
     using namespace sha1_detail;
 
-    array<uint32_t, 80> W {};
+    compat::array<compat::uint32_t, 80> W {};
 
     // Init the first 16 words of W
-    for (size_t i {}; i < 16UL; ++i)
+    for (compat::size_t i {}; i < 16UL; ++i)
     {
-        W[i] = (static_cast<uint32_t>(buffer_[i * 4U]) << 24U) |
-               (static_cast<uint32_t>(buffer_[i * 4U + 1U]) << 16U) |
-               (static_cast<uint32_t>(buffer_[i * 4U + 2U]) << 8U) |
-               (static_cast<uint32_t>(buffer_[i * 4U + 3U]));
+        W[i] = (static_cast<compat::uint32_t>(buffer_[i * 4U]) << 24U) |
+               (static_cast<compat::uint32_t>(buffer_[i * 4U + 1U]) << 16U) |
+               (static_cast<compat::uint32_t>(buffer_[i * 4U + 2U]) << 8U) |
+               (static_cast<compat::uint32_t>(buffer_[i * 4U + 3U]));
 
     }
 
-    for (size_t i {16U}; i < W.size(); ++i)
+    for (compat::size_t i {16U}; i < W.size(); ++i)
     {
-        W[i] = rotl(W[i - 3U] ^ W[i - 8U] ^ W[i - 14] ^ W[i - 16], 1U);
+        W[i] = compat::rotl(W[i - 3U] ^ W[i - 8U] ^ W[i - 14] ^ W[i - 16], 1U);
     }
 
     auto A {intermediate_hash_[0]};
