@@ -59,9 +59,21 @@ inline constexpr memset_span_t default_memset = [](std::span<std::byte> s) const
 };
 
 // Define the runtime function separately with external linkage
+//
+// I am unaware of any other way to accomplish this under safe buffer,
+// so we ignore the warning
 inline void runtime_memset_impl(std::span<std::byte> s)
 {
+    #if defined(__clang__) && __clang_major__ >= 20
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-libc-call"
+    #endif
+
     std::memset(s.data(), 0x00, s.size_bytes());
+
+    #if defined(__clang__) && __clang_major__ >= 20
+    #pragma clang diagnostic pop
+    #endif
 }
 
 // Now use the named function instead of lambda
@@ -83,7 +95,16 @@ using generic_meset_t = void(*)(void*, size_t);
 
 inline void generic_runtime_memset_func_impl(void* ptr, size_t size)
 {
+    #if defined(__clang__) && __clang_major__ >= 20
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-libc-call"
+    #endif
+
     std::memset(ptr, 0, size);
+
+    #if defined(__clang__) && __clang_major__ >= 20
+    #pragma clang diagnostic pop
+    #endif
 }
 
 inline volatile generic_meset_t generic_runtime_memset_func = generic_runtime_memset_func_impl;
