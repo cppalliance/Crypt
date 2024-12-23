@@ -20,7 +20,7 @@ BOOST_CRYPT_GPU_ENABLED void clear_mem(cuda::std::span<T> ptr)
 {
     for (auto& byte : ptr)
     {
-        byte = cuda::std::byte{};
+        byte = typename T::value_type{};
     }
 }
 
@@ -29,7 +29,7 @@ BOOST_CRYPT_GPU_ENABLED void clear_mem(T& arr)
 {
     for (auto& byte : arr)
     {
-        byte = cuda::std::byte{};
+        byte = typename T::value_type{};
     }
 }
 
