@@ -51,6 +51,7 @@ BOOST_CRYPT_GPU_ENABLED void clear_mem(T& arr)
 
 namespace boost::crypt::detail {
 
+/*
 using memset_span_t = void(*)(std::span<std::byte>);
 
 inline constexpr memset_span_t default_memset = [](std::span<std::byte> s) constexpr
@@ -90,6 +91,7 @@ constexpr void clear_mem(std::span<std::byte> data)
         runtime_memset_func(data);
     }
 }
+*/
 
 using generic_meset_t = void(*)(void*, size_t);
 

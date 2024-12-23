@@ -125,6 +125,7 @@ void test_class()
 
     for (const auto& test_value : test_values)
     {
+        hasher.init();
         const auto msg {std::get<0>(test_value)};
         hasher.process_bytes(msg);
         const auto message_result {hasher.get_digest()};
@@ -140,9 +141,11 @@ void test_class()
                 // LCOV_EXCL_STOP
             }
         }
-
-        hasher.init();
     }
+
+    const std::string bad_update_msg {"bad"};
+    BOOST_TEST(hasher.process_bytes(bad_update_msg) == boost::crypt::state::state_error);
+    BOOST_TEST(hasher.get_digest() == boost::crypt::sha1_hasher::return_type{});
 }
 
 void test_file(const std::string& filename, const std::array<std::uint16_t, 20>& res)
