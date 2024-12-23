@@ -6,6 +6,7 @@
 #define BOOST_CRYPT_DETAIL_SECURE_MEMSET_HPP
 
 #include <boost/crypt2/detail/config.hpp>
+#include <boost/crypt2/detail/compat.hpp>
 
 #ifdef BOOST_CRYPT_HAS_CUDA
 
@@ -15,22 +16,24 @@
 namespace boost::crypt::detail {
 
 template <typename T>
-void clear_mem(cuda::std::span<T> ptr)
+BOOST_CRYPT_GPU_ENABLED void clear_mem(cuda::std::span<T> ptr)
 {
     for (auto& byte : ptr)
     {
-        byte = static_cast<T>(0);
+        byte = cuda::std::byte{};
     }
 }
 
 template <typename T>
-void clear_mem(T& arr)
+BOOST_CRYPT_GPU_ENABLED void clear_mem(T& arr)
 {
     for (auto& byte : arr)
     {
-        byte = static_cast<T>(0);
+        byte = cuda::std::byte{};
     }
 }
+
+} // End namespace
 
 #else
 
