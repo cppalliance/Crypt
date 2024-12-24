@@ -27,6 +27,8 @@
 #include <vector>
 #include <span>
 
+// LCOV_EXCL_START
+
 namespace nist { namespace cavs {
 
 namespace detail {
@@ -85,7 +87,7 @@ public:
   // this hash test object.
 
   explicit test_object_hash(const std::string& str_result)
-      : my_result // LCOV_EXCL_LINE
+      : my_result 
         {
           [&str_result]()
           {
@@ -670,7 +672,7 @@ auto where_file(const std::string& test_vectors_filename, test_type test) -> std
 
     const bool file_01_is_open { in_01.is_open() };
 
-    // LCOV_EXCL_START
+    
     if(file_01_is_open)
     {
         in_01.close();
@@ -748,7 +750,7 @@ auto where_file(const std::string& test_vectors_filename, test_type test) -> std
             }
         }
     }
-    // LCOV_EXCL_STOP
+    
 
     return test_vectors_filename_relative;
 }
@@ -1769,7 +1771,7 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
         {
             if (!BOOST_TEST_EQ(test_vector.my_result[j], bits[j]))
             {
-                false_counter++; // LCOV_EXCL_LINE
+                false_counter++; 
             }
         }
 
@@ -1798,7 +1800,7 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
         {
             if (!BOOST_TEST_EQ(test_vector.my_result[j], bits[j]))
             {
-                false_counter++; // LCOV_EXCL_LINE
+                false_counter++; 
             }
         }
 
@@ -2009,7 +2011,7 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
                 for (auto& val : MDi)
                 {
                     // LCOV skips the following line even though MDi is not empty
-                    val = static_cast<std::uint8_t>(0); // LCOV_EXCL_LINE
+                    val = static_cast<std::uint8_t>(0); 
                 }
 
                 const auto output_length = this_hash.get_digest(MDi);
@@ -2119,14 +2121,14 @@ auto test_vectors_drbg_no_reseed(const nist::cavs::test_vector_container_drbg_no
         {
             if (return_bits[i] != test_vector.result[i])
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count
                           << "\nBeginning of entropy: " << std::to_string(test_vector.initial_entropy[0]) << ", "
                           << std::to_string(test_vector.initial_entropy[1]) << ", "
                           << std::to_string(test_vector.initial_entropy[2]) << std::endl;
                 break;
-                // LCOV_EXCL_STOP
+                
             }
         }
         ++count;
@@ -2166,14 +2168,14 @@ auto test_vectors_drbg_pr_false(const nist::cavs::test_vector_container_drbg_pr_
         {
             if (return_bits[i] != test_vector.result[i])
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count
                           << "\nBeginning of entropy: " << std::to_string(test_vector.initial_entropy[0]) << ", "
                           << std::to_string(test_vector.initial_entropy[1]) << ", "
                           << std::to_string(test_vector.initial_entropy[2]) << std::endl;
                 break;
-                // LCOV_EXCL_STOP
+                
             }
         }
         ++count;
@@ -2212,14 +2214,14 @@ auto test_vectors_drbg_pr_true(const nist::cavs::test_vector_container_drbg_pr_t
         {
             if (return_bits[i] != test_vector.result[i])
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count
                           << "\nBeginning of entropy: " << std::to_string(test_vector.initial_entropy[0]) << ", "
                           << std::to_string(test_vector.initial_entropy[1]) << ", "
                           << std::to_string(test_vector.initial_entropy[2]) << std::endl;
                 break;
-                // LCOV_EXCL_STOP
+                
             }
         }
         ++count;
@@ -2260,10 +2262,10 @@ auto test_vectors_aes_ctr(const nist::cavs::test_vector_container_aes &test_vect
 
         if (plaintext != test_vector.plaintext)
         {
-            // LCOV_EXCL_START
+            
             result_is_ok = false;
             std::cerr << "Error with vector: " << count << std::endl;
-            // LCOV_EXCL_STOP
+            
         }
 
         ++count;
@@ -2327,10 +2329,10 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
 
             if (plaintext != ciphertext)
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count << std::endl;
-                // LCOV_EXCL_STOP
+                
             }
 
             ++count;
@@ -2393,10 +2395,10 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
 
             if (plaintext != ciphertext)
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count << std::endl;
-                // LCOV_EXCL_STOP
+                
             }
 
             ++count;
@@ -2521,10 +2523,10 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
 
         if (plaintext != ciphertext)
         {
-            // LCOV_EXCL_START
+            
             result_is_ok = false;
             std::cerr << "Error with vector: " << count << std::endl;
-            // LCOV_EXCL_STOP
+            
         }
 
         ++count;
@@ -2539,5 +2541,7 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
 
 } // namespace cavs
 } // namespace nist
+
+// LCOV_EXCL_STOP
 
 #endif // BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP
