@@ -4,9 +4,30 @@
 # Distributed under the Boost Software License, Version 1.0.
 # https://www.boost.org/LICENSE_1_0.txt
 
-cmake_minimum_required(VERSION 3.8...3.20)
+cmake_minimum_required(VERSION 3.24)
 
-project(boost_crypt VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES CXX)
+project(boost_crypt VERSION 1.0.0 LANGUAGES CXX)
+
+option(BOOST_CRYPT_ENABLE_CUDA "Build with CUDA" OFF)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(BOOST_CRYPT_ENABLE_CUDA)
+
+    enable_language(CUDA)
+
+    set(CMAKE_CUDA_STANDARD 20)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+
+    set(CMAKE_CUDA_EXTENSIONS OFF)
+
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+
+    find_package(CUDAToolkit REQUIRED)
+
+endif()
 
 add_library(boost_crypt INTERFACE)
 

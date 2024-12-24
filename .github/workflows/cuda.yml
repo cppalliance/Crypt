@@ -23,25 +23,18 @@ jobs:
       fail-fast: false
 
     runs-on: gpu-runner-1
+    container:
+      image: nvidia/cuda:12.6.3-devel-ubuntu24.04
+      options: --gpus all
 
     steps:
-      - uses: Jimver/cuda-toolkit@v0.2.19
-        id: cuda-toolkit
-        with:
-          cuda: '12.5.0'
-          method: 'network'
-          sub-packages: '["nvcc"]'
-
-      - name: Output CUDA information
-        run: |
-          echo "Installed cuda version is: ${{steps.cuda-toolkit.outputs.cuda}}"+
-          echo "Cuda install location: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
-          nvcc -V
       - uses: actions/checkout@v4
 
       - name: Install Packages
         run: |
-          sudo apt-get install -y cmake make
+          apt-get update
+          apt-get install -y wget cmake git python3 build-essential
+
       - name: Setup Boost
         run: |
           echo GITHUB_REPOSITORY: $GITHUB_REPOSITORY
@@ -62,15 +55,34 @@ jobs:
           cp -r $GITHUB_WORKSPACE/* libs/$LIBRARY
           git submodule update --init tools/boostdep
           python3 tools/boostdep/depinst/depinst.py --git_args "--jobs 3" $LIBRARY
+
+      - name: Check CUDA Installation
+        run: |
+          nvidia-smi
+          nvcc --version
+          ls -l /usr/local/cuda-12.6/bin/nvcc
+
       - name: Configure
         run: |
           cd ../boost-root
           mkdir __build__ && cd __build__
-          cmake -DBOOST_INCLUDE_LIBRARIES=$LIBRARY -DBUILD_TESTING=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DBOOST_CRYPT_ENABLE_CUDA=1 -DCMAKE_CUDA_ARCHITECTURES=70 -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-12.5 ..
+          cmake -DBOOST_INCLUDE_LIBRARIES=$LIBRARY \
+                -DBUILD_TESTING=ON \
+                -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.6/bin/nvcc \
+                -DBOOST_CRYPT_ENABLE_CUDA=1 \
+                -DCMAKE_CUDA_ARCHITECTURES=70 \
+                -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-12.6 \
+                -DCUDA_PATH=/usr/local/cuda-12.6 \
+                -DCMAKE_VERBOSE_MAKEFILE=ON \
+                -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+                .. \
+                --debug-output
+
       - name: Build tests
         run: |
           cd ../boost-root/__build__
-          cmake --build . --target tests -j $(nproc)
+          cmake --build . --target tests -j $(nproc) --verbose
+
       - name: Run tests
         run: |
           cd ../boost-root/__build__

@@ -19,9 +19,9 @@ project
       <toolset>msvc:<cxxstd>latest
 
       <toolset>gcc:<cxxflags>-fmodules-ts
-      <toolset>gcc:<cxxstd>23
+      <toolset>gcc:<cxxstd>20
 
-      <toolset>clang:<cxxstd>23
+      <toolset>clang:<cxxstd>20
     ;
 
 obj crypt : crypt.cxx : <toolset>msvc:<cxxflags>-interface ;

@@ -33,32 +33,8 @@ jobs:
           # Linux, clang
           # https://llvm.org/docs/LibFuzzer.html#fuzzer-usage
           - toolset: clang
-            compiler: clang++-12
-            cxxstd: "14,17,20"
-            os: ubuntu-22.04
-            install:
-              - clang-12
-          - toolset: clang
-            compiler: clang++-13
-            cxxstd: "14,17,20"
-            os: ubuntu-22.04
-            install:
-              - clang-13
-          - toolset: clang
-            compiler: clang++-14
-            cxxstd: "14,17,20"
-            os: ubuntu-22.04
-            install:
-              - clang-14
-          - toolset: clang
-            compiler: clang++-14
-            cxxstd: "14-gnu,17-gnu,20-gnu"
-            os: ubuntu-22.04
-            install:
-              - clang-14
-          - toolset: clang
             compiler: clang++-15
-            cxxstd: "14,17,20"
+            cxxstd: "20"
             os: ubuntu-22.04
             install:
               - clang-15
@@ -68,7 +44,7 @@ jobs:
               - "https://apt.llvm.org/llvm-snapshot.gpg.key"
           - toolset: clang
             compiler: clang++-16
-            cxxstd: "14,17,20"
+            cxxstd: "20"
             os: ubuntu-22.04
             install:
               - clang-16
@@ -78,7 +54,7 @@ jobs:
               - "https://apt.llvm.org/llvm-snapshot.gpg.key"
           - toolset: clang
             compiler: clang++-17
-            cxxstd: "14,17,20"
+            cxxstd: "20"
             os: ubuntu-22.04
             install:
               - clang-17
@@ -88,7 +64,7 @@ jobs:
               - "https://apt.llvm.org/llvm-snapshot.gpg.key"
           - toolset: clang
             compiler: clang++-18
-            cxxstd: "14,17,20"
+            cxxstd: "20,23"
             os: ubuntu-24.04
             install:
               - clang-18
@@ -98,7 +74,7 @@ jobs:
               - "https://apt.llvm.org/llvm-snapshot.gpg.key"
           - toolset: clang
             compiler: clang++-19
-            cxxstd: "14,17,20"
+            cxxstd: "20,23"
             os: ubuntu-24.04
             install:
               - clang-19

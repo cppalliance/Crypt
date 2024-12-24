@@ -33,7 +33,8 @@ CXXFLAGS     = -march=native                                                   \
                -Wall                                                           \
                -fno-inline-functions                                           \
                -fprofile-arcs                                                  \
-               -ftest-coverage
+               -ftest-coverage                                                 \
+               -std=$(STD)
 
 C_DEFINES    =
 
@@ -67,7 +68,6 @@ ifneq ($(ALL_COV),0)
 LCOV_BRANCH := --rc lcov_branch_coverage=1
 endif
 
-LCOV_REMOVES = '*/test/mini_to_chars.hpp'                                     \
-               '*$(MY_BOOST_ROOT)*'                                           \
+LCOV_REMOVES = '*$(MY_BOOST_ROOT)*'                                           \
                '*/boost-root/*'                                               \
                '/usr/*'

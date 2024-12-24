@@ -6,7 +6,17 @@
 #ifndef BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP
 #define BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP
 
+#if defined(__clang__) && __clang_major__ >= 19
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+#endif
+
 #include <boost/core/lightweight_test.hpp>
+
+#if defined(__clang__) && __clang_major__ >= 19
+#pragma clang diagnostic pop
+#endif
+
 #include "boost/crypt/mac/hmac.hpp"
 #include "boost/crypt/aes/detail/cipher_mode.hpp"
 #include <cstddef>
@@ -15,6 +25,9 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <span>
+
+// LCOV_EXCL_START
 
 namespace nist { namespace cavs {
 
@@ -41,8 +54,17 @@ inline auto convert_hex_string_to_byte_container(const std::string& str_in) -> s
     // Get the next two characters represented as a substring of 2 chars.
     const std::string str = str_in.substr(pos, 2U);
 
+      #if defined(__clang__) && __clang_major__ >= 19
+      #pragma clang diagnostic push
+      #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+      #endif
+
     // Convert a 2-char hex string to unsigned long.
     const unsigned long ul = std::strtoul(str.c_str(), nullptr, 16);
+
+      #if defined(__clang__) && __clang_major__ >= 19
+      #pragma clang diagnostic pop
+      #endif
 
     container_out.push_back(std::uint8_t(ul));
   }
@@ -65,7 +87,7 @@ public:
   // this hash test object.
 
   explicit test_object_hash(const std::string& str_result)
-      : my_result // LCOV_EXCL_LINE
+      : my_result 
         {
           [&str_result]()
           {
@@ -650,7 +672,7 @@ auto where_file(const std::string& test_vectors_filename, test_type test) -> std
 
     const bool file_01_is_open { in_01.is_open() };
 
-    // LCOV_EXCL_START
+    
     if(file_01_is_open)
     {
         in_01.close();
@@ -728,7 +750,7 @@ auto where_file(const std::string& test_vectors_filename, test_type test) -> std
             }
         }
     }
-    // LCOV_EXCL_STOP
+    
 
     return test_vectors_filename_relative;
 }
@@ -777,7 +799,15 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
         {
           const std::string str_len = line.substr(6U, line.length() - 6U);
 
+            #if defined(__clang__) && __clang_major__ >= 19
+            #pragma clang diagnostic push
+            #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+            #endif
           const unsigned long length_from_file = std::strtoul(str_len.c_str(), nullptr, 10U);
+
+            #if defined(__clang__) && __clang_major__ >= 19
+            #pragma clang diagnostic pop
+          #endif
 
           length = static_cast<std::size_t>(length_from_file / 8U);
         }
@@ -938,7 +968,16 @@ auto parse_file_vectors_variable_xof(const std::string& test_vectors_filename, t
                 {
                     const std::string str_len = line.substr(12U, line.length() - 12U);
 
+                    #if defined(__clang__) && __clang_major__ >= 19
+                    #pragma clang diagnostic push
+                    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+                    #endif
+
                     const auto length_from_file = static_cast<std::size_t>(std::strtoul(str_len.c_str(), nullptr, 10U));
+
+                    #if defined(__clang__) && __clang_major__ >= 19
+                    #pragma clang diagnostic pop
+                    #endif
 
                     lengths.push_back(length_from_file / 8U);
                 }
@@ -1019,7 +1058,16 @@ auto parse_file_monte(const std::string& test_monte_filename, test_vector_contai
         {
           const std::string str_cnt = line.substr(8U, line.length() - 8U);
 
+            #if defined(__clang__) && __clang_major__ >= 19
+            #pragma clang diagnostic push
+            #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+            #endif
+
           const unsigned long count_from_file = std::strtoul(str_cnt.c_str(), nullptr, 10U);
+
+            #if defined(__clang__) && __clang_major__ >= 19
+            #pragma clang diagnostic pop
+              #endif
 
           count = static_cast<unsigned>(count_from_file);
         }
@@ -1085,6 +1133,11 @@ auto parse_file_monte_xof(const std::string& test_monte_filename, test_vector_co
                 const bool line_is_representation_is_output_len = (pos_output_len != std::string::npos);
                 const bool line_is_representation_is_output  = (pos_output  != std::string::npos);
 
+
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic push
+                #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+                #endif
                 // Get the next count.
                 if(line_is_representation_is_cnt)
                 {
@@ -1103,6 +1156,9 @@ auto parse_file_monte_xof(const std::string& test_monte_filename, test_vector_co
 
                     lengths.emplace_back(len_from_file);
                 }
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic pop
+                #endif
 
                 // Get the next (expected) result.
                 if(line_is_representation_is_output)
@@ -1634,11 +1690,25 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 
     this_hash.init();
 
-    this_hash.process_bytes(test_vector.my_msg.data(), test_vector.my_msg.size());
+      #if defined(__clang__) && __clang_major__ >= 19
+      #pragma clang diagnostic push
+      #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+      #endif
+    const auto data_span {std::span(test_vector.my_msg.data(), test_vector.my_msg.size())};
+      #if defined(__clang__) && __clang_major__ >= 19
+      #pragma clang diagnostic pop
+      #endif
+
+    this_hash.process_bytes(data_span);
 
     const local_result_type result_01 { this_hash.get_digest() };
 
-    const bool result_hash_01_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_01.cbegin()) };
+    //const bool result_hash_01_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_01.cbegin()) };
+    bool result_hash_01_is_ok { true };
+    for (std::size_t i = 0U; i < test_vector.my_result.size(); ++i)
+    {
+        result_hash_01_is_ok &= (static_cast<std::byte>(test_vector.my_result[i]) == result_01[i]);
+    }
 
     BOOST_TEST(result_hash_01_is_ok);
 
@@ -1650,11 +1720,15 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 
     this_hash.init();
 
-    this_hash.process_bytes(test_vector.my_msg.data(), test_vector.my_msg.size());
+    this_hash.process_bytes(data_span);
 
     const local_result_type result_02 { this_hash.get_digest() };
 
-    const bool result_hash_02_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_02.cbegin()) };
+    bool result_hash_02_is_ok { true };
+    for (std::size_t i = 0U; i < test_vector.my_result.size(); ++i)
+    {
+      result_hash_01_is_ok &= (static_cast<std::byte>(test_vector.my_result[i]) == result_02[i]);
+    }
 
     BOOST_TEST(result_hash_02_is_ok);
 
@@ -1684,10 +1758,10 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
         // Use the triple-combination of init/process/get-result functions.
 
         this_hash.init();
+        const auto data_span {std::span(test_vector.my_msg.data(), test_vector.my_msg.size())};
+        this_hash.process_bytes(data_span);
 
-        this_hash.process_bytes(test_vector.my_msg.data(), test_vector.my_msg.size());
-
-        std::vector<std::uint8_t> bits {};
+        std::vector<std::byte> bits {};
         bits.resize(lengths[i]);
 
         const auto result_01 { this_hash.get_digest(bits) };
@@ -1697,7 +1771,7 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
         {
             if (!BOOST_TEST_EQ(test_vector.my_result[j], bits[j]))
             {
-                false_counter++; // LCOV_EXCL_LINE
+                false_counter++; 
             }
         }
 
@@ -1711,11 +1785,11 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
 
         this_hash.init();
 
-        this_hash.process_bytes(test_vector.my_msg.data(), test_vector.my_msg.size());
+        this_hash.process_bytes(data_span);
 
         for (auto& bit : bits)
         {
-            bit = static_cast<std::uint8_t>(0);
+            bit = static_cast<std::byte>(0);
         }
 
         const auto result_02 { this_hash.get_digest(bits) };
@@ -1726,7 +1800,7 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
         {
             if (!BOOST_TEST_EQ(test_vector.my_result[j], bits[j]))
             {
-                false_counter++; // LCOV_EXCL_LINE
+                false_counter++; 
             }
         }
 
@@ -1937,7 +2011,7 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
                 for (auto& val : MDi)
                 {
                     // LCOV skips the following line even though MDi is not empty
-                    val = static_cast<std::uint8_t>(0); // LCOV_EXCL_LINE
+                    val = static_cast<std::uint8_t>(0); 
                 }
 
                 const auto output_length = this_hash.get_digest(MDi);
@@ -2047,14 +2121,14 @@ auto test_vectors_drbg_no_reseed(const nist::cavs::test_vector_container_drbg_no
         {
             if (return_bits[i] != test_vector.result[i])
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count
                           << "\nBeginning of entropy: " << std::to_string(test_vector.initial_entropy[0]) << ", "
                           << std::to_string(test_vector.initial_entropy[1]) << ", "
                           << std::to_string(test_vector.initial_entropy[2]) << std::endl;
                 break;
-                // LCOV_EXCL_STOP
+                
             }
         }
         ++count;
@@ -2094,14 +2168,14 @@ auto test_vectors_drbg_pr_false(const nist::cavs::test_vector_container_drbg_pr_
         {
             if (return_bits[i] != test_vector.result[i])
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count
                           << "\nBeginning of entropy: " << std::to_string(test_vector.initial_entropy[0]) << ", "
                           << std::to_string(test_vector.initial_entropy[1]) << ", "
                           << std::to_string(test_vector.initial_entropy[2]) << std::endl;
                 break;
-                // LCOV_EXCL_STOP
+                
             }
         }
         ++count;
@@ -2140,14 +2214,14 @@ auto test_vectors_drbg_pr_true(const nist::cavs::test_vector_container_drbg_pr_t
         {
             if (return_bits[i] != test_vector.result[i])
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count
                           << "\nBeginning of entropy: " << std::to_string(test_vector.initial_entropy[0]) << ", "
                           << std::to_string(test_vector.initial_entropy[1]) << ", "
                           << std::to_string(test_vector.initial_entropy[2]) << std::endl;
                 break;
-                // LCOV_EXCL_STOP
+                
             }
         }
         ++count;
@@ -2188,10 +2262,10 @@ auto test_vectors_aes_ctr(const nist::cavs::test_vector_container_aes &test_vect
 
         if (plaintext != test_vector.plaintext)
         {
-            // LCOV_EXCL_START
+            
             result_is_ok = false;
             std::cerr << "Error with vector: " << count << std::endl;
-            // LCOV_EXCL_STOP
+            
         }
 
         ++count;
@@ -2255,10 +2329,10 @@ auto test_vectors_aes_kat(const nist::cavs::test_vector_container_aes& test_vect
 
             if (plaintext != ciphertext)
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count << std::endl;
-                // LCOV_EXCL_STOP
+                
             }
 
             ++count;
@@ -2321,10 +2395,10 @@ auto test_vectors_aes_mmt(const nist::cavs::test_vector_container_aes& test_vect
 
             if (plaintext != ciphertext)
             {
-                // LCOV_EXCL_START
+                
                 result_is_ok = false;
                 std::cerr << "Error with vector: " << count << std::endl;
-                // LCOV_EXCL_STOP
+                
             }
 
             ++count;
@@ -2449,10 +2523,10 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
 
         if (plaintext != ciphertext)
         {
-            // LCOV_EXCL_START
+            
             result_is_ok = false;
             std::cerr << "Error with vector: " << count << std::endl;
-            // LCOV_EXCL_STOP
+            
         }
 
         ++count;
@@ -2467,5 +2541,7 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
 
 } // namespace cavs
 } // namespace nist
+
+// LCOV_EXCL_STOP
 
 #endif // BOOST_CRYPT_TEST_NIST_CAVS_DETAIL_HPP

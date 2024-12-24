@@ -6,36 +6,22 @@
 include(BoostTestJamfile OPTIONAL RESULT_VARIABLE HAVE_BOOST_TEST)
 
 if(HAVE_BOOST_TEST)
+    if(BOOST_CRYPT_ENABLE_CUDA)
+        message(STATUS "Building boost.crypt tests with CUDA")
 
-    if (BOOST_CRYPT_ENABLE_CUDA)
+        boost_test_jamfile(
+                FILE nvcc_jamfile
+                LINK_LIBRARIES Boost::crypt Boost::core CUDA::cudart
+                INCLUDE_DIRECTORIES ${CUDAToolkit_INCLUDE_DIRS}
+                COMPILE_OPTIONS
+                --expt-relaxed-constexpr
+        )
+    else()
+        message(STATUS "Building boost.crypt tests without CUDA")
 
-        message(STATUS "Building boost.crypt with CUDA")
-        find_package(CUDA REQUIRED)
-        enable_language(CUDA)
-        set(CMAKE_CUDA_EXTENSIONS OFF)
-
-        boost_test_jamfile(FILE nvcc_jamfile LINK_LIBRARIES Boost::crypt ${CUDA_LIBRARIES} INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS} )
-
-    elseif (BOOST_CRYPT_ENABLE_NVRTC)
-
-        message(STATUS "Building boost.crypt with NVRTC")
-        find_package(CUDA REQUIRED)
-        set(CUDA_nvrtc_LIBRARY /usr/local/cuda/lib64/libnvrtc.so)
-
-        if (BOOST_CRYPT_NVRTC_CI_RUN)
-
-            boost_test_jamfile(FILE nvrtc_jamfile LINK_LIBRARIES Boost::crypt ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY} COMPILE_DEFINITIONS BOOST_CRYPT_NVRTC_CI_RUN=1 INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS})
-
-        else ()
-
-            boost_test_jamfile(FILE nvrtc_jamfile LINK_LIBRARIES Boost::crypt ${CUDA_nvrtc_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUDA_LIBRARY} INCLUDE_DIRECTORIES ${CUDA_INCLUDE_DIRS} )
-
-        endif ()
-
-    else ()
-
-        boost_test_jamfile(FILE Jamfile LINK_LIBRARIES Boost::crypt Boost::core Boost::uuid)
-
-    endif ()
-
+        boost_test_jamfile(
+                FILE Jamfile
+                LINK_LIBRARIES Boost::crypt Boost::core
+        )
+    endif()
 endif()
