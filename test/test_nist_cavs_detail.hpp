@@ -1831,15 +1831,10 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
             (std::min)(static_cast<std::size_t>(MDi.size()), static_cast<std::size_t>(seed_init.size()))
         };
 
-        static_cast<void>
-        (
-            std::copy
-            (
-                seed_init.cbegin(),
-                seed_init.cbegin() + static_cast<typename std::vector<std::uint8_t>::difference_type>(copy_len),
-                MDi.begin()
-            )
-        );
+        for (std::size_t i {}; i < copy_len; ++i)
+        {
+            MDi[i] = static_cast<std::byte>(seed_init[i]);
+        }
 
         // See pseudocode on page 9 of "The Secure Hash Algorithm Validation System (SHAVS)".
 
@@ -1849,13 +1844,13 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
 
             MD[0U] = MD[1U] = MD[2U] = MDi;
 
-            for(std::size_t i { 3U } ; i < 1003U; ++i)
+            for (std::size_t i { 3U } ; i < 1003U; ++i)
             {
-                using local_wide_array_type = boost::crypt::array<std::uint8_t, boost::crypt::tuple_size<local_array_type>::value * 3U>;
+                using local_wide_array_type = std::array<std::byte, std::tuple_size<local_array_type>::value * 3U>;
 
-                std::vector<std::uint8_t> result_vector;
+                std::vector<std::byte> result_vector;
 
-                result_vector.reserve(boost::crypt::tuple_size<local_wide_array_type>::value);
+                result_vector.reserve(std::tuple_size<local_wide_array_type>::value);
 
                 result_vector.insert(result_vector.end(), MD[0U].cbegin(), MD[0U].cend());
                 result_vector.insert(result_vector.end(), MD[1U].cbegin(), MD[1U].cend());
@@ -1863,13 +1858,26 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
 
                 local_wide_array_type Mi { };
 
-                std::copy(result_vector.cbegin(), result_vector.cend(), Mi.begin());
+                for (std::size_t k {}; k < result_vector.size(); ++k)
+                {
+                    Mi[k] = static_cast<std::byte>(result_vector[k]);
+                }
 
                 local_hasher_type this_hash { };
 
                 this_hash.init();
 
-                this_hash.process_bytes(Mi.data(), Mi.size());
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic push
+                #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+                #endif
+                const auto current_data {std::span(Mi.data(), Mi.size())};
+
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic pop
+                #endif
+
+                this_hash.process_bytes(current_data);
 
                 MDi = this_hash.get_digest();
 
@@ -1879,14 +1887,15 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
             }
 
             // The output at this point is MDi.
-
-            const bool result_this_monte_step_is_ok =
-            std::equal
-            (
-                MDi.cbegin(),
-                MDi.cend(),
-                test_vectors_monte[j].my_result.cbegin()
-            );
+            bool result_this_monte_step_is_ok {true};
+            for (std::size_t k {}; k < MDi.size(); ++k)
+            {
+                if (MDi[k] != static_cast<std::byte>(test_vectors_monte[j].my_result[k]))
+                {
+                    result_this_monte_step_is_ok = false;
+                    break;
+                }
+            }
 
             result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
 
