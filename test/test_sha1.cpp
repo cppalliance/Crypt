@@ -164,6 +164,8 @@ void test_file(const std::string& filename, const std::array<std::uint16_t, 20>&
     }
 }
 
+// These tests end up showing red on LCOV becuase they are constexpr executed
+// LCOV_EXCL_START
 void test_invalid_file(const std::string& filename)
 {
     constexpr std::array<std::byte, 20> res{};
@@ -172,6 +174,7 @@ void test_invalid_file(const std::string& filename)
 
     BOOST_TEST(res == crypt_res);
 }
+// LCOV_EXCL_STOP
 
 void files_test()
 {
