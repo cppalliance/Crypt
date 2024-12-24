@@ -145,6 +145,7 @@ void test_class()
 
     const std::string bad_update_msg {"bad"};
     BOOST_TEST(hasher.process_bytes(bad_update_msg) == boost::crypt::state::state_error);
+    BOOST_TEST(hasher.finalize() == boost::crypt::state::state_error);
     BOOST_TEST(hasher.get_digest() == boost::crypt::sha1_hasher::return_type{});
 }
 

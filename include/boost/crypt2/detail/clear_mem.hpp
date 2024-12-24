@@ -116,7 +116,7 @@ constexpr void clear_mem(T& data)
 {
     if (std::is_constant_evaluated())
     {
-        std::fill(data.begin(), data.end(), static_cast<typename T::value_type>(0));
+        std::fill(data.begin(), data.end(), static_cast<typename T::value_type>(0)); // LCOV_EXCL_LINE
     }
     else
     {
