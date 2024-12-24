@@ -74,7 +74,7 @@ run test_sha1.cpp ;
 #run test_aes.cpp ;
 
 # NIST standard testing
-#run test_nist_cavs_sha1_monte.cpp ;
+run test_nist_cavs_sha1_monte.cpp ;
 run test_nist_cavs_sha1_short_long.cpp ;
 #run test_nist_cavs_sha1_hmac.cpp ;
 #run test_nist_cavs_sha1_hmac_drbg.cpp ;
