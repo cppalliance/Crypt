@@ -1813,91 +1813,99 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
 template<typename HasherType>
 auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vectors_monte, const std::vector<std::uint8_t>& seed_init) -> bool
 {
-  bool result_is_ok { (!test_vectors_monte.empty()) };
+    bool result_is_ok { (!test_vectors_monte.empty()) };
 
-  if(result_is_ok)
-  {
-    using local_hasher_type = HasherType;
-    using local_result_type = typename local_hasher_type::return_type;
-
-    using local_array_type = local_result_type;
-
-    // Obtain the test-specific initial seed.
-
-    local_array_type MDi { };
-
-    const std::size_t
-      copy_len
-      {
-        (std::min)(static_cast<std::size_t>(MDi.size()), static_cast<std::size_t>(seed_init.size()))
-      };
-
-    static_cast<void>
-    (
-      std::copy
-      (
-        seed_init.cbegin(),
-        seed_init.cbegin() + static_cast<typename std::vector<std::uint8_t>::difference_type>(copy_len),
-        MDi.begin()
-      )
-    );
-
-    // See pseudocode on page 9 of "The Secure Hash Algorithm Validation System (SHAVS)".
-
-    for(std::size_t j { }; j < 100U; ++j)
+    if(result_is_ok)
     {
-      local_array_type MD[3U] { { }, { }, { } };
+        using local_hasher_type = HasherType;
+        using local_result_type = typename local_hasher_type::return_type;
 
-      MD[0U] = MD[1U] = MD[2U] = MDi;
+        using local_array_type = local_result_type;
 
-      for(std::size_t i { 3U } ; i < 1003U; ++i)
-      {
-        using local_wide_array_type = boost::crypt::array<std::uint8_t, boost::crypt::tuple_size<local_array_type>::value * 3U>;
+        // Obtain the test-specific initial seed.
 
-        std::vector<std::uint8_t> result_vector;
+        local_array_type MDi { };
 
-        result_vector.reserve(boost::crypt::tuple_size<local_wide_array_type>::value);
+        const std::size_t copy_len
+        {
+            (std::min)(static_cast<std::size_t>(MDi.size()), static_cast<std::size_t>(seed_init.size()))
+        };
 
-        result_vector.insert(result_vector.end(), MD[0U].cbegin(), MD[0U].cend());
-        result_vector.insert(result_vector.end(), MD[1U].cbegin(), MD[1U].cend());
-        result_vector.insert(result_vector.end(), MD[2U].cbegin(), MD[2U].cend());
+        for (std::size_t i {}; i < copy_len; ++i)
+        {
+            MDi[i] = static_cast<std::byte>(seed_init[i]);
+        }
 
-        local_wide_array_type Mi { };
+        // See pseudocode on page 9 of "The Secure Hash Algorithm Validation System (SHAVS)".
 
-        std::copy(result_vector.cbegin(), result_vector.cend(), Mi.begin());
+        for(std::size_t j { }; j < 100U; ++j)
+        {
+            local_array_type MD[3U] { { }, { }, { } };
 
-        local_hasher_type this_hash { };
+            MD[0U] = MD[1U] = MD[2U] = MDi;
 
-        this_hash.init();
+            for (std::size_t i { 3U } ; i < 1003U; ++i)
+            {
+                using local_wide_array_type = std::array<std::byte, std::tuple_size<local_array_type>::value * 3U>;
 
-        this_hash.process_bytes(Mi.data(), Mi.size());
+                std::vector<std::byte> result_vector;
 
-        MDi = this_hash.get_digest();
+                result_vector.reserve(std::tuple_size<local_wide_array_type>::value);
 
-        MD[0U] = MD[1U];
-        MD[1U] = MD[2U];
-        MD[2U] = MDi;
-      }
+                result_vector.insert(result_vector.end(), MD[0U].cbegin(), MD[0U].cend());
+                result_vector.insert(result_vector.end(), MD[1U].cbegin(), MD[1U].cend());
+                result_vector.insert(result_vector.end(), MD[2U].cbegin(), MD[2U].cend());
 
-      // The output at this point is MDi.
+                local_wide_array_type Mi { };
 
-      const bool result_this_monte_step_is_ok =
-        std::equal
-        (
-          MDi.cbegin(),
-          MDi.cend(),
-          test_vectors_monte[j].my_result.cbegin()
-        );
+                for (std::size_t k {}; k < result_vector.size(); ++k)
+                {
+                    Mi[k] = static_cast<std::byte>(result_vector[k]);
+                }
 
-      result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
+                local_hasher_type this_hash { };
 
-      BOOST_TEST(result_this_monte_step_is_ok);
+                this_hash.init();
+
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic push
+                #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+                #endif
+                const auto current_data {std::span(Mi.data(), Mi.size())};
+
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic pop
+                #endif
+
+                this_hash.process_bytes(current_data);
+
+                MDi = this_hash.get_digest();
+
+                MD[0U] = MD[1U];
+                MD[1U] = MD[2U];
+                MD[2U] = MDi;
+            }
+
+            // The output at this point is MDi.
+            bool result_this_monte_step_is_ok {true};
+            for (std::size_t k {}; k < MDi.size(); ++k)
+            {
+                if (MDi[k] != static_cast<std::byte>(test_vectors_monte[j].my_result[k]))
+                {
+                    result_this_monte_step_is_ok = false;
+                    break;
+                }
+            }
+
+            result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
+
+            BOOST_TEST(result_this_monte_step_is_ok);
+        }
     }
-  }
 
-  BOOST_TEST(result_is_ok);
+    BOOST_TEST(result_is_ok);
 
-  return result_is_ok;
+    return result_is_ok;
 }
 
 // See: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/sha3/sha3vs.pdf
