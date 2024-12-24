@@ -2,8 +2,8 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
-#ifndef BOOST_CRYPT_DETAIL_CONFIG_HPP
-#define BOOST_CRYPT_DETAIL_CONFIG_HPP
+#ifndef BOOST_CRYPT_OLD_DETAIL_CONFIG_HPP
+#define BOOST_CRYPT_OLD_DETAIL_CONFIG_HPP
 
 #ifdef __CUDACC__
 #  ifndef BOOST_CRYPT_HAS_CUDA
@@ -189,4 +189,4 @@
 
 // ----- if constexpr -----
 
-#endif //BOOST_CRYPT_DETAIL_CONFIG_HPP
+#endif //BOOST_CRYPT_OLD_DETAIL_CONFIG_HPP
