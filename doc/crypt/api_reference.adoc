@@ -8,6 +8,10 @@ https://www.boost.org/LICENSE_1_0.txt
 = API Reference
 :idprefix: api_ref_
 
+== Namespace
+
+- `compat` Any time you see the namespace `compat` it is an alias to either `std::` or `cuda::std::` depending on the compiler being used
+
 == Types
 
 - None
@@ -100,6 +104,11 @@ https://www.boost.org/LICENSE_1_0.txt
 == Constants
 
 - None
+
+== Concepts
+
+- <<file_system_path, `file_system_path`>>
+- <<writeable_output_range, `writeable_output_range`>>
 
 == Macros
 

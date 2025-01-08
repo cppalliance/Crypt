@@ -26,6 +26,7 @@
 #include <cstring>
 #include <cstdint>
 #include <string>
+#include <filesystem>
 
 using std::byte;
 
@@ -165,18 +166,6 @@ void test_file(const std::string& filename, const std::array<std::uint16_t, 20>&
     }
 }
 
-// These tests end up showing red on LCOV becuase they are constexpr executed
-// LCOV_EXCL_START
-void test_invalid_file(const std::string& filename)
-{
-    constexpr std::array<std::byte, 20> res{};
-
-    const auto crypt_res {boost::crypt::sha1_file(filename)};
-
-    BOOST_TEST(res == crypt_res);
-}
-// LCOV_EXCL_STOP
-
 void files_test()
 {
     // Based off where we are testing from (test vs boost_root) we need to adjust our filepath
@@ -241,10 +230,10 @@ void files_test()
     #endif
 
     const auto invalid_filename = "broken.bin";
-    BOOST_TEST_THROWS(test_invalid_file(invalid_filename), std::runtime_error);
+    BOOST_TEST_THROWS(boost::crypt::sha1_file(invalid_filename), std::runtime_error);
 
     const std::string str_invalid_filename {invalid_filename};
-    BOOST_TEST_THROWS(test_invalid_file(str_invalid_filename), std::runtime_error);
+    BOOST_TEST_THROWS(boost::crypt::sha1_file(str_invalid_filename), std::runtime_error);
 
     // On macOS 15
     // sha1 test_file_2.txt
@@ -253,6 +242,12 @@ void files_test()
                                                   0x47, 0x99, 0xb4, 0x7b, 0xd9, 0x25, 0x5a, 0xc9, 0xcb, 0x65};
 
     test_file(filename_2, res_2);
+
+    const char* test_null_file = nullptr;
+    BOOST_TEST_THROWS(boost::crypt::sha1_file(test_null_file), std::runtime_error);
+
+    std::filesystem::path bad_path = "path.txt";
+    BOOST_TEST_THROWS(boost::crypt::sha1_file(bad_path), std::runtime_error);
 }
 
 int main()

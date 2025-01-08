@@ -92,9 +92,17 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto as_writable_bytes(span<T> s) noexcept
 
 // Type traits
 #ifdef BOOST_CRYPT_HAS_CUDA
+template <typename T, T v>
+using integral_constant = cuda::std::integral_constant<T, v>;
+template <bool b>
+using bool_constant = cuda::std::bool_constant<b>;
 using true_type = cuda::std::true_type;
 using false_type = cuda::std::false_type;
 #else
+template <typename T, T v>
+using integral_constant = std::integral_constant<T, v>;
+template <bool b>
+using bool_constant = std::bool_constant<b>;
 using true_type = std::true_type;
 using false_type = std::false_type;
 #endif
@@ -236,6 +244,27 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto rotl(T val, int shift) noexcept
     return cuda::std::rotl(val, shift);
     #else
     return std::rotl(val, shift);
+    #endif
+
+    #ifdef __clang__
+    #pragma clang diagnostic pop
+    #endif
+}
+
+template <typename T>
+BOOST_CRYPT_GPU_ENABLED constexpr auto rotr(T val, int shift) noexcept
+{
+    // Some clangs incorrectly warn on shift being an int instead of an unsigned int
+    // C++ standard says shift is to be int
+    #ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wsign-conversion"
+    #endif
+
+    #ifdef BOOST_CRYPT_HAS_CUDA
+    return cuda::std::rotr(val, shift);
+    #else
+    return std::rotr(val, shift);
     #endif
 
     #ifdef __clang__

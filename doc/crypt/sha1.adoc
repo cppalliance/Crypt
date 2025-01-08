@@ -25,15 +25,15 @@ namespace boost::crypt {
 class sha1_hasher
 {
 public:
-    uisng return_type = std::array<std::byte, 20>;
+    uisng return_type = compat::array<compat::byte, 20>;
 
     // Initialize the hasher
     constexpr void init() noexcept;
 
     // Process bytes piecewise
-    constexpr state process_bytes(std::span<const std::byte> data) noexcept;
+    constexpr state process_bytes(compat::span<const compat::byte> data) noexcept;
 
-    template <std::ranges::sized_range Range>
+    template <compat::ranges::sized_range Range>
     constexpr state process_bytes(Range&& data) noexcept;
 
     // Finalize the calculation of the hash
@@ -42,9 +42,8 @@ public:
     // Get the digest
     [[nodiscard]] constexpr return_type get_digest() noexcept;
 
-    template <typename Range>
+    template <concepts::writable_output_range Range>
     BOOST_CRYPT_GPU_ENABLED state get_digest(Range&& data) noexcept
-        requires std::output_range<Range, std::range_value_t<Range>> && std::sized_range<Range> && std::is_trivially_copyable_v<std::range_value_t<Range>>;
 };
 
 } // namespace boost::crypt
@@ -56,9 +55,9 @@ public:
 ----
 namespace boost::crypt {
 
-BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(std::span<const std::byte> data) noexcept -> sha1_hasher::return_type;
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(compat::span<const compat::byte> data) noexcept -> sha1_hasher::return_type;
 
-template <std::ranges::sized_range SizedRange>
+template <compat::ranges::sized_range SizedRange>
 BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(SizedRange&& data) noexcept -> sha1_hasher::return_type;
 
 } // namespace boost::crypt
@@ -72,7 +71,7 @@ We also have the ability to scan files and return the sha1 value:
 ----
 namespace boost::crypt {
 
-template <typename T>
+template <concepts::file_system_path T>
 inline auto sha1_file(const T& filepath) -> sha1_hasher::return_type;
 
 } // namespace boost::crypt

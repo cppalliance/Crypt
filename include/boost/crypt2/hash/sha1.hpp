@@ -10,14 +10,7 @@
 #include <boost/crypt2/hash/detail/sha_1_2_hasher_base.hpp>
 #include <boost/crypt2/detail/file_reader.hpp>
 #include <boost/crypt2/detail/compat.hpp>
-
-#if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
-#include <bit>
-#include <cstdint>
-#elif defined(BOOST_CRYPT_HAS_CUDA)
-#include <cuda/std/bit>
-#include <cuda/std/cstdint>
-#endif
+#include <boost/crypt2/detail/concepts.hpp>
 
 namespace boost::crypt {
 
@@ -237,23 +230,23 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1_hasher::process_message_block() noex
     buffer_index_ = 0U;
 }
 
-#ifndef BOOST_CRYPT_HAS_CUDA
-
 // One shot functions
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1(std::span<const std::byte> data) noexcept -> sha1_hasher::return_type
+BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1(compat::span<const compat::byte> data) noexcept -> sha1_hasher::return_type
 {
     sha1_hasher hasher;
     hasher.process_bytes(data);
     return hasher.get_digest();
 }
 
-template <std::ranges::sized_range SizedRange>
+template <compat::sized_range SizedRange>
 BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED auto sha1(SizedRange&& data) noexcept -> sha1_hasher::return_type
 {
     sha1_hasher hasher;
     hasher.process_bytes(data);
     return hasher.get_digest();
 }
+
+#ifndef BOOST_CRYPT_HAS_CUDA
 
 namespace detail {
 
@@ -286,33 +279,22 @@ auto sha1_file_impl(detail::file_reader<block_size>& reader) -> sha1_hasher::ret
 
 } // namespace detail
 
-template <typename T>
+template <concepts::file_system_path T>
 BOOST_CRYPT_EXPORT inline auto sha1_file(const T& filepath)
-    requires std::is_convertible_v<T, std::string>
 {
+    if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
+    {
+        if (filepath == nullptr)
+        {
+            throw std::runtime_error("Invalid file path");
+        }
+    }
+
     detail::file_reader<64U> reader(filepath);
     return detail::sha1_file_impl(reader);
 }
 
-#else
-
-// One shot functions
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED auto sha1(cuda::std::span<const cuda::std::byte> data) noexcept -> sha1_hasher::return_type
-{
-    sha1_hasher hasher;
-    hasher.process_bytes(data);
-    return hasher.get_digest();
-}
-
-template <cuda::std::ranges::sized_range SizedRange>
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED auto sha1(SizedRange&& data) noexcept -> sha1_hasher::return_type
-{
-    sha1_hasher hasher;
-    hasher.process_bytes(data);
-    return hasher.get_digest();
-}
-
-#endif // BOOST_CRYPT_GPU_ENABLED
+#endif // BOOST_CRYPT_HAS_CUDA
 
 } // Namespace boost::crypt
 
