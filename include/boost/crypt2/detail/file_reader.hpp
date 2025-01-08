@@ -39,21 +39,26 @@ public:
     explicit file_reader(const T& filename)
         requires std::is_convertible_v<T, std::string>
             : fd_(std::string{filename}, std::ios::binary | std::ios::in)
-        {
-            const std::string filename_str {filename};
-            validate_file(filename_str);
-        }
+    {
+        validate_file();
+    }
 
     explicit file_reader(const std::string_view filename)
             : fd_(filename.data(), std::ios::binary | std::ios::in)
     {
-        validate_file(filename);
+        validate_file();
     }
 
     explicit file_reader(const std::filesystem::path filename)
             : fd_(filename, std::ios::binary | std::ios::in)
     {
-        validate_file(filename);
+        validate_file();
+    }
+
+    explicit file_reader(const char* filename)
+            : fd_(filename, std::ios::binary | std::ios::in)
+    {
+        validate_file();
     }
 
     // Rule of 5
@@ -96,16 +101,15 @@ public:
     }
 
 private:
-    template <typename T>
-    void validate_file(const T filename) const
+    void validate_file() const
     {
         if (!fd_.is_open())
         {
-            throw std::runtime_error(std::string{"Error opening file: "} + std::string{filename});
+            throw std::runtime_error("Error opening file");
         }
         if (!fd_.good())
         {
-            throw std::runtime_error(std::string{"File stream not valid after opening: "} + std::string{filename}); // LCOV_EXCL_LINE
+            throw std::runtime_error("File stream not valid after opening"); // LCOV_EXCL_LINE
         }
     }
 };
