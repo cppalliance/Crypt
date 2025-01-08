@@ -20,8 +20,7 @@ This class does not use any dynamic memory allocation.
 
 [source, c++]
 ----
-namespace boost {
-namespace crypt {
+namespace boost::crypt {
 
 class sha1_hasher
 {
@@ -48,24 +47,21 @@ public:
         requires std::output_range<Range, std::range_value_t<Range>> && std::sized_range<Range> && std::is_trivially_copyable_v<std::range_value_t<Range>>;
 };
 
-} // namespace crypt
-} // namespace boost
+} // namespace boost::crypt
 ----
 
 == One-Shot Hashing Functions
 
 [source, c++]
 ----
-namespace boost {
-namespace crypt {
+namespace boost::crypt {
 
 BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(std::span<const std::byte> data) noexcept -> sha1_hasher::return_type;
 
 template <std::ranges::sized_range SizedRange>
 BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(SizedRange&& data) noexcept -> sha1_hasher::return_type;
 
-} //namespace crypt
-} //namespace boost
+} // namespace boost::crypt
 ----
 
 == File Hashing Functions
@@ -74,12 +70,10 @@ We also have the ability to scan files and return the sha1 value:
 
 [source, c++]
 ----
-namespace boost {
-namespace crypt {
+namespace boost::crypt {
 
 template <typename T>
 inline auto sha1_file(const T& filepath) -> sha1_hasher::return_type;
 
-} // namespace crypt
-} // namespace boost
+} // namespace boost::crypt
 ----
