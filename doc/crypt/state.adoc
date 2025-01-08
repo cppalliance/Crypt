@@ -24,10 +24,9 @@ The following are the possible states:
 [source, c++]
 ----
 
-namespace boost {
-namespace crypt {
+namespace boost::crypt {
 
-enum class state : boost::crypt::uint8_t
+enum class state
 {
     success,                    // no issues
     null,                       // nullptr as parameter
@@ -40,7 +39,6 @@ enum class state : boost::crypt::uint8_t
     state_error                 // added more input after get_digest without re-init
 };
 
-} // namespace crypt
-} // namespace boost
+} // namespace boost::crypt
 
 ----

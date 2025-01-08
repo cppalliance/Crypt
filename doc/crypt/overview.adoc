@@ -11,10 +11,11 @@ https://www.boost.org/LICENSE_1_0.txt
 == Description
 
 Boost.Crypt is cryptographic module aiming for FIPS 140-3 certification.
+The primary goal of this library is to be the safest implemenation, not the fastest.
 
 WARNING: This library is currently uncertified
 
-The library is header-only, has no dependencies, and requires C++14.
+The library is header-only, has no dependencies, and requires C++20.
 
 == Motivation
 
@@ -31,9 +32,9 @@ Anywhere where security is needed.
 Boost.Crypt is tested natively on Ubuntu (x86_64, s390x, and aarch64), macOS (x86_64, and Apple Silicon), and Windows (x32 and x64);
 as well as emulated PPC64LE and STM32 using QEMU with the following compilers:
 
-* GCC 7 and later
-* Clang 6 and later
-* Visual Studio 2017 and later
+* GCC 11 and later
+* Clang 15 and later
+* Visual Studio 2019 (14.2) and later
 * Intel OneAPI DPC++ 2024.2 and later
 * CUDA Toolkit 12.5 and later (Both NVCC and NVRTC)
 

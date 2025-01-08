@@ -10,12 +10,8 @@ https://www.boost.org/LICENSE_1_0.txt
 
 == User Configurable Macros
 
-- `BOOST_CRYPT_ENABLE_MD5`: Without this define `#include <boost/crypt/hash/md5.hpp>` will issue a `#error` because it is in-secure.
+- None at this time
 
 == Automatic Configuration Macros
 
-- `BOOST_CRYPT_HAS_STRING_VIEW`: This is defined when compiling with at least C++17 and your standard library has a complete implementation of `<string_view>`.
-
-- `BOOST_CRYPT_HAS_SPAN`: This is defined when compiling with at least C++20 and your standard library has a complete implementation of `<span>`.
-
-- `BOOST_CRYPT_HAS_CUDA`: This is defined when compiling with either NVCC or NVRTC regardless of the host compiler.
+- `BOOST_CRYPT_HAS_CUDA`: This is defined when compiling with NVCC regardless of the host compiler.
