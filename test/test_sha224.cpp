@@ -161,25 +161,6 @@ void test_file(const T filename, const std::array<uint16_t, 28>& res)
     }
 }
 
-template <typename T>
-void test_invalid_file(const T filename)
-{
-    constexpr boost::crypt::sha224_hasher::return_type res{};
-
-    const auto crypt_res {boost::crypt::sha224_file(filename)};
-
-    for (std::size_t j {}; j < crypt_res.size(); ++j)
-    {
-        if (!BOOST_TEST(res[j] == static_cast<byte>(crypt_res[j])))
-        {
-            // LCOV_EXCL_START
-            std::cerr << "Failure with file: " << filename << std::endl;
-            break;
-            // LCOV_EXCL_STOP
-        }
-    }
-}
-
 void files_test()
 {
     // Based off where we are testing from (test vs boost_root) we need to adjust our filepath
@@ -243,10 +224,10 @@ void files_test()
     #endif
 
     const auto invalid_filename = "broken.bin";
-    BOOST_TEST_THROWS(test_invalid_file(invalid_filename), std::runtime_error);
+    BOOST_TEST_THROWS(boost::crypt::sha224_file(invalid_filename), std::runtime_error);
 
     const std::string str_invalid_filename {invalid_filename};
-    BOOST_TEST_THROWS(test_invalid_file(str_invalid_filename), std::runtime_error);
+    BOOST_TEST_THROWS(boost::crypt::sha224_file(str_invalid_filename), std::runtime_error);
 
     // On macOS 15
     // sha224 test_file_2.txt
@@ -256,7 +237,7 @@ void files_test()
     test_file(filename_2, res_2);
 
     const char* test_null_file = nullptr;
-    BOOST_TEST_THROWS(test_invalid_file(test_null_file), std::runtime_error);
+    BOOST_TEST_THROWS(boost::crypt::sha224_file(test_null_file), std::runtime_error);
 }
 
 int main()
