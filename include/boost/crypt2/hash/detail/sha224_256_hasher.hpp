@@ -34,6 +34,8 @@ private:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_message_block() noexcept -> void override;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(const compat::true_type&) noexcept -> void;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(const compat::false_type&) noexcept -> void;
 };
 
 namespace sha256_detail {
@@ -172,8 +174,26 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_224_256_hasher<digest_size>::process_
     buffer_index_ = 0U;
 }
 
+// Initial values for SHA224
 template <compat::size_t digest_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_224_256_hasher<digest_size>::init(const compat::true_type&) noexcept -> void
+{
+    base_class::base_init();
+
+    // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+    intermediate_hash_[0] = 0xC1059ED8;
+    intermediate_hash_[1] = 0x367CD507;
+    intermediate_hash_[2] = 0x3070DD17;
+    intermediate_hash_[3] = 0xF70E5939;
+    intermediate_hash_[4] = 0xFFC00B31;
+    intermediate_hash_[5] = 0x68581511;
+    intermediate_hash_[6] = 0x64F98FA7;
+    intermediate_hash_[7] = 0xBEFA4FA4;
+}
+
+// Initial values for SHA256
+template <compat::size_t digest_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_224_256_hasher<digest_size>::init(const compat::false_type&) noexcept -> void
 {
     base_class::base_init();
 
