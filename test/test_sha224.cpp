@@ -238,6 +238,9 @@ void files_test()
 
     const char* test_null_file = nullptr;
     BOOST_TEST_THROWS(boost::crypt::sha224_file(test_null_file), std::runtime_error);
+
+    std::filesystem::path bad_path = "path.txt";
+    BOOST_TEST_THROWS(boost::crypt::sha224_file(bad_path), std::runtime_error);
 }
 
 int main()

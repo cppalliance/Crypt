@@ -61,6 +61,7 @@ inline auto sha224_file_impl(detail::file_reader<64U>& reader) -> sha224_hasher:
 } // namespace detail
 
 template <typename T>
+    requires std::is_convertible_v<T, std::string> || std::is_convertible_v<T, std::string_view>
 BOOST_CRYPT_EXPORT inline auto sha224_file(const T& filepath)
 {
     if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
