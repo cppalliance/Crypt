@@ -92,9 +92,13 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto as_writable_bytes(span<T> s) noexcept
 
 // Type traits
 #ifdef BOOST_CRYPT_HAS_CUDA
+template <typename T, T v>
+using integral_constant = cuda::std::integral_constant<T, v>;
 using true_type = cuda::std::true_type;
 using false_type = cuda::std::false_type;
 #else
+template <typename T, T v>
+using integral_constant = std::integral_constant<T, v>;
 using true_type = std::true_type;
 using false_type = std::false_type;
 #endif
