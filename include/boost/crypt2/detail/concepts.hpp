@@ -23,6 +23,11 @@ concept file_system_path = std::is_convertible_v<T, std::string> ||
 
 #endif
 
+template <typename Range>
+concept writable_output_range =  compat::output_range<Range, compat::range_value_t<Range>> &&
+                                 compat::sized_range<Range> &&
+                                 compat::is_trivially_copyable_v<compat::range_value_t<Range>>;
+
 } // namespace boost::crypt::concepts
 
 #endif // BOOST_CRYPT_DETAIL_CONCEPTS_HPP

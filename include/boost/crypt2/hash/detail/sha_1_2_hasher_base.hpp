@@ -8,6 +8,7 @@
 #include <boost/crypt2/detail/config.hpp>
 #include <boost/crypt2/detail/compat.hpp>
 #include <boost/crypt2/detail/clear_mem.hpp>
+#include <boost/crypt2/detail/concepts.hpp>
 #include <boost/crypt2/state.hpp>
 
 namespace boost::crypt::hash_detail {
@@ -54,22 +55,16 @@ public:
     [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() noexcept -> return_type;
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte, digest_size> data) noexcept -> state;
 
-    template <typename Range>
-    BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) noexcept -> void
-        requires compat::output_range<Range, compat::range_value_t<Range>> &&
-                 compat::sized_range<Range> &&
-                 compat::is_trivially_copyable_v<compat::range_value_t<Range>>;
+    template <concepts::writable_output_range Range>
+    BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto base_init() noexcept -> void;
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto base_destroy() noexcept -> void;
 };
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
-template <typename Range>
+template <concepts::writable_output_range Range>
 auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&& data) noexcept -> void
-    requires compat::output_range<Range, compat::range_value_t<Range>> &&
-             compat::sized_range<Range> &&
-             compat::is_trivially_copyable_v<compat::range_value_t<Range>>
 {
     using value_type = compat::range_value_t<Range>;
 
