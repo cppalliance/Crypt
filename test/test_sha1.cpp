@@ -165,9 +165,10 @@ void test_file(const std::string& filename, const std::array<std::uint16_t, 20>&
     }
 }
 
-// These tests end up showing red on LCOV becuase they are constexpr executed
+// These tests end up showing red on LCOV because they are constexpr executed
 // LCOV_EXCL_START
-void test_invalid_file(const std::string& filename)
+template <typename T>
+void test_invalid_file(const T filename)
 {
     constexpr std::array<std::byte, 20> res{};
 
@@ -253,6 +254,9 @@ void files_test()
                                                   0x47, 0x99, 0xb4, 0x7b, 0xd9, 0x25, 0x5a, 0xc9, 0xcb, 0x65};
 
     test_file(filename_2, res_2);
+
+    const char* test_null_file = nullptr;
+    BOOST_TEST_THROWS(test_invalid_file(test_null_file), std::runtime_error);
 }
 
 int main()

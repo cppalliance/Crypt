@@ -52,7 +52,7 @@ project : requirements
 # Basic Testing
 run quick.cpp ;
 run test_sha1.cpp ;
-#run test_sha224.cpp ;
+run test_sha224.cpp ;
 #run test_sha256.cpp ;
 #run test_sha384.cpp ;
 #run test_sha512.cpp ;
