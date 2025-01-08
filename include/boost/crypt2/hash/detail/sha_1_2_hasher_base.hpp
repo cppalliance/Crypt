@@ -42,7 +42,7 @@ public:
     using return_type = compat::array<compat::byte, digest_size>;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_1_2_hasher_base() noexcept { base_init(); }
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha_1_2_hasher_base() noexcept { destroy(); }
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR virtual ~sha_1_2_hasher_base() noexcept { base_destroy(); }
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
 
@@ -61,7 +61,7 @@ public:
                  compat::is_trivially_copyable_v<compat::range_value_t<Range>>;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto base_init() noexcept -> void;
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto destroy() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto base_destroy() noexcept -> void;
 };
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
@@ -258,7 +258,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
 }
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::destroy() noexcept -> void
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::base_destroy() noexcept -> void
 {
     detail::clear_mem(intermediate_hash_);
     detail::clear_mem(buffer_);
