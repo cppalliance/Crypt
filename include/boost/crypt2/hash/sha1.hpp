@@ -280,8 +280,15 @@ auto sha1_file_impl(detail::file_reader<block_size>& reader) -> sha1_hasher::ret
 
 template <typename T>
 BOOST_CRYPT_EXPORT inline auto sha1_file(const T& filepath)
-    requires std::is_convertible_v<T, std::string>
 {
+    if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
+    {
+        if (filepath == nullptr)
+        {
+            throw std::runtime_error("Invalid file path");
+        }
+    }
+
     detail::file_reader<64U> reader(filepath);
     return detail::sha1_file_impl(reader);
 }

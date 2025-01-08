@@ -42,12 +42,10 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha224(SizedRange&& da
 #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
 #endif
 
-template <typename T>
-BOOST_CRYPT_EXPORT inline auto sha1_file(const T& filepath)
-    requires std::is_convertible_v<T, std::string>
-{
-    detail::file_reader<64U> reader(filepath);
+namespace detail {
 
+inline auto sha224_file_impl(detail::file_reader<64U>& reader) -> sha224_hasher::return_type
+{
     sha224_hasher hasher;
     while (!reader.eof())
     {
@@ -58,6 +56,23 @@ BOOST_CRYPT_EXPORT inline auto sha1_file(const T& filepath)
     }
 
     return hasher.get_digest();
+}
+
+} // namespace detail
+
+template <typename T>
+BOOST_CRYPT_EXPORT inline auto sha224_file(const T& filepath)
+{
+    if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
+    {
+        if (filepath == nullptr)
+        {
+            throw std::runtime_error("Invalid file path");
+        }
+    }
+
+    detail::file_reader<64U> reader(filepath);
+    return detail::sha224_file_impl(reader);
 }
 
 #if defined(__clang__) && __clang_major__ >= 19

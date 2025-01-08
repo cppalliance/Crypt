@@ -45,7 +45,7 @@ public:
         }
 
     explicit file_reader(const std::string_view filename)
-            : fd_(filename, std::ios::binary | std::ios::in)
+            : fd_(filename.data(), std::ios::binary | std::ios::in)
     {
         validate_file(filename);
     }
