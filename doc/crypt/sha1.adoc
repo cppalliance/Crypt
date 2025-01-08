@@ -1,5 +1,5 @@
 ////
-Copyright 2024 Matt Borland
+Copyright 2024 - 2025 Matt Borland
 Distributed under the Boost Software License, Version 1.0.
 https://www.boost.org/LICENSE_1_0.txt
 ////
@@ -11,94 +11,6 @@ https://www.boost.org/LICENSE_1_0.txt
 
 This library supports SHA1 as described in https://datatracker.ietf.org/doc/html/rfc3174[RFC 3174].
 There is a wide range of acceptable inputs for the base sha1 function:
-
-== Hashing Functions
-
-[source, c++]
-----
-namespace boost {
-namespace crypt {
-
-uisng return_type = boost::crypt::array<uint8_t, 20>;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char* str, size_t len) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const unsigned char* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const unsigned char* str, size_t len) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char16_t* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char16_t* str, size_t len) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char32_t* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const char32_t* str, size_t len) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const wchar_t* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha1(const wchar_t* str, size_t len) noexcept -> return_type;
-
-inline auto sha1(const std::string& str) noexcept -> return_type;
-
-inline auto sha1(const std::u16string& str) noexcept -> return_type;
-
-inline auto sha1(const std::u32string& str) noexcept -> return_type;
-
-inline auto sha1(const std::wstring& str) noexcept -> return_type;
-
-#ifdef BOOST_CRYPT_HAS_STRING_VIEW
-
-inline auto sha1(std::string_view str) noexcept -> return_type;
-
-inline auto sha1(std::u16string_view str) noexcept -> return_type;
-
-inline auto sha1(std::u32string_view str) noexcept -> return_type;
-
-inline auto sha1(std::wstring_view str) noexcept -> return_type;
-
-#endif // BOOST_CRYPT_HAS_STRING_VIEW
-
-#ifdef BOOST_CRYPT_HAS_SPAN
-
-template <typename T, std::size_t extent>
-inline auto md5(std::span<T, extent> data) noexcept -> return_type;
-
-#endif // BOOST_CRYPT_HAS_SPAN
-
-#ifdef BOOST_CRYPT_HAS_CUDA
-
-template <typename T, boost::crypt::size_t extent>
-BOOST_CRYPT_GPU_ENABLED inline auto md5(cuda::std::span<T, extent> data) noexcept -> return_type;
-
-#endif // BOOST_CRYPT_HAS_CUDA
-
-} //namespace crypt
-} //namespace boost
-----
-
-== File Hashing Functions
-
-We also have the ability to scan files and return the sha1 value:
-
-[source, c++]
-----
-namespace boost {
-namespace crypt {
-
-uisng return_type = boost::crypt::array<uint8_t, 16>;
-
-inline auto sha1_file(const char* filepath) noexcept -> return_type;
-
-inline auto sha1_file(const std::string& filepath) noexcept -> return_type;
-
-inline auto sha1_file(std::string_view filepath) noexcept -> return_type;
-
-} // namespace crypt
-} // namespace boost
-----
 
 == Hashing Object
 
@@ -113,44 +25,60 @@ namespace crypt {
 
 class sha1_hasher
 {
-    uisng return_type = boost::crypt::array<uint8_t, 20>;
+public:
+    uisng return_type = std::array<std::byte, 20>;
 
-    void init();
+    // Initialize the hasher
+    constexpr void init() noexcept;
 
-    template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_byte(ByteType byte) noexcept -> state;
+    // Process bytes piecewise
+    constexpr state process_bytes(std::span<const std::byte> data) noexcept;
 
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, size_t byte_count) noexcept -> state;
+    template <std::ranges::sized_range Range>
+    constexpr state process_bytes(Range&& data) noexcept;
 
-    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    // Finalize the calculation of the hash
+    constexpr state finalize() noexcept;
 
-    inline auto process_bytes(std::string_view str) noexcept -> state;
+    // Get the digest
+    [[nodiscard]] constexpr return_type get_digest() noexcept;
 
-    inline auto process_bytes(std::u16string_view str) noexcept -> state;
-
-    inline auto process_bytes(std::u32string_view str) noexcept -> state;
-
-    inline auto process_bytes(std::wstring_view str) noexcept -> state;
-
-    #endif // BOOST_CRYPT_HAS_STRING_VIEW
-
-    #ifdef BOOST_CRYPT_HAS_SPAN
-
-    template <typename T, boost::crypt::size_t extent>
-    inline auto process_bytes(std::span<T, extent> data) noexcept -> state;
-
-    #endif // BOOST_CRYPT_HAS_SPAN
-
-    #ifdef BOOST_CRYPT_HAS_CUDA
-
-    template <typename T, boost::crypt::size_t extent>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(cuda::std::span<T, extent> data) noexcept -> state;
-
-    #endif // BOOST_CRYPT_HAS_CUDA
-
-    inline auto get_digest() noexcept -> boost::crypt::array<boost::crypt::uint8_t, 20>;
+    template <typename Range>
+    BOOST_CRYPT_GPU_ENABLED state get_digest(Range&& data) noexcept
+        requires std::output_range<Range, std::range_value_t<Range>> && std::sized_range<Range> && std::is_trivially_copyable_v<std::range_value_t<Range>>;
 };
+
+} // namespace crypt
+} // namespace boost
+----
+
+== One-Shot Hashing Functions
+
+[source, c++]
+----
+namespace boost {
+namespace crypt {
+
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(std::span<const std::byte> data) noexcept -> sha1_hasher::return_type;
+
+template <std::ranges::sized_range SizedRange>
+BOOST_CRYPT_GPU_ENABLED constexpr auto sha1(SizedRange&& data) noexcept -> sha1_hasher::return_type;
+
+} //namespace crypt
+} //namespace boost
+----
+
+== File Hashing Functions
+
+We also have the ability to scan files and return the sha1 value:
+
+[source, c++]
+----
+namespace boost {
+namespace crypt {
+
+template <typename T>
+inline auto sha1_file(const T& filepath) -> sha1_hasher::return_type;
 
 } // namespace crypt
 } // namespace boost
