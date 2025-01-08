@@ -73,6 +73,7 @@ We also have the ability to scan files and return the sha224 value:
 namespace boost::crypt {
 
 template <typename T>
+    requires std::is_convertible_v<T, std::string> || std::is_convertible_v<T, std::string_view>
 inline auto sha224_file(const T& filepath) -> sha224_hasher::return_type;
 
 } // namespace boost::crypt
