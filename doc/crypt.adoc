@@ -25,6 +25,7 @@ include::crypt/sha1.adoc[]
 
 include::crypt/sha224.adoc[]
 
+////
 include::crypt/sha256.adoc[]
 
 include::crypt/sha384.adoc[]
@@ -50,7 +51,7 @@ include::crypt/hash_drbg.adoc[]
 include::crypt/hmac_drbg.adoc[]
 
 include::crypt/config.adoc[]
-
+////
 include::crypt/reference.adoc[]
 
 include::crypt/copyright.adoc[]
