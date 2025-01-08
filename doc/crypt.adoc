@@ -50,6 +50,8 @@ include::crypt/hash_drbg.adoc[]
 
 include::crypt/hmac_drbg.adoc[]
 ////
+include::crypt/concepts.adoc[]
+
 include::crypt/config.adoc[]
 
 include::crypt/reference.adoc[]
