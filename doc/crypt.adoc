@@ -21,8 +21,6 @@ include::crypt/api_reference.adoc[]
 
 include::crypt/state.adoc[]
 
-include::crypt/md5.adoc[]
-
 include::crypt/sha1.adoc[]
 
 include::crypt/sha224.adoc[]
