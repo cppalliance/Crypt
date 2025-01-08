@@ -44,6 +44,12 @@ public:
             validate_file(filename_str);
         }
 
+    explicit file_reader(const std::string_view filename)
+            : fd_(filename, std::ios::binary | std::ios::in)
+    {
+        validate_file(filename);
+    }
+
     // Rule of 5
     file_reader(const file_reader&) = delete;
     file_reader& operator=(const file_reader&) = delete;
