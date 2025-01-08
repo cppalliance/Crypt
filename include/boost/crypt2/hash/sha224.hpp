@@ -11,6 +11,7 @@
 #include <boost/crypt2/hash/detail/sha224_256_hasher.hpp>
 #include <boost/crypt2/detail/file_reader.hpp>
 #include <boost/crypt2/detail/compat.hpp>
+#include <boost/crypt2/detail/concepts.hpp>
 
 namespace boost::crypt {
 
@@ -60,8 +61,7 @@ inline auto sha224_file_impl(detail::file_reader<64U>& reader) -> sha224_hasher:
 
 } // namespace detail
 
-template <typename T>
-    requires std::is_convertible_v<T, std::string> || std::is_convertible_v<T, std::string_view>
+template <concepts::file_system_path T>
 BOOST_CRYPT_EXPORT inline auto sha224_file(const T& filepath)
 {
     if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)

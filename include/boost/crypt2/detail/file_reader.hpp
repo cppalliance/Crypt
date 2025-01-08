@@ -50,6 +50,12 @@ public:
         validate_file(filename);
     }
 
+    explicit file_reader(const std::filesystem::path filename)
+            : fd_(filename, std::ios::binary | std::ios::in)
+    {
+        validate_file(filename);
+    }
+
     // Rule of 5
     file_reader(const file_reader&) = delete;
     file_reader& operator=(const file_reader&) = delete;
@@ -90,7 +96,8 @@ public:
     }
 
 private:
-    void validate_file(const std::string_view filename) const
+    template <typename T>
+    void validate_file(const T filename) const
     {
         if (!fd_.is_open())
         {

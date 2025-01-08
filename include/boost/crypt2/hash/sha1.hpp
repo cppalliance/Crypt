@@ -10,6 +10,7 @@
 #include <boost/crypt2/hash/detail/sha_1_2_hasher_base.hpp>
 #include <boost/crypt2/detail/file_reader.hpp>
 #include <boost/crypt2/detail/compat.hpp>
+#include <boost/crypt2/detail/concepts.hpp>
 
 namespace boost::crypt {
 
@@ -278,8 +279,7 @@ auto sha1_file_impl(detail::file_reader<block_size>& reader) -> sha1_hasher::ret
 
 } // namespace detail
 
-template <typename T>
-    requires std::is_convertible_v<T, std::string> || std::is_convertible_v<T, std::string_view>
+template <concepts::file_system_path T>
 BOOST_CRYPT_EXPORT inline auto sha1_file(const T& filepath)
 {
     if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
