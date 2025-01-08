@@ -20,6 +20,7 @@ template <compat::size_t digest_size>
 class sha_224_256_hasher final : public sha_1_2_hasher_base<digest_size, 8U>
 {
 private:
+
     static_assert(digest_size == 28U || digest_size == 32U, "Digest size must be 28 (SHA224) or 32 (SHA256)");
 
     friend class sha_1_2_hasher_base<digest_size, 8U>;
@@ -36,6 +37,10 @@ private:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(const compat::true_type&) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(const compat::false_type&) noexcept -> void;
+
+public:
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_224_256_hasher() noexcept { init(is_sha224()); }
 };
 
 namespace sha256_detail {
