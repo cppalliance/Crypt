@@ -251,6 +251,27 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto rotl(T val, int shift) noexcept
     #endif
 }
 
+template <typename T>
+BOOST_CRYPT_GPU_ENABLED constexpr auto rotr(T val, int shift) noexcept
+{
+    // Some clangs incorrectly warn on shift being an int instead of an unsigned int
+    // C++ standard says shift is to be int
+    #ifdef __clang__
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wsign-conversion"
+    #endif
+
+    #ifdef BOOST_CRYPT_HAS_CUDA
+    return cuda::std::rotr(val, shift);
+    #else
+    return std::rotr(val, shift);
+    #endif
+
+    #ifdef __clang__
+    #pragma clang diagnostic pop
+    #endif
+}
+
 } // namespace boost::crypt::compat
 
 #endif // BOOST_CRYPT2_DETAIL_COMPAT_HPP
