@@ -41,6 +41,8 @@ private:
 public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_224_256_hasher() noexcept { init(is_sha224()); }
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept { init(is_sha224()); }
 };
 
 namespace sha256_detail {
