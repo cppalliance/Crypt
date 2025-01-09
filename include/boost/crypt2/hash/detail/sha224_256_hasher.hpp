@@ -41,7 +41,7 @@ public:
 
 namespace sha256_detail {
 
-// On the host device we prefere this array to be static,
+// On the host device we prefer this array to be static,
 // but in a CUDA environment we move it into the function to make it available to host and device
 #ifndef BOOST_CRYPT_HAS_CUDA
 inline constexpr compat::array<compat::uint32_t, 64U> sha256_k {
