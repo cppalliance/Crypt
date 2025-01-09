@@ -243,6 +243,36 @@ void files_test()
     BOOST_TEST_THROWS(boost::crypt::sha224_file(bad_path), std::runtime_error);
 }
 
+consteval bool immediate_test()
+{
+    constexpr std::array<std::byte, 3> vals = {std::byte{0x61}, std::byte{0x62}, std::byte{0x63}};
+    constexpr std::array<std::byte, 28> expected_res = {
+            std::byte{0x23}, std::byte{0x09}, std::byte{0x7d}, std::byte{0x22}, std::byte{0x34}, std::byte{0x05},
+            std::byte{0xd8}, std::byte{0x22}, std::byte{0x86}, std::byte{0x42}, std::byte{0xa4}, std::byte{0x77},
+            std::byte{0xbd}, std::byte{0xa2}, std::byte{0x55}, std::byte{0xb3}, std::byte{0x2a}, std::byte{0xad},
+            std::byte{0xbc}, std::byte{0xe4}, std::byte{0xbd}, std::byte{0xa0}, std::byte{0xb3}, std::byte{0xf7},
+            std::byte{0xe3}, std::byte{0x6c}, std::byte{0x9d}, std::byte{0xa7}
+    };
+    std::span<const std::byte> byte_span {vals};
+
+    boost::crypt::sha224_hasher hasher;
+    hasher.init();
+    hasher.process_bytes(byte_span);
+    const auto res = hasher.get_digest();
+
+    bool correct {true};
+    for (std::size_t i {}; i < res.size(); ++i)
+    {
+        if (res[i] != expected_res[i])
+        {
+            correct = false;
+            break;
+        }
+    }
+
+    return correct;
+}
+
 int main()
 {
     basic_tests();
@@ -253,6 +283,11 @@ int main()
     // The Windows file system returns a different result than on UNIX platforms
     #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
     files_test();
+    #endif
+
+    // GCC-14 has an internal compiler error here
+    #if defined(__GNUC__) && __GNUC__ != 14
+    static_assert(immediate_test());
     #endif
 
     return boost::report_errors();

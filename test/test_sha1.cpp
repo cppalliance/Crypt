@@ -250,6 +250,36 @@ void files_test()
     BOOST_TEST_THROWS(boost::crypt::sha1_file(bad_path), std::runtime_error);
 }
 
+consteval bool immediate_test()
+{
+    constexpr std::array<std::byte, 3> vals = {std::byte{0x61}, std::byte{0x62}, std::byte{0x63}};
+    constexpr std::array<std::byte, 20> expected_res = {
+        std::byte{0xA9}, std::byte{0x99}, std::byte{0x3E}, std::byte{0x36}, std::byte{0x47}, std::byte{0x06},
+        std::byte{0x81}, std::byte{0x6A}, std::byte{0xBA}, std::byte{0x3E}, std::byte{0x25}, std::byte{0x71},
+        std::byte{0x78}, std::byte{0x50}, std::byte{0xC2}, std::byte{0x6C}, std::byte{0x9C}, std::byte{0xD0},
+        std::byte{0xD8}, std::byte{0x9D}
+    };
+
+    const std::span<const std::byte> byte_span {vals};
+
+    boost::crypt::sha1_hasher hasher;
+    hasher.init();
+    hasher.process_bytes(byte_span);
+    const auto res = hasher.get_digest();
+
+    bool correct {true};
+    for (std::size_t i {}; i < res.size(); ++i)
+    {
+        if (res[i] != expected_res[i])
+        {
+            correct = false;
+            break;
+        }
+    }
+
+    return correct;
+}
+
 int main()
 {
     basic_tests();
@@ -260,6 +290,11 @@ int main()
     // The Windows file system returns a different result than on UNIX platforms
     #if defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
     files_test();
+    #endif
+
+    // GCC-14 has an internal compiler error here
+    #if defined(__GNUC__) && __GNUC__ != 14
+    static_assert(immediate_test());
     #endif
 
     return boost::report_errors();
