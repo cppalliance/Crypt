@@ -47,8 +47,8 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
 
-    template <compat::sized_range Range>
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(Range&& data) noexcept -> state;
+    template <compat::sized_range SizedRange>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(SizedRange&& data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 

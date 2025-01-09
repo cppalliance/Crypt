@@ -21,6 +21,8 @@ class sha512_base final
 {
 public:
 
+    using return_type = compat::array<compat::byte, digest_size>;
+
     static constexpr compat::size_t block_size {128U};
 
 private:
@@ -45,6 +47,11 @@ public:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha512_base() noexcept { init(); }
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha512_base() noexcept;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
+
+    template <compat::sized_range SizedRange>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(SizedRange&& data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
 };
@@ -337,6 +344,20 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_message
 
     // Reset the buffer index
     buffer_index_ = 0U;
+}
+
+template <compat::size_t digest_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_bytes(compat::span<const compat::byte> data) noexcept -> state
+{
+    return update(data);
+}
+
+template <compat::size_t digest_size>
+template <compat::sized_range SizedRange>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_bytes(SizedRange&& data) noexcept -> state
+{
+    auto data_span {compat::make_span(compat::forward<SizedRange>(data))};
+    return update(data_span);
 }
 
 } // namespace boost::crypt::hash_detail
