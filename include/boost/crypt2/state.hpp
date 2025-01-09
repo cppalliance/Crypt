@@ -20,6 +20,7 @@ BOOST_CRYPT_EXPORT enum class state
     uninitialized,              // Random bits can not be provided since the generator is uninitialized
     requested_too_many_bits,    // 2^19 bits is all that's allowed per request
     insufficient_key_length,    // The key is not of proscribed length
+    insufficient_output_length, // The output will not fit in the provided container
     state_error                 // added more input after get_digest without re-init
 };
 
