@@ -52,6 +52,7 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 
+    // TODO(mborland): Allow this to take dynamic extent, check the length and then use a fixed amount. See sha512_base
     [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() noexcept -> return_type;
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte, digest_size> data) noexcept -> state;
 
