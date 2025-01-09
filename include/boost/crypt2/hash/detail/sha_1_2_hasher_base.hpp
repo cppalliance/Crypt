@@ -43,7 +43,7 @@ public:
     using return_type = compat::array<compat::byte, digest_size>;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_1_2_hasher_base() noexcept { base_init(); }
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR virtual ~sha_1_2_hasher_base() noexcept { base_destroy(); }
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha_1_2_hasher_base() noexcept { base_destroy(); }
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
 

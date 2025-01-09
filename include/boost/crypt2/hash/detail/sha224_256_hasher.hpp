@@ -36,8 +36,6 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_224_256_hasher() noexcept { init(); }
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha_224_256_hasher() noexcept override { base_class::base_destroy(); };
-
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
 };
 
