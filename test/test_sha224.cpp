@@ -285,7 +285,10 @@ int main()
     files_test();
     #endif
 
+    // GCC-14 has an internal compiler error here
+    #if defined(__GNUC__) && __GNUC__ != 14
     static_assert(immediate_test());
+    #endif
 
     return boost::report_errors();
 }
