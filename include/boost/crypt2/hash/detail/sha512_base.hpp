@@ -51,13 +51,37 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha512_base() noexcept;
 
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
+
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
 
     template <compat::sized_range SizedRange>
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(SizedRange&& data) noexcept -> state;
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 };
+
+template <compat::size_t digest_size>
+constexpr auto sha512_base<digest_size>::finalize() noexcept -> state
+{
+    if (computed_)
+    {
+        corrupted_ = true;
+    }
+    if (corrupted_)
+    {
+        return state::state_error;
+    }
+
+    pad_message();
+    
+    detail::clear_mem(buffer_);
+    low_ = 0UL;
+    high_ = 0UL;
+    computed_ = true;
+
+    return state::success;
+}
 
 template <compat::size_t digest_size>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
