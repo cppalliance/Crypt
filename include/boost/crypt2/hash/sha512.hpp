@@ -22,6 +22,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512(compat::span<co
 {
     sha512_hasher hasher;
     hasher.process_bytes(data);
+    hasher.finalize();
     return hasher.get_digest();
 }
 
@@ -30,6 +31,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512(SizedRange&& da
 {
     sha512_hasher hasher;
     hasher.process_bytes(data);
+    hasher.finalize();
     return hasher.get_digest();
 }
 
@@ -56,6 +58,7 @@ inline auto sha512_file_impl(detail::file_reader<64U>& reader) -> sha512_hasher:
         hasher.process_bytes(buffer_span);
     }
 
+    hasher.finalize();
     return hasher.get_digest();
 }
 

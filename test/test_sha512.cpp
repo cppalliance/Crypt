@@ -125,6 +125,7 @@ void string_view_test()
         boost::crypt::sha512_hasher hasher;
         const auto current_state = hasher.process_bytes(string_view_message);
         BOOST_TEST(current_state == boost::crypt::state::success);
+        hasher.finalize();
         const auto result2 = hasher.get_digest();
         for (std::size_t i {}; i < message_result.size(); ++i)
         {
@@ -149,6 +150,7 @@ void test_class()
         hasher.init();
         const auto msg {std::get<0>(test_value)};
         hasher.process_bytes(msg);
+        hasher.finalize();
         const auto message_result {hasher.get_digest()};
 
         const auto valid_result {std::get<1>(test_value)};
@@ -272,19 +274,32 @@ void files_test()
 consteval bool immediate_test()
 {
     constexpr std::array<std::byte, 3> vals = {std::byte{0x61}, std::byte{0x62}, std::byte{0x63}};
-    const auto expected_res = std::array<std::uint8_t, 64>{0xdd, 0xaf, 0x35, 0xa1, 0x93, 0x61, 0x7a, 0xba, 0xcc, 0x41, 0x73, 0x49, 0xae, 0x20, 0x41, 0x31, 0x12, 0xe6, 0xfa, 0x4e, 0x89, 0xa9, 0x7e, 0xa2, 0x0a, 0x9e, 0xee, 0xe6, 0x4b, 0x55, 0xd3, 0x9a, 0x21, 0x92, 0x99, 0x2a, 0x27, 0x4f, 0xc1, 0xa8, 0x36, 0xba, 0x3c, 0x23, 0xa3, 0xfe, 0xeb, 0xbd, 0x45, 0x4d, 0x44, 0x23, 0x64, 0x3c, 0xe8, 0x0e, 0x2a, 0x9a, 0xc9, 0x4f, 0xa5, 0x4c, 0xa4, 0x9f};
+    constexpr std::array<std::byte, 64> expected_res {
+        std::byte{0xdd}, std::byte{0xaf}, std::byte{0x35}, std::byte{0xa1}, std::byte{0x93}, std::byte{0x61},
+        std::byte{0x7a}, std::byte{0xba}, std::byte{0xcc}, std::byte{0x41}, std::byte{0x73}, std::byte{0x49},
+        std::byte{0xae}, std::byte{0x20}, std::byte{0x41}, std::byte{0x31}, std::byte{0x12}, std::byte{0xe6},
+        std::byte{0xfa}, std::byte{0x4e}, std::byte{0x89}, std::byte{0xa9}, std::byte{0x7e}, std::byte{0xa2},
+        std::byte{0x0a}, std::byte{0x9e}, std::byte{0xee}, std::byte{0xe6}, std::byte{0x4b}, std::byte{0x55},
+        std::byte{0xd3}, std::byte{0x9a}, std::byte{0x21}, std::byte{0x92}, std::byte{0x99}, std::byte{0x2a},
+        std::byte{0x27}, std::byte{0x4f}, std::byte{0xc1}, std::byte{0xa8}, std::byte{0x36}, std::byte{0xba},
+        std::byte{0x3c}, std::byte{0x23}, std::byte{0xa3}, std::byte{0xfe}, std::byte{0xeb}, std::byte{0xbd},
+        std::byte{0x45}, std::byte{0x4d}, std::byte{0x44}, std::byte{0x23}, std::byte{0x64}, std::byte{0x3c},
+        std::byte{0xe8}, std::byte{0x0e}, std::byte{0x2a}, std::byte{0x9a}, std::byte{0xc9}, std::byte{0x4f},
+        std::byte{0xa5}, std::byte{0x4c}, std::byte{0xa4}, std::byte{0x9f}
+    };
 
     std::span<const std::byte> byte_span {vals};
 
     boost::crypt::sha512_hasher hasher;
     hasher.init();
     hasher.process_bytes(byte_span);
+    hasher.finalize();
     const auto res = hasher.get_digest();
 
     bool correct {true};
     for (std::size_t i {}; i < res.size(); ++i)
     {
-        if (res[i] != static_cast<std::byte>(expected_res[i]))
+        if (res[i] != expected_res[i])
         {
             correct = false;
             break;
