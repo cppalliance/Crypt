@@ -56,7 +56,7 @@ public:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte, digest_size> data) noexcept -> state;
 
     template <concepts::writable_output_range Range>
-    BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) noexcept -> void;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(Range&& data) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto base_init() noexcept -> void;
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto base_destroy() noexcept -> void;
@@ -64,7 +64,7 @@ public:
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 template <concepts::writable_output_range Range>
-auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&& data) noexcept -> void
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&& data) noexcept -> void
 {
     using value_type = compat::range_value_t<Range>;
 
