@@ -36,6 +36,10 @@ private:
     bool computed_ {};
     bool corrupted_ {};
 
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_message_block() noexcept -> void;
+
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha512_base() noexcept { init(); }
@@ -44,6 +48,49 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
 };
+
+template <compat::size_t digest_size>
+[[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+auto sha512_base<digest_size>::update(compat::span<const compat::byte> data) noexcept -> state
+{
+    if (data.empty())
+    {
+        return state::success;
+    }
+    if (computed_)
+    {
+        corrupted_ = true;
+    }
+    if (corrupted_)
+    {
+        return state::state_error;
+    }
+
+    for (const auto val : data)
+    {
+        buffer_[buffer_index_++] = val;
+
+        low_ += 8U;
+
+        if (low_ == 0U) [[unlikely]]
+        {
+            // Would indicate size_t rollover which should not happen on a single data stream
+            // LCOV_EXCL_START
+            ++high_;
+            if (high_ == 0U) [[unlikely]]
+            {
+                corrupted_ = true;
+                return state::input_too_long;
+            }
+            // LCOV_EXCL_STOP
+        }
+
+        if (buffer_index_ == buffer_.size())
+        {
+            process_message_block();
+        }
+    }
+}
 
 template <compat::size_t digest_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha512_base<digest_size>::~sha512_base() noexcept
