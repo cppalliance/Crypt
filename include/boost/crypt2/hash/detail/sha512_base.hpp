@@ -12,6 +12,7 @@
 #include <boost/crypt2/detail/compat.hpp>
 #include <boost/crypt2/detail/clear_mem.hpp>
 #include <boost/crypt2/detail/concepts.hpp>
+#include <boost/crypt2/detail/assert.hpp>
 #include <boost/crypt2/state.hpp>
 
 namespace boost::crypt::hash_detail {
@@ -41,6 +42,8 @@ private:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_message_block() noexcept -> void;
 
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto pad_message() noexcept -> void;
 
 public:
 
@@ -358,6 +361,61 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_bytes(S
 {
     auto data_span {compat::make_span(compat::forward<SizedRange>(data))};
     return update(data_span);
+}
+
+template <compat::size_t digest_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::pad_message() noexcept -> void
+{
+    constexpr compat::size_t message_length_start_index {112U};
+
+    // We don't have enough space for everything we need
+    if (buffer_index_ >= message_length_start_index)
+    {
+        buffer_[buffer_index_++] = compat::byte{0x80};
+        while (buffer_index_ < buffer_.size())
+        {
+            buffer_[buffer_index_++] = compat::byte{0x00};
+        }
+
+        process_message_block();
+
+        while (buffer_index_ < message_length_start_index)
+        {
+            buffer_[buffer_index_++] = compat::byte{0x00};
+        }
+    }
+    else
+    {
+        buffer_[buffer_index_++] = compat::byte{0x80};
+        while (buffer_index_ < message_length_start_index)
+        {
+            buffer_[buffer_index_++] = compat::byte{0x00};
+        }
+    }
+
+    // Add the message length to the end of the buffer
+    BOOST_CRYPT_ASSERT(buffer_index_ == message_length_start_index);
+
+    buffer_[112U] = static_cast<compat::byte>(high_ >> 56U);
+    buffer_[113U] = static_cast<compat::byte>(high_ >> 48U);
+    buffer_[114U] = static_cast<compat::byte>(high_ >> 40U);
+    buffer_[115U] = static_cast<compat::byte>(high_ >> 32U);
+    buffer_[116U] = static_cast<compat::byte>(high_ >> 24U);
+    buffer_[117U] = static_cast<compat::byte>(high_ >> 16U);
+    buffer_[118U] = static_cast<compat::byte>(high_ >>  8U);
+    buffer_[119U] = static_cast<compat::byte>(high_);
+
+    buffer_[120U] = static_cast<compat::byte>(low_ >> 56U);
+    buffer_[121U] = static_cast<compat::byte>(low_ >> 48U);
+    buffer_[122U] = static_cast<compat::byte>(low_ >> 40U);
+    buffer_[123U] = static_cast<compat::byte>(low_ >> 32U);
+    buffer_[124U] = static_cast<compat::byte>(low_ >> 24U);
+    buffer_[125U] = static_cast<compat::byte>(low_ >> 16U);
+    buffer_[126U] = static_cast<compat::byte>(low_ >>  8U);
+    buffer_[127U] = static_cast<compat::byte>(low_);
+
+    // Finally we process the message block with our filled buffer
+    process_message_block();
 }
 
 } // namespace boost::crypt::hash_detail
