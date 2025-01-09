@@ -25,7 +25,6 @@ private:
 public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha1_hasher() noexcept { init(); }
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha1_hasher() noexcept override { base_destroy(); }
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
 };
