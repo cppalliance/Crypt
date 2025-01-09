@@ -45,6 +45,8 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto pad_message() noexcept -> void;
 
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest_impl(compat::span<compat::byte, digest_size> data) const -> state;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha512_base() noexcept { init(); }
@@ -59,7 +61,91 @@ public:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(SizedRange&& data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
+
+    [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+    auto get_digest() const noexcept -> return_type;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte> data) const noexcept -> state;
+
+    template <concepts::writable_output_range Range>
+    BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) const noexcept -> state;
 };
+
+template <compat::size_t digest_size>
+template <concepts::writable_output_range Range>
+BOOST_CRYPT_GPU_ENABLED auto sha512_base<digest_size>::get_digest(Range&& data) const noexcept -> state
+{
+    using value_type = compat::range_value_t<Range>;
+
+    auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
+
+    if (data_span.size() * sizeof(value_type) < digest_size)
+    {
+        return state::insufficient_output_length;
+    }
+
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+    #endif
+
+    return get_digest_impl(compat::span<compat::byte, digest_size>(
+            compat::as_writable_bytes(data_span).data(),
+            digest_size
+    ));
+
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic pop
+    #endif
+}
+
+template <compat::size_t digest_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::get_digest(compat::span<compat::byte> data) const noexcept -> state
+{
+    if (data.size() >= digest_size)
+    {
+        // We have verified the length of the span is correct so using a fixed length section of it is safe
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+        #endif
+
+        return get_digest_impl(compat::span<compat::byte, digest_size>(data.data(), digest_size));
+
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic pop
+        #endif
+    }
+
+    return state::insufficient_output_length;
+}
+
+template <compat::size_t digest_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::get_digest() const noexcept -> sha512_base::return_type
+{
+    return_type digest {};
+    [[maybe_unused]] const auto return_val = get_digest_impl(digest);
+    BOOST_CRYPT_ASSERT(return_val == state::success);
+    return digest;
+}
+
+template <compat::size_t digest_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::get_digest_impl(compat::span<compat::byte, digest_size> data) const -> state
+{
+    if (corrupted_)
+    {
+        return state::state_error;
+    }
+
+    static_assert(data.size() == digest_size);
+    static_assert(intermediate_hash_.size() >= (digest_size - 1U) >> 3U);
+    for (compat::size_t i {}; i < digest_size; ++i)
+    {
+        data[i] = static_cast<compat::byte>(intermediate_hash_[i >> 3U] >> 8U * (7 - (i % 8U)));
+    }
+
+    return state::success;
+}
 
 template <compat::size_t digest_size>
 constexpr auto sha512_base<digest_size>::finalize() noexcept -> state
@@ -74,7 +160,7 @@ constexpr auto sha512_base<digest_size>::finalize() noexcept -> state
     }
 
     pad_message();
-    
+
     detail::clear_mem(buffer_);
     low_ = 0UL;
     high_ = 0UL;
