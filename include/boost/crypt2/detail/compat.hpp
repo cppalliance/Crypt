@@ -42,9 +42,11 @@ namespace boost::crypt::compat {
 #ifdef BOOST_CRYPT_HAS_CUDA
 using size_t = cuda::std::size_t;
 using uint32_t = cuda::std::uint32_t;
+using uint64_t = cuda::std::uint64_t;
 #else
 using size_t = std::size_t;
 using uint32_t = std::uint32_t;
+using uint64_t = std::uint64_t;
 #endif
 
 // Arrays and spans
