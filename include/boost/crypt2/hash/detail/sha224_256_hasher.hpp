@@ -30,21 +30,15 @@ private:
     using base_class::buffer_;
     using base_class::buffer_index_;
 
-    using is_sha224 = compat::bool_constant<digest_size == 28U>;
-
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_message_block() noexcept -> void override;
-
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(const compat::true_type&) noexcept -> void;
-
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(const compat::false_type&) noexcept -> void;
 
 public:
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_224_256_hasher() noexcept { init(is_sha224()); }
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_224_256_hasher() noexcept { init(); }
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha_224_256_hasher() noexcept override { base_class::base_destroy(); };
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept { init(is_sha224()); }
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
 };
 
 namespace sha256_detail {
@@ -185,36 +179,34 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_224_256_hasher<digest_size>::process_
 
 // Initial values for SHA224
 template <compat::size_t digest_size>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_224_256_hasher<digest_size>::init(const compat::true_type&) noexcept -> void
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_224_256_hasher<digest_size>::init() noexcept -> void
 {
     base_class::base_init();
 
-    // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
-    intermediate_hash_[0] = 0xC1059ED8;
-    intermediate_hash_[1] = 0x367CD507;
-    intermediate_hash_[2] = 0x3070DD17;
-    intermediate_hash_[3] = 0xF70E5939;
-    intermediate_hash_[4] = 0xFFC00B31;
-    intermediate_hash_[5] = 0x68581511;
-    intermediate_hash_[6] = 0x64F98FA7;
-    intermediate_hash_[7] = 0xBEFA4FA4;
-}
-
-// Initial values for SHA256
-template <compat::size_t digest_size>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_224_256_hasher<digest_size>::init(const compat::false_type&) noexcept -> void
-{
-    base_class::base_init();
-
-    // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
-    intermediate_hash_[0] = 0xC1059ED8;
-    intermediate_hash_[1] = 0x367CD507;
-    intermediate_hash_[2] = 0x3070DD17;
-    intermediate_hash_[3] = 0xF70E5939;
-    intermediate_hash_[4] = 0xFFC00B31;
-    intermediate_hash_[5] = 0x68581511;
-    intermediate_hash_[6] = 0x64F98FA7;
-    intermediate_hash_[7] = 0xBEFA4FA4;
+    if constexpr (digest_size == 28U)
+    {
+        // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+        intermediate_hash_[0] = 0xC1059ED8;
+        intermediate_hash_[1] = 0x367CD507;
+        intermediate_hash_[2] = 0x3070DD17;
+        intermediate_hash_[3] = 0xF70E5939;
+        intermediate_hash_[4] = 0xFFC00B31;
+        intermediate_hash_[5] = 0x68581511;
+        intermediate_hash_[6] = 0x64F98FA7;
+        intermediate_hash_[7] = 0xBEFA4FA4;
+    }
+    else
+    {
+        // https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
+        intermediate_hash_[0] = 0x6A09E667;
+        intermediate_hash_[1] = 0xBB67AE85;
+        intermediate_hash_[2] = 0x3C6EF372;
+        intermediate_hash_[3] = 0xA54FF53A;
+        intermediate_hash_[4] = 0x510E527F;
+        intermediate_hash_[5] = 0x9B05688C;
+        intermediate_hash_[6] = 0x1F83D9AB;
+        intermediate_hash_[7] = 0x5BE0CD19;
+    }
 }
 
 } // namespace boost::crypt::hash_detail
