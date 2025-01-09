@@ -53,7 +53,7 @@ project : requirements
 run quick.cpp ;
 run test_sha1.cpp ;
 run test_sha224.cpp ;
-#run test_sha256.cpp ;
+run test_sha256.cpp ;
 #run test_sha384.cpp ;
 #run test_sha512.cpp ;
 #run test_sha512_224.cpp ;
@@ -86,8 +86,8 @@ run test_nist_cavs_sha224_short_long.cpp ;
 #run test_nist_cavs_sha224_hmac_drbg.cpp ;
 #run test_nist_cavs_sha224_hash_drbg.cpp ;
 
-#run test_nist_cavs_sha256_monte.cpp ;
-#run test_nist_cavs_sha256_short_long.cpp ;
+run test_nist_cavs_sha256_monte.cpp ;
+run test_nist_cavs_sha256_short_long.cpp ;
 #run test_nist_cavs_sha256_hmac.cpp ;
 #run test_nist_cavs_sha256_hmac_drbg.cpp ;
 #run test_nist_cavs_sha256_hash_drbg.cpp ;

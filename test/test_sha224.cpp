@@ -218,10 +218,8 @@ void files_test()
     const std::string str_filename {filename};
     test_file(str_filename, res);
 
-    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
     const std::string_view str_view_filename {str_filename};
     test_file(str_view_filename, res);
-    #endif
 
     const auto invalid_filename = "broken.bin";
     BOOST_TEST_THROWS(boost::crypt::sha224_file(invalid_filename), std::runtime_error);
