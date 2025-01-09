@@ -58,7 +58,7 @@ public:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
 
     template <compat::sized_range SizedRange>
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(SizedRange&& data) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 
@@ -124,21 +124,20 @@ template <compat::size_t digest_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::get_digest() const noexcept -> sha512_base::return_type
 {
     return_type digest {};
-    [[maybe_unused]] const auto return_val = get_digest_impl(digest);
-    BOOST_CRYPT_ASSERT(return_val == state::success);
+    get_digest_impl(digest);
     return digest;
 }
 
 template <compat::size_t digest_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::get_digest_impl(compat::span<compat::byte, digest_size> data) const -> state
 {
-    if (corrupted_)
+    if (corrupted_ || !computed_)
     {
         return state::state_error;
     }
 
-    static_assert(data.size() == digest_size);
-    static_assert(intermediate_hash_.size() >= (digest_size - 1U) >> 3U);
+    BOOST_CRYPT_ASSERT(data.size() == digest_size);
+    BOOST_CRYPT_ASSERT(intermediate_hash_.size() >= (digest_size - 1U) >> 3U);
     for (compat::size_t i {}; i < digest_size; ++i)
     {
         data[i] = static_cast<compat::byte>(intermediate_hash_[i >> 3U] >> 8U * (7 - (i % 8U)));
@@ -210,6 +209,8 @@ auto sha512_base<digest_size>::update(compat::span<const compat::byte> data) noe
             process_message_block();
         }
     }
+
+    return state::success;
 }
 
 template <compat::size_t digest_size>
@@ -402,7 +403,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_message
     compat::array<compat::uint64_t, 80U> W {};
 
     // Init the first 16 words of W
-    static_assert(8U * 16U == buffer_.size());
+    BOOST_CRYPT_ASSERT(8U * 16U == buffer_.size());
     for (compat::size_t i {}; i < 16U; ++i)
     {
         W[i] = (static_cast<compat::uint64_t>(buffer_[i * 8U]) << 56U) |
@@ -431,7 +432,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_message
     auto G {intermediate_hash_[6]};
     auto H {intermediate_hash_[7]};
 
-    static_assert(sha512_k.size() == W.size());
+    BOOST_CRYPT_ASSERT(sha512_k.size() == W.size());
     for (compat::size_t i {}; i < W.size(); ++i)
     {
         const auto temp1 {H + big_sigma1(E) + sha_ch(E, F, G) + sha512_k[i] + W[i]};
@@ -467,10 +468,10 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_bytes(c
 
 template <compat::size_t digest_size>
 template <compat::sized_range SizedRange>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_bytes(SizedRange&& data) noexcept -> state
+BOOST_CRYPT_GPU_ENABLED auto sha512_base<digest_size>::process_bytes(SizedRange&& data) noexcept -> state
 {
     auto data_span {compat::make_span(compat::forward<SizedRange>(data))};
-    return update(data_span);
+    return update(compat::as_bytes(data_span));
 }
 
 template <compat::size_t digest_size>
