@@ -40,7 +40,21 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha512_base() noexcept { init(); }
 
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha512_base() noexcept;
+
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
+};
+
+template <compat::size_t digest_size>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha512_base<digest_size>::~sha512_base() noexcept
+{
+    detail::clear_mem(intermediate_hash_);
+    detail::clear_mem(buffer_);
+    buffer_index_ = 0U;
+    low_ = 0ULL;
+    high_ = 0ULL;
+    computed_ = false;
+    corrupted_ = false;
 };
 
 template <compat::size_t digest_size>
