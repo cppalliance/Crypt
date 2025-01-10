@@ -25,7 +25,7 @@ namespace boost::crypt {
 class sha384_hasher
 {
 public:
-    uisng return_type = compat::array<compat::byte, 64>;
+    uisng return_type = compat::array<compat::byte, 48>;
 
     // Initialize the hasher
     BOOST_CRYPT_GPU_ENABLED constexpr void init() noexcept;
