@@ -64,7 +64,8 @@ void basic_tests()
 {
     for (const auto& test_value : test_values)
     {
-        const auto message_result {boost::crypt::sha1(std::get<0>(test_value))};
+        const auto message_result_expected {boost::crypt::sha1(std::get<0>(test_value))};
+        const auto message_result {message_result_expected.value()};
         const auto valid_result {std::get<1>(test_value)};
         for (std::size_t i {}; i < message_result.size(); ++i)
         {
@@ -84,7 +85,8 @@ void string_test()
     for (const auto& test_value : test_values)
     {
         const std::string string_message {std::get<0>(test_value)};
-        const auto message_result {boost::crypt::sha1(string_message)};
+        const auto message_result_expected {boost::crypt::sha1(string_message)};
+        const auto message_result {message_result_expected.value()};
         const auto valid_result {std::get<1>(test_value)};
         for (std::size_t i {}; i < message_result.size(); ++i)
         {
@@ -105,7 +107,8 @@ void string_view_test()
     {
         const std::string string_message {std::get<0>(test_value)};
         const std::string_view string_view_message {string_message};
-        const auto message_result {boost::crypt::sha1(string_view_message)};
+        const auto message_result_expected {boost::crypt::sha1(string_view_message)};
+        const auto message_result {message_result_expected.value()};
         const auto valid_result {std::get<1>(test_value)};
         for (std::size_t i {}; i < message_result.size(); ++i)
         {
@@ -130,7 +133,8 @@ void test_class()
         const auto msg {std::get<0>(test_value)};
         hasher.process_bytes(msg);
         hasher.finalize();
-        const auto message_result {hasher.get_digest()};
+        const auto message_result_expected {hasher.get_digest()};
+        const auto message_result {message_result_expected.value()};
 
         const auto valid_result {std::get<1>(test_value)};
         for (std::size_t i {}; i < message_result.size(); ++i)
@@ -148,12 +152,14 @@ void test_class()
     const std::string bad_update_msg {"bad"};
     BOOST_TEST(hasher.process_bytes(bad_update_msg) == boost::crypt::state::state_error);
     BOOST_TEST(hasher.finalize() == boost::crypt::state::state_error);
-    BOOST_TEST(hasher.get_digest() == boost::crypt::sha1_hasher::return_type{});
+    BOOST_TEST(hasher.get_digest().error() == boost::crypt::state::state_error);
 }
 
-void test_file(const std::string& filename, const std::array<std::uint16_t, 20>& res)
+template <typename T>
+void test_file(const T& filename, const std::array<std::uint16_t, 20>& res)
 {
-    const auto crypt_res {boost::crypt::sha1_file(filename)};
+    const auto crypt_res_expected {boost::crypt::sha1_file(filename)};
+    const auto crypt_res {crypt_res_expected.value()};
 
     for (std::size_t j {}; j < crypt_res.size(); ++j)
     {
@@ -225,16 +231,14 @@ void files_test()
     const std::string str_filename {filename};
     test_file(str_filename, res);
 
-    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
     const std::string_view str_view_filename {str_filename};
     test_file(str_view_filename, res);
-    #endif
 
     const auto invalid_filename = "broken.bin";
-    BOOST_TEST_THROWS(boost::crypt::sha1_file(invalid_filename), std::runtime_error);
+    BOOST_TEST_THROWS([[maybe_unused]] const auto trash1 = boost::crypt::sha1_file(invalid_filename), std::runtime_error);
 
     const std::string str_invalid_filename {invalid_filename};
-    BOOST_TEST_THROWS(boost::crypt::sha1_file(str_invalid_filename), std::runtime_error);
+    BOOST_TEST_THROWS([[maybe_unused]] const auto trash2 = boost::crypt::sha1_file(str_invalid_filename), std::runtime_error);
 
     // On macOS 15
     // sha1 test_file_2.txt
@@ -245,10 +249,10 @@ void files_test()
     test_file(filename_2, res_2);
 
     const char* test_null_file = nullptr;
-    BOOST_TEST_THROWS(boost::crypt::sha1_file(test_null_file), std::runtime_error);
+    BOOST_TEST_THROWS([[maybe_unused]] const auto trash3 = boost::crypt::sha1_file(test_null_file), std::runtime_error);
 
     std::filesystem::path bad_path = "path.txt";
-    BOOST_TEST_THROWS(boost::crypt::sha1_file(bad_path), std::runtime_error);
+    BOOST_TEST_THROWS([[maybe_unused]] const auto trash4 = boost::crypt::sha1_file(bad_path), std::runtime_error);
 }
 
 consteval bool immediate_test()
@@ -267,7 +271,8 @@ consteval bool immediate_test()
     hasher.init();
     hasher.process_bytes(byte_span);
     hasher.finalize();
-    const auto res = hasher.get_digest();
+    const auto res_expected = hasher.get_digest();
+    const auto res {res_expected.value()};
 
     bool correct {true};
     for (std::size_t i {}; i < res.size(); ++i)

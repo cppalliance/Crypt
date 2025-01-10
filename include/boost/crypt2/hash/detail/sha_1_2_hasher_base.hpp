@@ -38,7 +38,7 @@ protected:
 
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest_impl(compat::span<compat::byte, digest_size> data) const noexcept -> state;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest_impl(compat::span<compat::byte, digest_size> data) const noexcept -> state;
 
 public:
 
@@ -55,18 +55,18 @@ public:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 
     // TODO(mborland): Allow this to take dynamic extent, check the length and then use a fixed amount. See sha512_base
-    [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() noexcept -> return_type;
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte> data) const noexcept -> state;
+    [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() noexcept -> compat::expected<return_type, state>;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte> data) const noexcept -> state;
 
     template <concepts::writable_output_range Range>
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(Range&& data) const noexcept -> void;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(Range&& data) const noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto base_init() noexcept -> void;
 };
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 template <concepts::writable_output_range Range>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&& data) const noexcept -> void
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&& data) const noexcept -> state
 {
     using value_type = compat::range_value_t<Range>;
 
@@ -74,7 +74,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
 
     if (data_span.size() * sizeof(value_type) < digest_size)
     {
-        return;
+        return state::insufficient_output_length;
     }
 
     #if defined(__clang__) && __clang_major__ >= 19
@@ -90,6 +90,8 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic pop
     #endif
+
+    return state::success;
 }
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
@@ -100,7 +102,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
         return state::state_error;
     }
 
-    for (size_t i {}; i < data.size(); ++i)
+    for (compat::size_t i {}; i < data.size(); ++i)
     {
         data[i] = static_cast<compat::byte>(intermediate_hash_[i >> 2U] >> 8U * (3U - (i & 0x03U)));
     }
@@ -132,10 +134,15 @@ sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(compat::spa
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
-sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept -> sha_1_2_hasher_base::return_type
+sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept -> compat::expected<return_type, state>
 {
     return_type digest {};
-    get_digest_impl(digest);
+    const auto return_state {get_digest_impl(digest)};
+    if (return_state != state::success)
+    {
+        return compat::unexpected<state>(return_state);
+    }
+
     return digest;
 }
 

@@ -18,7 +18,8 @@ namespace boost::crypt {
 BOOST_CRYPT_EXPORT using sha512_hasher = hash_detail::sha512_base<64U>;
 
 // One shot functions
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512(compat::span<const compat::byte> data) noexcept -> sha512_hasher::return_type
+[[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+auto sha512(compat::span<const compat::byte> data) noexcept -> compat::expected<sha512_hasher::return_type, state>
 {
     sha512_hasher hasher;
     hasher.process_bytes(data);
@@ -27,7 +28,8 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512(compat::span<co
 }
 
 template <compat::sized_range SizedRange>
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512(SizedRange&& data) noexcept -> sha512_hasher::return_type
+[[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED
+auto sha512(SizedRange&& data) noexcept -> compat::expected<sha512_hasher::return_type, state>
 {
     sha512_hasher hasher;
     hasher.process_bytes(data);
@@ -47,7 +49,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512(SizedRange&& da
 
 namespace detail {
 
-inline auto sha512_file_impl(detail::file_reader<64U>& reader) -> sha512_hasher::return_type
+[[nodiscard]] inline auto sha512_file_impl(detail::file_reader<64U>& reader) -> compat::expected<sha512_hasher::return_type, state>
 {
     sha512_hasher hasher;
     while (!reader.eof())
@@ -65,7 +67,7 @@ inline auto sha512_file_impl(detail::file_reader<64U>& reader) -> sha512_hasher:
 } // namespace detail
 
 template <concepts::file_system_path T>
-BOOST_CRYPT_EXPORT inline auto sha512_file(const T& filepath)
+[[nodiscard]] BOOST_CRYPT_EXPORT inline auto sha512_file(const T& filepath) -> compat::expected<sha512_hasher::return_type, state>
 {
     if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
     {

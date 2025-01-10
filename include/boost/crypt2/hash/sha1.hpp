@@ -230,7 +230,8 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1_hasher::process_message_block() noex
 }
 
 // One shot functions
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1(compat::span<const compat::byte> data) noexcept -> sha1_hasher::return_type
+[[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+auto sha1(compat::span<const compat::byte> data) noexcept -> compat::expected<sha1_hasher::return_type, state>
 {
     sha1_hasher hasher;
     hasher.process_bytes(data);
@@ -239,7 +240,8 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1(compat::span<cons
 }
 
 template <compat::sized_range SizedRange>
-BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED auto sha1(SizedRange&& data) noexcept -> sha1_hasher::return_type
+[[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED
+auto sha1(SizedRange&& data) noexcept -> compat::expected<sha1_hasher::return_type, state>
 {
     sha1_hasher hasher;
     hasher.process_bytes(data);
@@ -260,7 +262,7 @@ namespace detail {
 #endif
 
 template <std::size_t block_size = 64U>
-auto sha1_file_impl(detail::file_reader<block_size>& reader) -> sha1_hasher::return_type
+[[nodiscard]] auto sha1_file_impl(detail::file_reader<block_size>& reader) -> compat::expected<sha1_hasher::return_type, state>
 {
     sha1_hasher hasher;
     while (!reader.eof())
@@ -282,7 +284,8 @@ auto sha1_file_impl(detail::file_reader<block_size>& reader) -> sha1_hasher::ret
 } // namespace detail
 
 template <concepts::file_system_path T>
-BOOST_CRYPT_EXPORT inline auto sha1_file(const T& filepath)
+[[nodiscard]] BOOST_CRYPT_EXPORT inline
+auto sha1_file(const T& filepath) -> compat::expected<sha1_hasher::return_type, state>
 {
     if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
     {
