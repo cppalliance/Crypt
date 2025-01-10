@@ -160,7 +160,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::get_digest_impl
 }
 
 template <compat::size_t digest_size>
-constexpr auto sha512_base<digest_size>::finalize() noexcept -> state
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::finalize() noexcept -> state
 {
     if (computed_)
     {

@@ -23,12 +23,10 @@ project : requirements
     <toolset>gcc:<cxxflags>-Wcast-qual
     <toolset>gcc:<cxxflags>-Wcast-align
     <toolset>gcc:<cxxflags>-Wlogical-op
-    <toolset>gcc:<cxxflags>-Wuseless-cast
     <toolset>gcc:<cxxflags>-Wdouble-promotion
     <toolset>gcc:<cxxflags>-Wformat=2
     <toolset>gcc:<cxxflags>-Wnull-dereference
     <toolset>gcc:<cxxflags>-Wstack-protector
-    <toolset>gcc:<cxxflags>-Wno-useless-cas
 
     <toolset>clang:<cxxflags>-Wsign-conversion
     <toolset>clang:<cxxflags>-Wconversion
