@@ -1674,71 +1674,71 @@ using detail::test_type;
 template<typename HasherType>
 auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> bool
 {
-  using local_hasher_type = HasherType;
-  using local_result_type = typename local_hasher_type::return_type;
+    using local_hasher_type = HasherType;
+    using local_result_type = typename local_hasher_type::return_type;
 
-  BOOST_TEST((!test_vectors.empty()));
+    BOOST_TEST((!test_vectors.empty()));
 
-  bool result_is_ok { true };
+    bool result_is_ok { true };
 
-  for(const auto& test_vector : test_vectors)
-  {
-    local_hasher_type this_hash { };
-
-    // Make pass 1 through the messages.
-    // Use the triple-combination of init/process/get-result functions.
-
-    this_hash.init();
-
-      #if defined(__clang__) && __clang_major__ >= 19
-      #pragma clang diagnostic push
-      #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
-      #endif
-    const auto data_span {std::span(test_vector.my_msg.data(), test_vector.my_msg.size())};
-      #if defined(__clang__) && __clang_major__ >= 19
-      #pragma clang diagnostic pop
-      #endif
-
-    this_hash.process_bytes(data_span);
-    this_hash.finalize();
-    const local_result_type result_01 { this_hash.get_digest() };
-
-    //const bool result_hash_01_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_01.cbegin()) };
-    bool result_hash_01_is_ok { true };
-    for (std::size_t i = 0U; i < test_vector.my_result.size(); ++i)
+    for(const auto& test_vector : test_vectors)
     {
-        result_hash_01_is_ok &= (static_cast<std::byte>(test_vector.my_result[i]) == result_01[i]);
+        local_hasher_type this_hash { };
+
+        // Make pass 1 through the messages.
+        // Use the triple-combination of init/process/get-result functions.
+
+        this_hash.init();
+
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+        #endif
+        const auto data_span {std::span(test_vector.my_msg.data(), test_vector.my_msg.size())};
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic pop
+        #endif
+
+        this_hash.process_bytes(data_span);
+        this_hash.finalize();
+        const local_result_type result_01 { this_hash.get_digest().value() };
+
+        //const bool result_hash_01_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_01.cbegin()) };
+        bool result_hash_01_is_ok { true };
+        for (std::size_t i = 0U; i < test_vector.my_result.size(); ++i)
+        {
+            result_hash_01_is_ok &= (static_cast<std::byte>(test_vector.my_result[i]) == result_01[i]);
+        }
+
+        BOOST_TEST(result_hash_01_is_ok);
+
+        // Make pass 2 through the messages.
+        // Use the triple-combination of init/process/get-result functions.
+        // Even though this is not required in CAVS testing, it is
+        // done in order to ensure that the init() function properly
+        // puts the hasher-object into its initialized state.
+
+        this_hash.init();
+
+        this_hash.process_bytes(data_span);
+        this_hash.finalize();
+        const local_result_type result_02 { this_hash.get_digest().value() };
+
+        bool result_hash_02_is_ok { true };
+        for (std::size_t i = 0U; i < test_vector.my_result.size(); ++i)
+        {
+            result_hash_01_is_ok &= (static_cast<std::byte>(test_vector.my_result[i]) == result_02[i]);
+        }
+
+        BOOST_TEST(result_hash_02_is_ok);
+
+        // Collect the combined results of pass 1 and pass 2.
+        const bool result_hash_is_ok = (result_hash_01_is_ok && result_hash_02_is_ok);
+
+        result_is_ok = (result_hash_is_ok && result_is_ok);
     }
 
-    BOOST_TEST(result_hash_01_is_ok);
-
-    // Make pass 2 through the messages.
-    // Use the triple-combination of init/process/get-result functions.
-    // Even though this is not required in CAVS testing, it is
-    // done in order to ensure that the init() function properly
-    // puts the hasher-object into its initialized state.
-
-    this_hash.init();
-
-    this_hash.process_bytes(data_span);
-    this_hash.finalize();
-    const local_result_type result_02 { this_hash.get_digest() };
-
-    bool result_hash_02_is_ok { true };
-    for (std::size_t i = 0U; i < test_vector.my_result.size(); ++i)
-    {
-      result_hash_01_is_ok &= (static_cast<std::byte>(test_vector.my_result[i]) == result_02[i]);
-    }
-
-    BOOST_TEST(result_hash_02_is_ok);
-
-    // Collect the combined results of pass 1 and pass 2.
-    const bool result_hash_is_ok = (result_hash_01_is_ok && result_hash_02_is_ok);
-
-    result_is_ok = (result_hash_is_ok && result_is_ok);
-  }
-
-  return result_is_ok;
+    return result_is_ok;
 }
 
 template<typename HasherType>
@@ -1763,8 +1763,8 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
 
         std::vector<std::byte> bits {};
         bits.resize(lengths[i]);
-
-        const auto result_01 { this_hash.get_digest(bits) };
+        this_hash.finalize();
+        const auto result_01 { this_hash.get_digest(bits).value() };
 
         BOOST_CRYPT_ASSERT(test_vector.my_result.size() == result_01);
         for (std::size_t j {}; j < test_vector.my_result.size(); ++j)
@@ -1792,7 +1792,8 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
             bit = static_cast<std::byte>(0);
         }
 
-        const auto result_02 { this_hash.get_digest(bits) };
+        this_hash.finalize();
+        const auto result_02 { this_hash.get_digest(bits).value() };
 
         BOOST_TEST_EQ(lengths[i], result_02);
 
@@ -1879,7 +1880,7 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
 
                 this_hash.process_bytes(current_data);
                 this_hash.finalize();
-                MDi = this_hash.get_digest();
+                MDi = this_hash.get_digest().value();
 
                 MD[0U] = MD[1U];
                 MD[1U] = MD[2U];
