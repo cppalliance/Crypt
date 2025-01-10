@@ -10,6 +10,10 @@
 
 #include <boost/crypt2/detail/config.hpp>
 
+#if !defined(BOOST_CRYPT_HAS_CUDA)
+#include <boost/crypt2/detail/expected.hpp>
+#endif
+
 #if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
 
 #include <span>
@@ -33,6 +37,7 @@
 #include <cuda/std/ranges>
 #include <cuda/std/utility>
 #include <cuda/std/bit>
+#include <cuda/std/expected>
 
 #endif
 
@@ -273,6 +278,23 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto rotr(T val, int shift) noexcept
     #pragma clang diagnostic pop
     #endif
 }
+
+// Expected
+template <typename T, typename E>
+using expected =
+        #ifdef BOOST_CRYPT_HAS_CUDA
+        cuda::std::expected<T, E>;
+        #else
+        boost::crypt::detail::expected_impl::expected<T, E>;
+        #endif
+
+template <typename E>
+using unexpected =
+        #ifdef BOOST_CRYPT_HAS_CUDA
+        cuda::std::unexpected<E>;
+        #else
+        boost::crypt::detail::expected_impl::unexpected<E>;
+        #endif
 
 } // namespace boost::crypt::compat
 
