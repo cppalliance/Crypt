@@ -300,8 +300,17 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::finalize(
 {
     if (!computed_)
     {
-        buffer_[buffer_index_] ^= static_cast<compat::byte>(0x06);
-        buffer_.back() ^= static_cast<compat::byte>(0x80);
+        if constexpr (!is_xof)
+        {
+            buffer_[buffer_index_] ^= static_cast<compat::byte>(0x06);
+            buffer_.back() ^= static_cast<compat::byte>(0x80);
+        }
+        else
+        {
+            buffer_[buffer_index_] ^= static_cast<compat::byte>(0x1F);
+            buffer_.back() ^= static_cast<compat::byte>(0x80);
+        }
+
         process_message_block();
         computed_ = true;
     }
