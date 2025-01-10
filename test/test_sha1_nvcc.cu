@@ -24,7 +24,7 @@ __global__ void cuda_test(char** in, digest_type* out, int numElements)
     if (i < numElements)
     {
         auto in_span {cuda::std::span(in[i], 64)};
-        out[i] = boost::crypt::sha1(in_span);
+        out[i] = boost::crypt::sha1(in_span).value();
     }
 }
 
@@ -82,7 +82,7 @@ int main()
         for(int i = 0; i < numElements; ++i)
         {
            std::span<char> in(input_vector1[i], elementSize);
-           results.emplace_back(boost::crypt::sha1(in));
+           results.emplace_back(boost::crypt::sha1(in).value());
         }
         double t = w.elapsed();
 
