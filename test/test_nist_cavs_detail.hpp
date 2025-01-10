@@ -1861,7 +1861,7 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
 
                 for (std::size_t k {}; k < result_vector.size(); ++k)
                 {
-                    Mi[k] = static_cast<std::byte>(result_vector[k]);
+                    Mi[k] = result_vector[k];
                 }
 
                 local_hasher_type this_hash { };
