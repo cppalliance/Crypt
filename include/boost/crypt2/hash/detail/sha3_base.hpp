@@ -53,6 +53,8 @@ public:
 
     template <compat::sized_range SizedRange>
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 };
 
 namespace sha3_detail {
@@ -291,6 +293,24 @@ BOOST_CRYPT_GPU_ENABLED auto sha3_base<digest_size, is_xof>::process_bytes(Sized
 {
     auto data_span {compat::make_span(compat::forward<SizedRange>(data))};
     return update(compat::as_bytes(data_span));
+}
+
+template <compat::size_t digest_size, bool is_xof>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::finalize() noexcept -> state
+{
+    if (!computed_)
+    {
+        buffer_[buffer_index_] ^= static_cast<compat::byte>(0x06);
+        buffer_.back() ^= static_cast<compat::byte>(0x80);
+        process_message_block();
+        computed_ = true;
+    }
+    if (corrupted_)
+    {
+        return state::state_error;
+    }
+
+    return state::success;
 }
 
 } // namespace boost::crypt::hash_detail
