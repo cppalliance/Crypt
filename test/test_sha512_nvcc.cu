@@ -14,7 +14,7 @@
 #include <memory>
 #include <span>
 
-using digest_type = cuda::std::array<cuda::std::byte, 20>;
+using digest_type = cuda::std::array<cuda::std::byte, 64>;
 
 // The kernel function
 __global__ void cuda_test(char** in, digest_type* out, int numElements)
