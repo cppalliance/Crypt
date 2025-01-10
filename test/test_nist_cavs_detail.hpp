@@ -809,7 +809,7 @@ auto parse_file_vectors(const std::string& test_vectors_filename, test_vector_co
             #pragma clang diagnostic pop
           #endif
 
-          length = static_cast<std::size_t>(length_from_file / 8U);
+          length = length_from_file / 8U;
         }
 
         // Get the next message.
@@ -973,7 +973,7 @@ auto parse_file_vectors_variable_xof(const std::string& test_vectors_filename, t
                     #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
                     #endif
 
-                    const auto length_from_file = static_cast<std::size_t>(std::strtoul(str_len.c_str(), nullptr, 10U));
+                    const auto length_from_file = std::strtoul(str_len.c_str(), nullptr, 10U);
 
                     #if defined(__clang__) && __clang_major__ >= 19
                     #pragma clang diagnostic pop
@@ -1152,7 +1152,7 @@ auto parse_file_monte_xof(const std::string& test_monte_filename, test_vector_co
                 {
                     const std::string str_cnt = line.substr(1U, line.length() - 1U);
 
-                    const auto len_from_file = static_cast<std::size_t>(std::strtoul(str_cnt.c_str(), nullptr, 10U));
+                    const auto len_from_file = std::strtoul(str_cnt.c_str(), nullptr, 10U);
 
                     lengths.emplace_back(len_from_file);
                 }
@@ -1829,7 +1829,7 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
 
         const std::size_t copy_len
         {
-            (std::min)(static_cast<std::size_t>(MDi.size()), static_cast<std::size_t>(seed_init.size()))
+            (std::min)(MDi.size(), seed_init.size())
         };
 
         for (std::size_t i {}; i < copy_len; ++i)
@@ -1929,7 +1929,7 @@ auto test_vectors_monte_sha3(const nist::cavs::test_vector_container_type& test_
 
         const std::size_t copy_len
         {
-                (std::min)(static_cast<std::size_t>(MDi.size()), static_cast<std::size_t>(seed_init.size()))
+                (std::min)(MDi.size(), seed_init.size())
         };
 
         static_cast<void>
@@ -1991,7 +1991,7 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
 
         const std::size_t copy_len
         {
-            (std::min)(static_cast<std::size_t>(MDi.size()), static_cast<std::size_t>(seed_init.size()))
+            (std::min)(MDi.size(), seed_init.size())
         };
 
         static_cast<void>

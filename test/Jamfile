@@ -11,30 +11,46 @@ import testing ;
 
 project : requirements
 
-  <warnings>extra
+    <warnings>pedantic
 
-  # Additional flags by request
-  <toolset>gcc:<cxxflags>-Wsign-conversion
-  <toolset>gcc:<cxxflags>-Wconversion
-  <toolset>gcc:<cxxflags>-Wundef
-  <toolset>gcc:<cxxflags>-Wold-style-cast
-  <toolset>gcc:<cxxflags>-Wduplicated-branches
-  <toolset>gcc:<cxxflags>-Wfloat-equal
+    <toolset>gcc:<cxxflags>-Wsign-conversion
+    <toolset>gcc:<cxxflags>-Wconversion
+    <toolset>gcc:<cxxflags>-Wundef
+    <toolset>gcc:<cxxflags>-Wold-style-cast
+    <toolset>gcc:<cxxflags>-Wduplicated-branches
+    <toolset>gcc:<cxxflags>-Wfloat-equal
+    <toolset>gcc:<cxxflags>-Wshadow
+    <toolset>gcc:<cxxflags>-Wcast-qual
+    <toolset>gcc:<cxxflags>-Wcast-align
+    <toolset>gcc:<cxxflags>-Wlogical-op
+    <toolset>gcc:<cxxflags>-Wuseless-cast
+    <toolset>gcc:<cxxflags>-Wdouble-promotion
+    <toolset>gcc:<cxxflags>-Wformat=2
+    <toolset>gcc:<cxxflags>-Wnull-dereference
+    <toolset>gcc:<cxxflags>-Wstack-protector
+    <toolset>gcc:<cxxflags>-Wno-useless-cas
 
-  <toolset>clang:<cxxflags>-Wsign-conversion
-  <toolset>clang:<cxxflags>-Wconversion
-  <toolset>clang:<cxxflags>-Wundef
-  <toolset>clang:<cxxflags>-Wold-style-cast
-  <toolset>clang:<cxxflags>-Wfloat-equal
-  <toolset>clang-19:<cxxflags>-Wunsafe-buffer-usage
-  <toolset>clang-20:<cxxflags>-Wunsafe-buffer-usage
+    <toolset>clang:<cxxflags>-Wsign-conversion
+    <toolset>clang:<cxxflags>-Wconversion
+    <toolset>clang:<cxxflags>-Wundef
+    <toolset>clang:<cxxflags>-Wold-style-cast
+    <toolset>clang:<cxxflags>-Wfloat-equal
+    <toolset>clang:<cxxflags>-Wshadow
+    <toolset>clang:<cxxflags>-Wcast-qual
+    <toolset>clang:<cxxflags>-Wcast-align
+    <toolset>clang:<cxxflags>-Wdouble-promotion
+    <toolset>clang:<cxxflags>-Wformat=2
+    <toolset>clang:<cxxflags>-Wnull-dereference
+    <toolset>clang:<cxxflags>-Wthread-safety
+    <toolset>clang:<cxxflags>-Wunused-lambda-capture
+    <toolset>clang:<cxxflags>-Wassign-enum
 
-  <toolset>msvc:<warnings-as-errors>on
-  <toolset>clang:<warnings-as-errors>on
-  <toolset>gcc:<warnings-as-errors>on
+    <toolset>msvc:<warnings-as-errors>on
+    <toolset>clang:<warnings-as-errors>on
+    <toolset>gcc:<warnings-as-errors>on
 
-  [ requires cxx20_hdr_version cxx20_hdr_concepts cxx20_hdr_span cxx20_hdr_source_location cxx20_hdr_ranges ]
-  ;
+    [ requires cxx20_hdr_version cxx20_hdr_concepts cxx20_hdr_span cxx20_hdr_source_location cxx20_hdr_ranges ]
+    ;
 
 
 # ODR Violations
