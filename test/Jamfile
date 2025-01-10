@@ -49,6 +49,9 @@ project : requirements
 # ODR Violations
 #run link_1.cpp link_2.cpp link_3.cpp ;
 
+# Helpers
+run test_assert.cpp ;
+
 # Basic Testing
 run quick.cpp ;
 run test_sha1.cpp ;
