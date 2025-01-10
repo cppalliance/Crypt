@@ -12,94 +12,6 @@ https://www.boost.org/LICENSE_1_0.txt
 This library supports sha512_256 as described in https://datatracker.ietf.org/doc/html/rfc6234[RFC 6234].
 There is a wide range of acceptable inputs for the base sha512_256 function:
 
-== Hashing Functions
-
-[source, c++]
-----
-namespace boost {
-namespace crypt {
-
-uisng return_type = boost::crypt::array<uint8_t, 32>;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const char* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const char* str, size_t len) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const unsigned char* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const unsigned char* str, size_t len) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const char16_t* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const char16_t* str, size_t len) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const char32_t* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const char32_t* str, size_t len) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const wchar_t* str) noexcept -> return_type;
-
-BOOST_CRYPT_GPU_ENABLED inline auto sha512_256(const wchar_t* str, size_t len) noexcept -> return_type;
-
-inline auto sha512_256(const std::string& str) noexcept -> return_type;
-
-inline auto sha512_256(const std::u16string& str) noexcept -> return_type;
-
-inline auto sha512_256(const std::u32string& str) noexcept -> return_type;
-
-inline auto sha512_256(const std::wstring& str) noexcept -> return_type;
-
-#ifdef BOOST_CRYPT_HAS_STRING_VIEW
-
-inline auto sha512_256(std::string_view str) noexcept -> return_type;
-
-inline auto sha512_256(std::u16string_view str) noexcept -> return_type;
-
-inline auto sha512_256(std::u32string_view str) noexcept -> return_type;
-
-inline auto sha512_256(std::wstring_view str) noexcept -> return_type;
-
-#endif // BOOST_CRYPT_HAS_STRING_VIEW
-
-#ifdef BOOST_CRYPT_HAS_SPAN
-
-template <typename T, std::size_t extent>
-inline auto md5(std::span<T, extent> data) noexcept -> return_type;
-
-#endif // BOOST_CRYPT_HAS_SPAN
-
-#ifdef BOOST_CRYPT_HAS_CUDA
-
-template <typename T, boost::crypt::size_t extent>
-BOOST_CRYPT_GPU_ENABLED inline auto md5(cuda::std::span<T, extent> data) noexcept -> return_type;
-
-#endif // BOOST_CRYPT_HAS_CUDA
-
-} //namespace crypt
-} //namespace boost
-----
-
-== File Hashing Functions
-
-We also have the ability to scan files and return the sha512_256 value:
-
-[source, c++]
-----
-namespace boost {
-namespace crypt {
-
-uisng return_type = boost::crypt::array<uint8_t, 32>;
-
-inline auto sha512_256_file(const char* filepath) noexcept -> return_type;
-
-inline auto sha512_256_file(const std::string& filepath) noexcept -> return_type;
-
-inline auto sha512_256_file(std::string_view filepath) noexcept -> return_type;
-
-} // namespace crypt
-} // namespace boost
-----
-
 == Hashing Object
 
 [#sha512_256_hasher]
@@ -108,50 +20,61 @@ This class does not use any dynamic memory allocation.
 
 [source, c++]
 ----
-namespace boost {
-namespace crypt {
+namespace boost::crypt {
 
 class sha512_256_hasher
 {
-    uisng return_type = boost::crypt::array<uint8_t, 32>;
+public:
+    uisng return_type = compat::array<compat::byte, 28>;
 
-    void init();
+    // Initialize the hasher
+    BOOST_CRYPT_GPU_ENABLED constexpr void init() noexcept;
 
-    template <typename ByteType>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_byte(ByteType byte) noexcept -> state;
+    // Process bytes piecewise
+    BOOST_CRYPT_GPU_ENABLED constexpr state process_bytes(compat::span<const compat::byte> data) noexcept;
 
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(ForwardIter buffer, size_t byte_count) noexcept -> state;
+    template <compat::ranges::sized_range Range>
+    BOOST_CRYPT_GPU_ENABLED constexpr state process_bytes(Range&& data) noexcept;
 
-    #ifdef BOOST_CRYPT_HAS_STRING_VIEW
+    // Finalize the calculation of the hash
+    BOOST_CRYPT_GPU_ENABLED constexpr state finalize() noexcept;
 
-    inline auto process_bytes(std::string_view str) noexcept -> state;
+    // Get the digest
+    [[nodiscard]] constexpr expected<return_type, state> get_digest() const noexcept;
 
-    inline auto process_bytes(std::u16string_view str) noexcept -> state;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR state get_digest(compat::span<compat::byte> data) const noexcept;
 
-    inline auto process_bytes(std::u32string_view str) noexcept -> state;
-
-    inline auto process_bytes(std::wstring_view str) noexcept -> state;
-
-    #endif // BOOST_CRYPT_HAS_STRING_VIEW
-
-    #ifdef BOOST_CRYPT_HAS_SPAN
-
-    template <typename T, boost::crypt::size_t extent>
-    inline auto process_bytes(std::span<T, extent> data) noexcept -> state;
-
-    #endif // BOOST_CRYPT_HAS_SPAN
-
-    #ifdef BOOST_CRYPT_HAS_CUDA
-
-    template <typename T, boost::crypt::size_t extent>
-    BOOST_CRYPT_GPU_ENABLED inline auto process_bytes(cuda::std::span<T, extent> data) noexcept -> state;
-
-    #endif // BOOST_CRYPT_HAS_CUDA
-
-    inline auto get_digest() noexcept -> return_type;
+    template <concepts::writable_output_range Range>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED state get_digest(Range&& data) const noexcept;
 };
 
-} // namespace crypt
-} // namespace boost
+} // namespace boost::crypt
+----
+
+== One-Shot Hashing Functions
+
+[source, c++]
+----
+namespace boost::crypt {
+
+[[nodiscard]] BOOST_CRYPT_GPU_ENABLED constexpr auto sha512_256(compat::span<const compat::byte> data) noexcept -> expected<sha512_256_hasher::return_type, state>;
+
+template <compat::ranges::sized_range SizedRange>
+[[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto sha512_256(SizedRange&& data) noexcept -> expected<sha512_256_hasher::return_type, state>;
+
+} // namespace boost::crypt
+----
+
+== File Hashing Functions
+
+We also have the ability to scan files and return the sha512_256 value:
+
+[source, c++]
+----
+namespace boost::crypt {
+
+template <concepts::file_system_path T>
+[[nodiscard]] inline auto sha512_256_file(const T& filepath) -> expected<sha512_256_hasher::return_type, state>;
+
+} // namespace boost::crypt
 ----
