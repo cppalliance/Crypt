@@ -34,7 +34,7 @@ protected:
     bool computed_ {};
     bool corrupted_ {};
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest_impl(compat::span<compat::byte, digest_size> data) -> state;
 
@@ -209,7 +209,8 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
 }
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(compat::span<const compat::byte> data) noexcept -> state
+[[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(compat::span<const compat::byte> data) noexcept -> state
 {
     if (data.empty())
     {
