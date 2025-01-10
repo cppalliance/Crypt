@@ -1700,7 +1700,7 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
       #endif
 
     this_hash.process_bytes(data_span);
-
+    this_hash.finalize();
     const local_result_type result_01 { this_hash.get_digest() };
 
     //const bool result_hash_01_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_01.cbegin()) };
@@ -1721,7 +1721,7 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
     this_hash.init();
 
     this_hash.process_bytes(data_span);
-
+    this_hash.finalize();
     const local_result_type result_02 { this_hash.get_digest() };
 
     bool result_hash_02_is_ok { true };
@@ -1878,7 +1878,7 @@ auto test_vectors_monte(const nist::cavs::test_vector_container_type& test_vecto
                 #endif
 
                 this_hash.process_bytes(current_data);
-
+                this_hash.finalize();
                 MDi = this_hash.get_digest();
 
                 MD[0U] = MD[1U];

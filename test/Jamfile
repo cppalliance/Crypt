@@ -49,13 +49,16 @@ project : requirements
 # ODR Violations
 #run link_1.cpp link_2.cpp link_3.cpp ;
 
+# Helpers
+run test_assert.cpp ;
+
 # Basic Testing
 run quick.cpp ;
 run test_sha1.cpp ;
 run test_sha224.cpp ;
 run test_sha256.cpp ;
 #run test_sha384.cpp ;
-#run test_sha512.cpp ;
+run test_sha512.cpp ;
 #run test_sha512_224.cpp ;
 #run test_sha512_256.cpp ;
 #run test_sha3_512.cpp ;
@@ -98,8 +101,8 @@ run test_nist_cavs_sha256_short_long.cpp ;
 #run test_nist_cavs_sha384_hmac_drbg.cpp ;
 #run test_nist_cavs_sha384_hash_drbg.cpp ;
 
-#run test_nist_cavs_sha512_monte.cpp ;
-#run test_nist_cavs_sha512_short_long.cpp ;
+run test_nist_cavs_sha512_monte.cpp ;
+run test_nist_cavs_sha512_short_long.cpp ;
 #run test_nist_cavs_sha512_hmac.cpp ;
 #run test_nist_cavs_sha512_hmac_drbg.cpp ;
 #run test_nist_cavs_sha512_hash_drbg.cpp ;
