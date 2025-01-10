@@ -105,6 +105,7 @@ void string_view_test()
         boost::crypt::sha256_hasher hasher;
         const auto current_state = hasher.process_bytes(string_view_message);
         BOOST_TEST(current_state == boost::crypt::state::success);
+        hasher.finalize();
         const auto result2 = hasher.get_digest();
         for (std::size_t i {}; i < message_result.size(); ++i)
         {
@@ -129,6 +130,7 @@ void test_class()
         hasher.init();
         const auto msg {std::get<0>(test_value)};
         hasher.process_bytes(msg);
+        hasher.finalize();
         const auto message_result {hasher.get_digest()};
 
         const auto valid_result {std::get<1>(test_value)};
@@ -266,6 +268,7 @@ consteval bool immediate_test()
     boost::crypt::sha256_hasher hasher;
     hasher.init();
     hasher.process_bytes(byte_span);
+    hasher.finalize();
     const auto res = hasher.get_digest();
 
     bool correct {true};

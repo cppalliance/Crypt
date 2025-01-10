@@ -234,6 +234,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha1(compat::span<cons
 {
     sha1_hasher hasher;
     hasher.process_bytes(data);
+    hasher.finalize();
     return hasher.get_digest();
 }
 
@@ -242,6 +243,7 @@ BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED auto sha1(SizedRange&& data) noexcept
 {
     sha1_hasher hasher;
     hasher.process_bytes(data);
+    hasher.finalize();
     return hasher.get_digest();
 }
 
@@ -269,6 +271,7 @@ auto sha1_file_impl(detail::file_reader<block_size>& reader) -> sha1_hasher::ret
         hasher.process_bytes(buffer_span);
     }
 
+    hasher.finalize();
     return hasher.get_digest();
 }
 
