@@ -27,7 +27,8 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
         hasher.process_bytes(data_span);
         hasher.process_bytes(data_span);
         hasher.process_bytes(data_span);
-        hasher.get_digest();
+        hasher.finalize();
+        [[maybe_unused]] const auto res = hasher.get_digest();
         hasher.process_bytes(data_span); // State is invalid but should not crash
     }
     catch(...)
