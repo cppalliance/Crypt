@@ -14,7 +14,7 @@ https://www.boost.org/LICENSE_1_0.txt
 
 == Types
 
-- `boost::crypt::expected` - either https://tl.tartanllama.xyz/en/latest/api/expected.html[`tl::expected`] or `cuda::std::expected` depending on context.
+- `boost::crypt::expected` - either an alias to https://tl.tartanllama.xyz/en/latest/api/expected.html[`tl::expected`] or `cuda::std::expected` depending on context.
 
 == Structures and Classes
 
