@@ -48,6 +48,11 @@ public:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha3_base() noexcept;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
+
+    template <compat::sized_range SizedRange>
+    BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
 };
 
 namespace sha3_detail {
@@ -272,6 +277,20 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::init() no
     buffer_index_ = 0U;
     computed_ = false;
     corrupted_ = false;
+}
+
+template <compat::size_t digest_size, bool is_xof>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_bytes(compat::span<const compat::byte> data) noexcept -> state
+{
+    return update(data);
+}
+
+template <compat::size_t digest_size, bool is_xof>
+template <compat::sized_range SizedRange>
+BOOST_CRYPT_GPU_ENABLED auto sha3_base<digest_size, is_xof>::process_bytes(SizedRange&& data) noexcept -> state
+{
+    auto data_span {compat::make_span(compat::forward<SizedRange>(data))};
+    return update(compat::as_bytes(data_span));
 }
 
 } // namespace boost::crypt::hash_detail
