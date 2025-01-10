@@ -8,6 +8,8 @@
 #include <boost/crypt2/detail/config.hpp>
 
 // Check for C++23 stacktrace support
+// TODO(mborland): Not ready for the mainstream as of 01/25
+#if 0
 #if __has_include(<stacktrace>)
 #  ifndef BOOST_CRYPT_BUILD_MODULE
 #    include <stacktrace>
@@ -18,6 +20,9 @@
 #else
 #  define BOOST_CRYPT_HAS_STACKTRACE 0
 #endif
+#endif
+
+#define BOOST_CRYPT_HAS_STACKTRACE 0
 
 #ifndef BOOST_CRYPT_BUILD_MODULE
 
