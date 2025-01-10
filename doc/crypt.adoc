@@ -27,12 +27,12 @@ include::crypt/sha224.adoc[]
 
 include::crypt/sha256.adoc[]
 
-#include::crypt/sha384.adoc[]
+include::crypt/sha384.adoc[]
 
 include::crypt/sha512.adoc[]
-////
-include::crypt/sha512_224.adoc[]
 
+include::crypt/sha512_224.adoc[]
+////
 include::crypt/sha512_256.adoc[]
 
 include::crypt/sha3_224.adoc[]
