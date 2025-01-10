@@ -67,16 +67,16 @@ public:
     auto get_digest() const noexcept -> compat::expected<return_type, state>;
 
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-    auto get_digest(compat::span<compat::byte> data) const noexcept -> compat::expected<return_type, state>;
+    auto get_digest(compat::span<compat::byte> data) const noexcept -> state;
 
     template <concepts::writable_output_range Range>
-    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) const noexcept -> compat::expected<return_type, state>;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) const noexcept -> state;
 };
 
 template <compat::size_t digest_size>
 template <concepts::writable_output_range Range>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED
-auto sha512_base<digest_size>::get_digest(Range&& data) const noexcept -> compat::expected<return_type, state>
+auto sha512_base<digest_size>::get_digest(Range&& data) const noexcept -> state
 {
     using value_type = compat::range_value_t<Range>;
 
@@ -84,7 +84,7 @@ auto sha512_base<digest_size>::get_digest(Range&& data) const noexcept -> compat
 
     if (data_span.size() * sizeof(value_type) < digest_size)
     {
-        return compat::unexpected<state>(state::insufficient_output_length);
+        return state::insufficient_output_length;
     }
 
     #if defined(__clang__) && __clang_major__ >= 19
@@ -104,7 +104,7 @@ auto sha512_base<digest_size>::get_digest(Range&& data) const noexcept -> compat
 
 template <compat::size_t digest_size>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-auto sha512_base<digest_size>::get_digest(compat::span<compat::byte> data) const noexcept -> compat::expected<return_type, state>
+auto sha512_base<digest_size>::get_digest(compat::span<compat::byte> data) const noexcept -> state
 {
     if (data.size() >= digest_size)
     {
@@ -121,7 +121,7 @@ auto sha512_base<digest_size>::get_digest(compat::span<compat::byte> data) const
         #endif
     }
 
-    return compat::unexpected<state>(state::insufficient_output_length);
+    return state::insufficient_output_length;
 }
 
 template <compat::size_t digest_size>
