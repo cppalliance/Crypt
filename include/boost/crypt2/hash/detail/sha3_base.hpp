@@ -18,15 +18,15 @@
 namespace boost::crypt::hash_detail {
 
 template <compat::size_t digest_size, bool is_xof = false>
-class sha3_base final
-{
+class sha3_base final {
 public:
 
     static constexpr compat::size_t block_size {200U - 2U * digest_size};
 
 private:
 
-    static_assert((!is_xof && (digest_size == 28U || digest_size == 32U || digest_size == 48U || digest_size == 64U)) || is_xof,
+    static_assert((!is_xof && (digest_size == 28U || digest_size == 32U || digest_size == 48U || digest_size == 64U)) ||
+                  is_xof,
                   "Digest size must be 28 (SHA3-224), 32 (SHA3-256), 48 (SHA3-384), or 64(SHA3-512) or this must be an xof");
 
     compat::array<compat::uint64_t, 25U> state_array_ {};
@@ -37,13 +37,21 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_message_block() noexcept -> void;
 
-    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+    auto update(compat::span<const compat::byte> data) noexcept -> state;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+    auto xof_digest_impl(compat::span<compat::byte> data) noexcept -> void;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+    auto sha_digest_impl(compat::span<compat::byte, digest_size> data) const noexcept -> void;
 
 public:
 
     using return_type = compat::array<compat::byte, digest_size>;
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha3_base() noexcept { init(); }
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha3_base() noexcept
+    { init(); }
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha3_base() noexcept;
 
@@ -55,6 +63,15 @@ public:
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
+
+    [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+    auto get_digest() noexcept -> compat::expected<return_type, state>;
+
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+    auto get_digest(compat::span<compat::byte> data) noexcept -> state;
+
+    template <concepts::writable_output_range Range>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) noexcept -> state;
 };
 
 namespace sha3_detail {
@@ -64,24 +81,24 @@ namespace sha3_detail {
 inline constexpr compat::size_t num_rounds {24U};
 
 inline constexpr compat::array<compat::uint32_t, num_rounds> rho_rotation {
-    1U,  3U,  6U,  10U, 15U, 21U, 28U, 36U, 45U, 55U, 2U,  14U,
-    27U, 41U, 56U, 8U,  25U, 43U, 62U, 18U, 39U, 61U, 20U, 44U
+        1U, 3U, 6U, 10U, 15U, 21U, 28U, 36U, 45U, 55U, 2U, 14U,
+        27U, 41U, 56U, 8U, 25U, 43U, 62U, 18U, 39U, 61U, 20U, 44U
 };
 
 inline constexpr compat::array<compat::uint32_t, num_rounds> pi_lane_number {
-    10U, 7U,  11U, 17U, 18U, 3U, 5U,  16U, 8U,  21U, 24U, 4U,
-    15U, 23U, 19U, 13U, 12U, 2U, 20U, 14U, 22U, 9U,  6U,  1U
+        10U, 7U, 11U, 17U, 18U, 3U, 5U, 16U, 8U, 21U, 24U, 4U,
+        15U, 23U, 19U, 13U, 12U, 2U, 20U, 14U, 22U, 9U, 6U, 1U
 };
 
 inline constexpr compat::array<compat::uint64_t, num_rounds> iota {
-    0x0000000000000001ULL, 0x0000000000008082ULL, 0x800000000000808aULL,
-    0x8000000080008000ULL, 0x000000000000808bULL, 0x0000000080000001ULL,
-    0x8000000080008081ULL, 0x8000000000008009ULL, 0x000000000000008aULL,
-    0x0000000000000088ULL, 0x0000000080008009ULL, 0x000000008000000aULL,
-    0x000000008000808bULL, 0x800000000000008bULL, 0x8000000000008089ULL,
-    0x8000000000008003ULL, 0x8000000000008002ULL, 0x8000000000000080ULL,
-    0x000000000000800aULL, 0x800000008000000aULL, 0x8000000080008081ULL,
-    0x8000000000008080ULL, 0x0000000080000001ULL, 0x8000000080008008ULL,
+        0x0000000000000001ULL, 0x0000000000008082ULL, 0x800000000000808aULL,
+        0x8000000080008000ULL, 0x000000000000808bULL, 0x0000000080000001ULL,
+        0x8000000080008081ULL, 0x8000000000008009ULL, 0x000000000000008aULL,
+        0x0000000000000088ULL, 0x0000000080008009ULL, 0x000000008000000aULL,
+        0x000000008000808bULL, 0x800000000000008bULL, 0x8000000000008089ULL,
+        0x8000000000008003ULL, 0x8000000000008002ULL, 0x8000000000000080ULL,
+        0x000000000000800aULL, 0x800000008000000aULL, 0x8000000080008081ULL,
+        0x8000000000008080ULL, 0x0000000080000001ULL, 0x8000000080008008ULL,
 };
 
 #endif // BOOST_CRYPT_HAS_CUDA
@@ -135,12 +152,11 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
                     (static_cast<compat::uint64_t>(buffer_[i + 5U]) << 16U) |
                     (static_cast<compat::uint64_t>(buffer_[i + 6U]) << 8U) |
                     (static_cast<compat::uint64_t>(buffer_[i + 7U]));
-        }
-        else
+        } else
         {
             state_array_[state_i] =
                     (static_cast<compat::uint64_t>(buffer_[i])) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 1U]) <<  8U) |
+                    (static_cast<compat::uint64_t>(buffer_[i + 1U]) << 8U) |
                     (static_cast<compat::uint64_t>(buffer_[i + 2U]) << 16U) |
                     (static_cast<compat::uint64_t>(buffer_[i + 3U]) << 24U) |
                     (static_cast<compat::uint64_t>(buffer_[i + 4U]) << 32U) |
@@ -149,7 +165,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
                     (static_cast<compat::uint64_t>(buffer_[i + 7U]) << 56U);
         }
     }
-    
+
     // Apply Kecckaf
     compat::array<compat::uint64_t, 5U> cd {};
     for (compat::size_t round {}; round < num_rounds; ++round)
@@ -157,7 +173,8 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
         // Theta
         for (compat::size_t i {}; i < cd.size(); ++i)
         {
-            cd[i] = state_array_[i] ^ state_array_[i + 5U] ^ state_array_[i + 10U] ^ state_array_[i + 15U] ^ state_array_[i + 20U];
+            cd[i] = state_array_[i] ^ state_array_[i + 5U] ^ state_array_[i + 10U] ^ state_array_[i + 15U] ^
+                    state_array_[i + 20U];
         }
 
         for (compat::size_t i {}; i < cd.size(); ++i)
@@ -195,7 +212,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
         // Iota
         state_array_[0] ^= iota[round];
     }
-    
+
     // Now we need to write back into the buffer
     for (compat::size_t i {}, state_i {}; i < buffer_.size(), state_i < state_array_.size(); i += 8U, ++state_i)
     {
@@ -212,8 +229,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
             buffer_[i + 5U] = static_cast<compat::byte>((state_value >> 16U) & 0xFFULL);
             buffer_[i + 6U] = static_cast<compat::byte>((state_value >> 8U) & 0xFFULL);
             buffer_[i + 7U] = static_cast<compat::byte>((state_value) & 0xFFU);
-        }
-        else
+        } else
         {
             const auto state_value {state_array_[state_i]};
             buffer_[i] = static_cast<compat::byte>(state_value & 0xFFU);
@@ -248,7 +264,7 @@ auto sha3_base<digest_size, is_xof>::update(compat::span<const compat::byte> dat
         return state::state_error;
     }
 
-    for (const auto val : data)
+    for (const auto val: data)
     {
         buffer_[buffer_index_++] = val;
 
@@ -275,14 +291,15 @@ template <compat::size_t digest_size, bool is_xof>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::init() noexcept -> void
 {
     state_array_.fill(0ULL);
-    buffer_.fill(compat::byte{0x00});
+    buffer_.fill(compat::byte {0x00});
     buffer_index_ = 0U;
     computed_ = false;
     corrupted_ = false;
 }
 
 template <compat::size_t digest_size, bool is_xof>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_bytes(compat::span<const compat::byte> data) noexcept -> state
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
+sha3_base<digest_size, is_xof>::process_bytes(compat::span<const compat::byte> data) noexcept -> state
 {
     return update(data);
 }
@@ -304,8 +321,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::finalize(
         {
             buffer_[buffer_index_] ^= static_cast<compat::byte>(0x06);
             buffer_.back() ^= static_cast<compat::byte>(0x80);
-        }
-        else
+        } else
         {
             buffer_[buffer_index_] ^= static_cast<compat::byte>(0x1F);
             buffer_.back() ^= static_cast<compat::byte>(0x80);
@@ -320,6 +336,127 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::finalize(
     }
 
     return state::success;
+}
+
+template <compat::size_t digest_size, bool is_xof>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+auto sha3_base<digest_size, is_xof>::xof_digest_impl(compat::span<compat::byte> data) noexcept -> void
+{
+    for (compat::size_t i {}; i < data.size(); ++i)
+    {
+        if (buffer_index_ == buffer_.size())
+        {
+            process_message_block();
+        }
+
+        data[i] = buffer_[buffer_index_++];
+    }
+}
+
+template <compat::size_t digest_size, bool is_xof>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+auto sha3_base<digest_size, is_xof>::sha_digest_impl(compat::span<compat::byte, digest_size> data) const noexcept -> void
+{
+    BOOST_CRYPT_ASSERT(data.size() <= buffer_.size());
+    for (compat::size_t i {}; i < data.size(); ++i)
+    {
+        data[i] = buffer_[i];
+    }
+}
+
+template <compat::size_t digest_size, bool is_xof>
+[[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+auto sha3_base<digest_size, is_xof>::get_digest() noexcept -> compat::expected<return_type, state>
+{
+    return_type digest {};
+
+    if (!computed_ || corrupted_)
+    {
+        return compat::unexpected<state>(state::state_error);
+    }
+
+    if constexpr (is_xof)
+    {
+        xof_digest_impl(digest);
+    } else
+    {
+        sha_digest_impl(digest);
+    }
+
+    return digest;
+}
+
+template <compat::size_t digest_size, bool is_xof>
+[[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
+sha3_base<digest_size, is_xof>::get_digest(compat::span<compat::byte> data) noexcept -> state
+{
+    if (!computed_ || corrupted_)
+    {
+        return state::state_error;
+    }
+    if (data.size() < digest_size)
+    {
+        return state::insufficient_output_length;
+    }
+
+    // XOF will fill the entire provided span whereas SHA will only fill the digest size
+    if constexpr (is_xof)
+    {
+        xof_digest_impl(data);
+    }
+    else
+    {
+        // We have verified the length of the span is correct so using a fixed length section of it is safe
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+        #endif
+
+        sha_digest_impl(compat::span<compat::byte, digest_size>(data.data(), digest_size));
+
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic pop
+        #endif
+    }
+
+    return state::success;
+}
+
+template <compat::size_t digest_size, bool is_xof>
+template <concepts::writable_output_range Range>
+[[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto sha3_base<digest_size, is_xof>::get_digest(Range&& data) noexcept -> state
+{
+    using value_type = compat::range_value_t<Range>;
+
+    auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
+
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+    #endif
+
+    if constexpr (is_xof)
+    {
+        return get_digest(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data()));
+    }
+    else
+    {
+        if (data_span.size() * sizeof(value_type) < digest_size)
+        {
+            return state::insufficient_output_length;
+        }
+
+        return get_digest(
+            compat::span<compat::byte, digest_size>(
+                compat::as_writable_bytes(data_span).data(),
+                digest_size
+            )
+        );
+    }
+    
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic pop
+    #endif
 }
 
 } // namespace boost::crypt::hash_detail
