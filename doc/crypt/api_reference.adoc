@@ -14,12 +14,13 @@ https://www.boost.org/LICENSE_1_0.txt
 
 == Types
 
-- None
+- `boost::crypt::expected` - either https://tl.tartanllama.xyz/en/latest/api/expected.html[`tl::expected`] or `cuda::std::expected` depending on context.
 
 == Structures and Classes
 
 === Hashers
 
+==== SHA1
 - <<sha1_hasher, `sha1_hasher`>>
 
 ==== SHA2 Family of Hashers
