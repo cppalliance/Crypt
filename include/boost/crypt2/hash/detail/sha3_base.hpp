@@ -35,6 +35,10 @@ private:
     bool computed_ {};
     bool corrupted_ {};
 
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_message_block() noexcept -> void;
+
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
+
 public:
 
     using return_type = compat::array<compat::byte, digest_size>;
@@ -45,6 +49,42 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
 };
+
+template <compat::size_t digest_size, bool is_xof>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_message_block() noexcept -> void
+{
+
+}
+
+template <compat::size_t digest_size, bool is_xof>
+[[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+auto sha3_base<digest_size, is_xof>::update(compat::span<const compat::byte> data) noexcept -> state
+{
+    if (data.empty())
+    {
+        return state::success;
+    }
+    if (computed_)
+    {
+        corrupted_ = true;
+    }
+    if (corrupted_)
+    {
+        return state::state_error;
+    }
+
+    for (const auto val : data)
+    {
+        buffer_[buffer_index_++] = val;
+
+        if (buffer_index_ == buffer_.size())
+        {
+            process_message_block();
+        }
+    }
+
+    return state::success;
+}
 
 template <compat::size_t digest_size, bool is_xof>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha3_base<digest_size, is_xof>::~sha3_base() noexcept
