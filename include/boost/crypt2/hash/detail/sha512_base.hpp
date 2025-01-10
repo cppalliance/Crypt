@@ -84,7 +84,7 @@ auto sha512_base<digest_size>::get_digest(Range&& data) const noexcept -> compat
 
     if (data_span.size() * sizeof(value_type) < digest_size)
     {
-        return compat::unexpected(state::insufficient_output_length);
+        return compat::unexpected<state>(state::insufficient_output_length);
     }
 
     #if defined(__clang__) && __clang_major__ >= 19
@@ -121,7 +121,7 @@ auto sha512_base<digest_size>::get_digest(compat::span<compat::byte> data) const
         #endif
     }
 
-    return compat::unexpected(state::insufficient_output_length);
+    return compat::unexpected<state>(state::insufficient_output_length);
 }
 
 template <compat::size_t digest_size>
@@ -137,7 +137,7 @@ auto sha512_base<digest_size>::get_digest() const noexcept -> compat::expected<r
     }
     else
     {
-        return compat::unexpected(return_status);
+        return compat::unexpected<state>(return_status);
     }
 }
 
