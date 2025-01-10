@@ -296,6 +296,20 @@ using unexpected =
         boost::crypt::detail::expected_impl::unexpected<E>;
         #endif
 
+// Endian
+enum class endian : int
+{
+    #ifdef BOOST_CRYPT_HAS_CUDA
+    little = static_cast<int>(cuda::std::endian::little),
+    big = static_cast<int>(cuda::std::endian::big),
+    native = static_cast<int>(cuda::std::endian::native),
+    #else
+    little = static_cast<int>(std::endian::little),
+    big = static_cast<int>(std::endian::big),
+    native = static_cast<int>(std::endian::native),
+    #endif
+};
+
 } // namespace boost::crypt::compat
 
 #endif // BOOST_CRYPT2_DETAIL_COMPAT_HPP
