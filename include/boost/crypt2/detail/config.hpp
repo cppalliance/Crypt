@@ -7,7 +7,7 @@
 
 #ifdef __CUDACC__
 #  ifndef BOOST_CRYPT_HAS_CUDA
-#    define BOOST_CRYPT_HAS_CUDA
+#    define BOOST_CRYPT_HAS_CUDA 1
 #  endif
 #  define BOOST_CRYPT_GPU_ENABLED __host__ __device__
 #  define BOOST_CRYPT_GPU_HOST_ENABLED __host__
@@ -17,12 +17,16 @@
 
 #ifdef __CUDACC_RTC__
 #  ifndef BOOST_CRYPT_HAS_CUDA
-#    define BOOST_CRYPT_HAS_CUDA
+#    define BOOST_CRYPT_HAS_CUDA 1
 #  endif
 #  define BOOST_CRYPT_HAS_NVRTC
 #  define BOOST_CRYPT_GPU_ENABLED __host__ __device__
 #  define BOOST_CRYPT_GPU_HOST_ENABLED __host__
 #  define BOOST_CRYPT_GPU_DEVICE_ENABLED __device__
+#endif
+
+#ifndef BOOST_CRYPT_HAS_CUDA
+#  define BOOST_CRYPT_HAS_CUDA 0
 #endif
 
 #ifndef BOOST_CRYPT_GPU_ENABLED
