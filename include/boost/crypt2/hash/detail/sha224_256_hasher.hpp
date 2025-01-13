@@ -43,7 +43,7 @@ namespace sha256_detail {
 
 // On the host device we prefer this array to be static,
 // but in a CUDA environment we move it into the function to make it available to host and device
-#ifndef BOOST_CRYPT_HAS_CUDA
+#if !BOOST_CRYPT_HAS_CUDA
 inline constexpr compat::array<compat::uint32_t, 64U> sha256_k {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
     0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01,
@@ -102,7 +102,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_maj(const compat::uint32_t x,
 template <compat::size_t digest_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_224_256_hasher<digest_size>::process_message_block() noexcept -> void
 {
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     constexpr compat::uint32_t sha256_k[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b,
     0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01,

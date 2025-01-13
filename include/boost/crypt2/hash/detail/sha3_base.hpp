@@ -76,7 +76,7 @@ public:
 
 namespace sha3_detail {
 
-#ifndef BOOST_CRYPT_HAS_CUDA
+#if !BOOST_CRYPT_HAS_CUDA
 
 inline constexpr compat::size_t num_rounds {24U};
 
@@ -108,7 +108,7 @@ inline constexpr compat::array<compat::uint64_t, num_rounds> iota {
 template <compat::size_t digest_size, bool is_xof>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_message_block() noexcept -> void
 {
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
 
     constexpr compat::size_t num_rounds {24U};
 

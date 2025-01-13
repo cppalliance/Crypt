@@ -7,7 +7,7 @@
 
 #include <boost/crypt2/detail/config.hpp>
 
-#ifndef BOOST_CRYPT_HAS_CUDA
+#if !BOOST_CRYPT_HAS_CUDA
 
 #ifndef BOOST_CRYPT_BUILD_MODULE
 #include <fstream>

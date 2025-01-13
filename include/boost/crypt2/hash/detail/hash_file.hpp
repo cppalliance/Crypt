@@ -7,7 +7,7 @@
 
 #include <boost/crypt2/detail/config.hpp>
 
-#ifndef BOOST_CRYPT_HAS_CUDA
+#if !BOOST_CRYPT_HAS_CUDA
 
 #include <boost/crypt2/detail/file_reader.hpp>
 #include <boost/crypt2/detail/concepts.hpp>
