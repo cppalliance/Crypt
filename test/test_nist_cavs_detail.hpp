@@ -1681,6 +1681,7 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 
     bool result_is_ok { true };
 
+    std::size_t counter {};
     for(const auto& test_vector : test_vectors)
     {
         local_hasher_type this_hash { };
@@ -1735,7 +1736,13 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
         // Collect the combined results of pass 1 and pass 2.
         const bool result_hash_is_ok = (result_hash_01_is_ok && result_hash_02_is_ok);
 
+        if (!result_hash_is_ok)
+        {
+            std::cerr << "Failed with test: " << counter << std::endl;
+        }
+
         result_is_ok = (result_hash_is_ok && result_is_ok);
+        ++counter;
     }
 
     return result_is_ok;
@@ -1932,38 +1939,42 @@ auto test_vectors_monte_sha3(const nist::cavs::test_vector_container_type& test_
                 (std::min)(MDi.size(), seed_init.size())
         };
 
-        static_cast<void>
-        (
-            std::copy
-            (
-                seed_init.cbegin(),
-                seed_init.cbegin() + static_cast<typename std::vector<std::uint8_t>::difference_type>(copy_len),
-                MDi.begin()
-            )
-        );
-
-        for (size_t j = 0; j < 100; j++)
+        for (std::size_t i {}; i < copy_len; ++i)
         {
-            for (size_t i = 1; i < 1001; i++)
+            MDi[i] = static_cast<std::byte>(seed_init[i]);
+        }
+
+        for (std::size_t j = 0; j < 100; j++)
+        {
+            for (std::size_t i = 1; i < 1001; i++)
             {
                 local_hasher_type this_hash { };
 
                 this_hash.init();
 
-                this_hash.process_bytes(MDi.data(), MDi.size());
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic push
+                #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+                #endif
+                const auto current_data {std::span(MDi.data(), MDi.size())};
 
-                MDi = this_hash.get_digest();
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic pop
+                #endif
+
+                this_hash.process_bytes(current_data);
+                this_hash.finalize();
+
+                MDi = this_hash.get_digest().value();
             }
 
             // The output at this point is MDi.
 
-            const bool result_this_monte_step_is_ok =
-            std::equal
-            (
-                MDi.cbegin(),
-                MDi.cend(),
-                test_vectors_monte[j].my_result.cbegin()
-            );
+            bool result_this_monte_step_is_ok {true};
+            for (std::size_t i {}; i < MDi.size(); ++i)
+            {
+                result_this_monte_step_is_ok &= (MDi[i] == static_cast<std::byte>(test_vectors_monte[j].my_result[i]));
+            }
 
             result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
 
