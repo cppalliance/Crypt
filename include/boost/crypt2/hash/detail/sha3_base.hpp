@@ -139,7 +139,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
 
     // Prepare the state array cube
     // This depends on the endianness of the machine
-    for (compat::size_t i {}, state_i {}; i < buffer_.size(), state_i < state_array_.size(); i += 8U, ++state_i)
+    for (compat::size_t i {}, state_i {}; i < buffer_.size() && state_i < state_array_.size(); i += 8U, ++state_i)
     {
         if constexpr (compat::endian::native == compat::endian::big)
         {
@@ -214,7 +214,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
     }
 
     // Now we need to write back into the buffer
-    for (compat::size_t i {}, state_i {}; i < buffer_.size(), state_i < state_array_.size(); i += 8U, ++state_i)
+    for (compat::size_t i {}, state_i {}; i < buffer_.size() && state_i < state_array_.size(); i += 8U, ++state_i)
     {
         // For SHA3 endianness matters
         if constexpr (compat::endian::native == compat::endian::big)
