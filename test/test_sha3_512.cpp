@@ -15,6 +15,7 @@
 #pragma clang diagnostic pop
 #endif
 
+#include "where_file.hpp"
 #include <random>
 #include <iostream>
 #include <string>
@@ -164,57 +165,16 @@ void test_file(T filename, const std::array<uint16_t, 64U>& res)
 
 void files_test()
 {
-    // Based off where we are testing from (test vs boost_root) we need to adjust our filepath
-    const char* filename;
-    const char* filename_2;
-
-    // Boost-root
-    std::ifstream fd("libs/crypt/test/test_file_1.txt", std::ios::binary | std::ios::in);
-    filename = "libs/crypt/test/test_file_1.txt";
-    filename_2 = "libs/crypt/test/test_file_2.txt";
-
-    // LCOV_EXCL_START
-    if (!fd.is_open())
-    {
-        // Local test directory or IDE
-        std::ifstream fd2("test_file_1.txt", std::ios::binary | std::ios::in);
-        filename = "test_file_1.txt";
-        filename_2 = "test_file_2.txt";
-
-        if (!fd2.is_open())
-        {
-            // test/cover
-            std::ifstream fd3("../test_file_1.txt", std::ios::binary | std::ios::in);
-            filename = "../test_file_1.txt";
-            filename_2 = "../test_file_2.txt";
-
-            if (!fd3.is_open())
-            {
-                std::cerr << "Test not run due to file system issues" << std::endl;
-                return;
-            }
-            else
-            {
-                fd3.close();
-            }
-        }
-        else
-        {
-            fd2.close();
-        }
-    }
-    else
-    {
-        fd.close();
-    }
-    // LCOV_EXCL_STOP
+    std::ifstream fd(boost::crypt::where_file("test_file_1.txt"), std::ios::binary | std::ios::in);
+    std::string filename = boost::crypt::where_file("test_file_1.txt").c_str();
+    std::string filename_2 = boost::crypt::where_file("test_file_2.txt").c_str();
 
     // On macOS 15
     // openssl dgst -sha3-512 test_file_1.txt
     // sha3_512 (test_file_1.txt) = 189a3d5af62a8f7c0dcc8504fe8dc1c3287911412a61ae4760b847c2b5253a408e1b8823954374ea806059af01d907c574ba0abe7e5d7b400de6b8601ed2c9cf
     constexpr std::array<uint16_t, 64> res{0x18, 0x9a, 0x3d, 0x5a, 0xf6, 0x2a, 0x8f, 0x7c, 0x0d, 0xcc, 0x85, 0x04, 0xfe, 0x8d, 0xc1, 0xc3, 0x28, 0x79, 0x11, 0x41, 0x2a, 0x61, 0xae, 0x47, 0x60, 0xb8, 0x47, 0xc2, 0xb5, 0x25, 0x3a, 0x40, 0x8e, 0x1b, 0x88, 0x23, 0x95, 0x43, 0x74, 0xea, 0x80, 0x60, 0x59, 0xaf, 0x01, 0xd9, 0x07, 0xc5, 0x74, 0xba, 0x0a, 0xbe, 0x7e, 0x5d, 0x7b, 0x40, 0x0d, 0xe6, 0xb8, 0x60, 0x1e, 0xd2, 0xc9, 0xcf};
 
-    test_file(filename, res);
+    test_file(filename.c_str(), res);
 
     const std::string str_filename {filename};
     test_file(str_filename, res);
