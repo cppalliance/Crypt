@@ -378,7 +378,8 @@ auto sha3_base<digest_size, is_xof>::get_digest() noexcept -> compat::expected<r
     if constexpr (is_xof)
     {
         xof_digest_impl(digest);
-    } else
+    }
+    else
     {
         sha_digest_impl(digest);
     }
