@@ -1965,18 +1965,16 @@ auto test_vectors_monte_sha3(const nist::cavs::test_vector_container_type& test_
                 this_hash.process_bytes(current_data);
                 this_hash.finalize();
 
-                MDi = this_hash.get_digest();
+                MDi = this_hash.get_digest().value();
             }
 
             // The output at this point is MDi.
 
-            const bool result_this_monte_step_is_ok =
-            std::equal
-            (
-                MDi.cbegin(),
-                MDi.cend(),
-                test_vectors_monte[j].my_result.cbegin()
-            );
+            bool result_this_monte_step_is_ok {true};
+            for (std::size_t i {}; i < MDi.size(); ++i)
+            {
+                result_this_monte_step_is_ok &= (MDi[i] == static_cast<std::byte>(test_vectors_monte[j].my_result[i]));
+            }
 
             result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
 
