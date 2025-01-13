@@ -192,7 +192,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
         {
             const auto j {pi_lane_number[i]};
             cd[0] = state_array_[j];
-            state_array_[j] = compat::rotl(temp, static_cast<compat::uint64_t>(rho_rotation[i]));
+            state_array_[j] = compat::rotl(temp, static_cast<int>(rho_rotation[i]));
             temp = cd[0];
         }
 
