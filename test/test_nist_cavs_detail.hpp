@@ -1681,6 +1681,7 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
 
     bool result_is_ok { true };
 
+    std::size_t counter {};
     for(const auto& test_vector : test_vectors)
     {
         local_hasher_type this_hash { };
@@ -1735,7 +1736,13 @@ auto test_vectors_oneshot(const test_vector_container_type& test_vectors) -> boo
         // Collect the combined results of pass 1 and pass 2.
         const bool result_hash_is_ok = (result_hash_01_is_ok && result_hash_02_is_ok);
 
+        if (!result_hash_is_ok)
+        {
+            std::cerr << "Failed with test: " << counter << std::endl;
+        }
+
         result_is_ok = (result_hash_is_ok && result_is_ok);
+        ++counter;
     }
 
     return result_is_ok;

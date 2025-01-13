@@ -266,7 +266,7 @@ auto sha3_base<digest_size, is_xof>::update(compat::span<const compat::byte> dat
 
     for (const auto val: data)
     {
-        buffer_[buffer_index_++] = val;
+        buffer_[buffer_index_++] ^= val;
 
         if (buffer_index_ == buffer_.size())
         {
