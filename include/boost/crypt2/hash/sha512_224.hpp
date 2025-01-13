@@ -37,7 +37,7 @@ auto sha512_224(SizedRange&& data) noexcept -> compat::expected<sha512_224_hashe
     return hasher.get_digest();
 }
 
-#ifndef BOOST_CRYPT_HAS_CUDA
+#if !BOOST_CRYPT_HAS_CUDA
 
 template <concepts::file_system_path T>
 [[nodiscard]] BOOST_CRYPT_EXPORT inline auto sha512_224_file(const T& filepath) -> compat::expected<sha512_224_hasher::return_type, state>

@@ -34,8 +34,7 @@ auto sha3_512(SizedRange&& data) noexcept -> compat::expected<sha3_512_hasher::r
     return hasher.get_digest();
 }
 
-#ifndef BOOST_CRYPT_HAS_CUDA
-
+#if !BOOST_CRYPT_HAS_CUDA
 
 template <concepts::file_system_path T>
 [[nodiscard]] BOOST_CRYPT_EXPORT

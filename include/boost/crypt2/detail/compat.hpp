@@ -10,11 +10,11 @@
 
 #include <boost/crypt2/detail/config.hpp>
 
-#if !defined(BOOST_CRYPT_HAS_CUDA)
+#if !BOOST_CRYPT_HAS_CUDA
 #include <boost/crypt2/detail/expected.hpp>
 #endif
 
-#if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
+#if !defined(BOOST_CRYPT_BUILD_MODULE) && !BOOST_CRYPT_HAS_CUDA
 
 #include <span>
 #include <array>
@@ -26,7 +26,7 @@
 #include <utility>
 #include <bit>
 
-#elif defined(BOOST_CRYPT_HAS_CUDA)
+#elif BOOST_CRYPT_HAS_CUDA
 
 #include <cuda/std/span>
 #include <cuda/std/array>
@@ -44,7 +44,7 @@
 namespace boost::crypt::compat {
 
 // Fixed width types
-#ifdef BOOST_CRYPT_HAS_CUDA
+#if BOOST_CRYPT_HAS_CUDA
 using size_t = cuda::std::size_t;
 using uint32_t = cuda::std::uint32_t;
 using uint64_t = cuda::std::uint64_t;
@@ -56,13 +56,13 @@ using uint64_t = std::uint64_t;
 
 // Arrays and spans
 template <typename T, compat::size_t N>
-#ifdef BOOST_CRYPT_HAS_CUDA
+#if BOOST_CRYPT_HAS_CUDA
 using array = cuda::std::array<T, N>;
 #else
 using array = std::array<T, N>;
 #endif
 
-#ifdef BOOST_CRYPT_HAS_CUDA
+#if BOOST_CRYPT_HAS_CUDA
 template<typename T, cuda::std::size_t Extent = cuda::std::dynamic_extent>
 using span = cuda::std::span<T, Extent>;
 #else
@@ -71,7 +71,7 @@ using span = std::span<T, Extent>;
 #endif
 
 // Byte and friends
-#ifdef BOOST_CRYPT_HAS_CUDA
+#if BOOST_CRYPT_HAS_CUDA
 using byte = cuda::std::byte;
 #else
 using byte = std::byte;
@@ -80,7 +80,7 @@ using byte = std::byte;
 template <typename T>
 BOOST_CRYPT_GPU_ENABLED constexpr auto as_bytes(span<T> s) noexcept
 {
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     return cuda::std::as_bytes(s);
     #else
     return std::as_bytes(s);
@@ -90,7 +90,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto as_bytes(span<T> s) noexcept
 template <typename T>
 BOOST_CRYPT_GPU_ENABLED constexpr auto as_writable_bytes(span<T> s) noexcept
 {
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     return cuda::std::as_writable_bytes(s);
     #else
     return std::as_writable_bytes(s);
@@ -98,7 +98,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto as_writable_bytes(span<T> s) noexcept
 }
 
 // Type traits
-#ifdef BOOST_CRYPT_HAS_CUDA
+#if BOOST_CRYPT_HAS_CUDA
 template <typename T, T v>
 using integral_constant = cuda::std::integral_constant<T, v>;
 template <bool b>
@@ -116,7 +116,7 @@ using false_type = std::false_type;
 
 template <typename T>
 inline constexpr bool is_trivially_copyable_v =
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     cuda::std::is_trivially_copyable_v<T>;
     #else
     std::is_trivially_copyable_v<T>;
@@ -124,7 +124,7 @@ inline constexpr bool is_trivially_copyable_v =
 
 template <typename T>
 using remove_reference_t =
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     cuda::std::remove_reference_t<T>;
     #else
     std::remove_reference_t<T>;
@@ -132,7 +132,7 @@ using remove_reference_t =
 
 template <typename T>
 using remove_cvref_t =
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     cuda::std::remove_cv_t<cuda::std::remove_reference_t<T>>;
     #else
     std::remove_cv_t<std::remove_reference_t<T>>;
@@ -141,7 +141,7 @@ using remove_cvref_t =
 // Ranges concepts and utilities
 template <typename R>
 concept sized_range =
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     cuda::std::ranges::sized_range<R>;
     #else
     std::ranges::sized_range<R>;
@@ -149,7 +149,7 @@ concept sized_range =
 
 template <typename R, typename T>
 concept output_range =
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     cuda::std::ranges::output_range<R, T>;
     #else
     std::ranges::output_range<R, T>;
@@ -157,7 +157,7 @@ concept output_range =
 
 template <typename R>
 using range_value_t =
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     cuda::std::ranges::range_value_t<R>;
     #else
     std::ranges::range_value_t<R>;
@@ -167,7 +167,7 @@ using range_value_t =
 template <typename T>
 BOOST_CRYPT_GPU_ENABLED constexpr auto forward(remove_reference_t<T>& t) noexcept -> T&&
 {
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     return cuda::std::forward<T>(t);
     #else
     return std::forward<T>(t);
@@ -177,7 +177,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto forward(remove_reference_t<T>& t) noexcep
 template <typename T>
 BOOST_CRYPT_GPU_ENABLED constexpr auto forward(remove_reference_t<T>&& t) noexcept -> T&&
 {
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     return cuda::std::forward<T>(cuda::std::move(t));
     #else
     return std::forward<T>(std::move(t));
@@ -203,7 +203,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto make_span(R&& r)
 {
     if constexpr (is_span_v<remove_cvref_t<R>>)
     {
-        #ifdef BOOST_CRYPT_HAS_CUDA
+        #if BOOST_CRYPT_HAS_CUDA
         return cuda::std::forward<R>(r);
         #else
         return std::forward<R>(r);
@@ -211,7 +211,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto make_span(R&& r)
     }
     else
     {
-        #ifdef BOOST_CRYPT_HAS_CUDA
+        #if BOOST_CRYPT_HAS_CUDA
         return cuda::std::span(cuda::std::forward<R>(r));
         #else
         return std::span(std::forward<R>(r));
@@ -228,7 +228,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto make_span(R& r)
     }
     else
     {
-        #ifdef BOOST_CRYPT_HAS_CUDA
+        #if BOOST_CRYPT_HAS_CUDA
         return cuda::std::span(r);
         #else
         return std::span(r);
@@ -247,7 +247,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto rotl(T val, int shift) noexcept
     #pragma clang diagnostic ignored "-Wsign-conversion"
     #endif
 
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     return cuda::std::rotl(val, shift);
     #else
     return std::rotl(val, shift);
@@ -268,7 +268,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto rotr(T val, int shift) noexcept
     #pragma clang diagnostic ignored "-Wsign-conversion"
     #endif
 
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     return cuda::std::rotr(val, shift);
     #else
     return std::rotr(val, shift);
@@ -282,7 +282,7 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto rotr(T val, int shift) noexcept
 // Expected
 template <typename T, typename E>
 using expected =
-        #ifdef BOOST_CRYPT_HAS_CUDA
+        #if BOOST_CRYPT_HAS_CUDA
         cuda::std::expected<T, E>;
         #else
         boost::crypt::detail::expected_impl::expected<T, E>;
@@ -290,7 +290,7 @@ using expected =
 
 template <typename E>
 using unexpected =
-        #ifdef BOOST_CRYPT_HAS_CUDA
+        #if BOOST_CRYPT_HAS_CUDA
         cuda::std::unexpected<E>;
         #else
         boost::crypt::detail::expected_impl::unexpected<E>;
@@ -299,7 +299,7 @@ using unexpected =
 // Endian
 enum class endian : int
 {
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
     little = static_cast<int>(cuda::std::endian::little),
     big = static_cast<int>(cuda::std::endian::big),
     native = static_cast<int>(cuda::std::endian::native),

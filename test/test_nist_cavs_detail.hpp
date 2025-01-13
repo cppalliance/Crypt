@@ -17,6 +17,11 @@
 #pragma clang diagnostic pop
 #endif
 
+// Compatibility measure between crypt1 and 2
+#ifdef BOOST_CRYPT_HAS_CUDA
+#undef BOOST_CRYPT_HAS_CUDA
+#endif
+
 #include "boost/crypt/mac/hmac.hpp"
 #include "boost/crypt/aes/detail/cipher_mode.hpp"
 #include <cstddef>

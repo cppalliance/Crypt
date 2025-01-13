@@ -301,7 +301,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::init() noexcept
 
 namespace sha512_detail {
     
-#ifndef BOOST_CRYPT_HAS_CUDA
+#if !BOOST_CRYPT_HAS_CUDA
 
 // On the host device we prefer this array to be static,
 // but in a CUDA environment we move it into the function to make it available to host and device
@@ -377,7 +377,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_maj(const compat::uint64_t x,
 template <compat::size_t digest_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_message_block() noexcept -> void
 {
-    #ifdef BOOST_CRYPT_HAS_CUDA
+    #if BOOST_CRYPT_HAS_CUDA
 
     constexpr compat::array<compat::uint64_t, 80U> sha512_k = {
             0x428A2F98D728AE22ULL, 0x7137449123EF65CDULL, 0xB5C0FBCFEC4D3B2FULL,

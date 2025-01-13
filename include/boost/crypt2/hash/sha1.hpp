@@ -249,7 +249,7 @@ auto sha1(SizedRange&& data) noexcept -> compat::expected<sha1_hasher::return_ty
     return hasher.get_digest();
 }
 
-#ifndef BOOST_CRYPT_HAS_CUDA
+#if !BOOST_CRYPT_HAS_CUDA
 
 
 template <concepts::file_system_path T>

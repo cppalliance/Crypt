@@ -37,7 +37,7 @@ auto sha384(SizedRange&& data) noexcept -> compat::expected<sha384_hasher::retur
     return hasher.get_digest();
 }
 
-#ifndef BOOST_CRYPT_HAS_CUDA
+#if !BOOST_CRYPT_HAS_CUDA
 
 template <concepts::file_system_path T>
 [[nodiscard]] BOOST_CRYPT_EXPORT inline auto sha384_file(const T& filepath) -> compat::expected<sha384_hasher::return_type, state>

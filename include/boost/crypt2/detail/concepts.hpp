@@ -7,14 +7,14 @@
 
 #include <boost/crypt2/detail/compat.hpp>
 
-#if !defined(BOOST_CRYPT_BUILD_MODULE) && !defined(BOOST_CRYPT_HAS_CUDA)
+#if !defined(BOOST_CRYPT_BUILD_MODULE) && !BOOST_CRYPT_HAS_CUDA
 #include <filesystem>
 #include <type_traits>
 #endif
 
 namespace boost::crypt::concepts {
 
-#ifndef BOOST_CRYPT_HAS_CUDA
+#if !BOOST_CRYPT_HAS_CUDA
 
 template <typename T>
 concept file_system_path =

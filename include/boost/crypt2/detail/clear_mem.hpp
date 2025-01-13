@@ -8,7 +8,7 @@
 #include <boost/crypt2/detail/config.hpp>
 #include <boost/crypt2/detail/compat.hpp>
 
-#ifdef BOOST_CRYPT_HAS_CUDA
+#if BOOST_CRYPT_HAS_CUDA
 
 #include <cuda/std/span>
 #include <cuda/std/array>

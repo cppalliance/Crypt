@@ -35,7 +35,7 @@
 
 #endif
 
-#if !defined(NDEBUG) && !defined(BOOST_CRYPT_HAS_CUDA)
+#if !defined(NDEBUG) && !BOOST_CRYPT_HAS_CUDA
 
 namespace boost::crypt::assert_detail {
 
