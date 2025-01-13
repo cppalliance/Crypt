@@ -24,7 +24,7 @@ namespace boost::crypt::hash_detail {
 #endif
 
 template <typename HasherType, concepts::file_system_path T>
-[[nodiscard]] auto hash_file_impl(const T& filepath) -> compat::expected<HasherType, state>
+[[nodiscard]] auto hash_file_impl(const T& filepath) -> compat::expected<typename HasherType::return_type, state>
 {
     if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
     {
