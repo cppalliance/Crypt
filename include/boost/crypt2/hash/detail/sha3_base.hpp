@@ -138,32 +138,17 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
     using namespace sha3_detail;
 
     // Prepare the state array cube
-    // This depends on the endianness of the machine
     for (compat::size_t i {}, state_i {}; i < buffer_.size() && state_i < state_array_.size(); i += 8U, ++state_i)
     {
-        if constexpr (compat::endian::native == compat::endian::big)
-        {
-            state_array_[state_i] =
-                    (static_cast<compat::uint64_t>(buffer_[i]) << 56U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 1U]) << 48U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 2U]) << 40U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 3U]) << 32U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 4U]) << 24U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 5U]) << 16U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 6U]) << 8U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 7U]));
-        } else
-        {
-            state_array_[state_i] =
-                    (static_cast<compat::uint64_t>(buffer_[i])) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 1U]) << 8U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 2U]) << 16U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 3U]) << 24U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 4U]) << 32U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 5U]) << 40U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 6U]) << 48U) |
-                    (static_cast<compat::uint64_t>(buffer_[i + 7U]) << 56U);
-        }
+        state_array_[state_i] =
+                (static_cast<compat::uint64_t>(buffer_[i])) |
+                (static_cast<compat::uint64_t>(buffer_[i + 1U]) << 8U) |
+                (static_cast<compat::uint64_t>(buffer_[i + 2U]) << 16U) |
+                (static_cast<compat::uint64_t>(buffer_[i + 3U]) << 24U) |
+                (static_cast<compat::uint64_t>(buffer_[i + 4U]) << 32U) |
+                (static_cast<compat::uint64_t>(buffer_[i + 5U]) << 40U) |
+                (static_cast<compat::uint64_t>(buffer_[i + 6U]) << 48U) |
+                (static_cast<compat::uint64_t>(buffer_[i + 7U]) << 56U);
     }
 
     // Apply Kecckaf
@@ -216,31 +201,15 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
     // Now we need to write back into the buffer
     for (compat::size_t i {}, state_i {}; i < buffer_.size() && state_i < state_array_.size(); i += 8U, ++state_i)
     {
-        // For SHA3 endianness matters
-        if constexpr (compat::endian::native == compat::endian::big)
-        {
-
-            const auto state_value {state_array_[state_i]};
-            buffer_[i] = static_cast<compat::byte>((state_value >> 56U) & 0xFFULL);
-            buffer_[i + 1U] = static_cast<compat::byte>((state_value >> 48U) & 0xFFULL);
-            buffer_[i + 2U] = static_cast<compat::byte>((state_value >> 40U) & 0xFFULL);
-            buffer_[i + 3U] = static_cast<compat::byte>((state_value >> 32U) & 0xFFULL);
-            buffer_[i + 4U] = static_cast<compat::byte>((state_value >> 24U) & 0xFFULL);
-            buffer_[i + 5U] = static_cast<compat::byte>((state_value >> 16U) & 0xFFULL);
-            buffer_[i + 6U] = static_cast<compat::byte>((state_value >> 8U) & 0xFFULL);
-            buffer_[i + 7U] = static_cast<compat::byte>((state_value) & 0xFFU);
-        } else
-        {
-            const auto state_value {state_array_[state_i]};
-            buffer_[i] = static_cast<compat::byte>(state_value & 0xFFU);
-            buffer_[i + 1U] = static_cast<compat::byte>((state_value >> 8U) & 0xFFU);
-            buffer_[i + 2U] = static_cast<compat::byte>((state_value >> 16U) & 0xFFU);
-            buffer_[i + 3U] = static_cast<compat::byte>((state_value >> 24U) & 0xFFU);
-            buffer_[i + 4U] = static_cast<compat::byte>((state_value >> 32U) & 0xFFU);
-            buffer_[i + 5U] = static_cast<compat::byte>((state_value >> 40U) & 0xFFU);
-            buffer_[i + 6U] = static_cast<compat::byte>((state_value >> 48U) & 0xFFU);
-            buffer_[i + 7U] = static_cast<compat::byte>((state_value >> 56U) & 0xFFU);
-        }
+        const auto state_value {state_array_[state_i]};
+        buffer_[i] = static_cast<compat::byte>(state_value & 0xFFU);
+        buffer_[i + 1U] = static_cast<compat::byte>((state_value >> 8U) & 0xFFU);
+        buffer_[i + 2U] = static_cast<compat::byte>((state_value >> 16U) & 0xFFU);
+        buffer_[i + 3U] = static_cast<compat::byte>((state_value >> 24U) & 0xFFU);
+        buffer_[i + 4U] = static_cast<compat::byte>((state_value >> 32U) & 0xFFU);
+        buffer_[i + 5U] = static_cast<compat::byte>((state_value >> 40U) & 0xFFU);
+        buffer_[i + 6U] = static_cast<compat::byte>((state_value >> 48U) & 0xFFU);
+        buffer_[i + 7U] = static_cast<compat::byte>((state_value >> 56U) & 0xFFU);
     }
 
     // Finally, reset the buffer index
