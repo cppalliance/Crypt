@@ -1932,25 +1932,31 @@ auto test_vectors_monte_sha3(const nist::cavs::test_vector_container_type& test_
                 (std::min)(MDi.size(), seed_init.size())
         };
 
-        static_cast<void>
-        (
-            std::copy
-            (
-                seed_init.cbegin(),
-                seed_init.cbegin() + static_cast<typename std::vector<std::uint8_t>::difference_type>(copy_len),
-                MDi.begin()
-            )
-        );
-
-        for (size_t j = 0; j < 100; j++)
+        for (std::size_t i {}; i < copy_len; ++i)
         {
-            for (size_t i = 1; i < 1001; i++)
+            MDi[i] = static_cast<std::byte>(seed_init[i]);
+        }
+
+        for (std::size_t j = 0; j < 100; j++)
+        {
+            for (std::size_t i = 1; i < 1001; i++)
             {
                 local_hasher_type this_hash { };
 
                 this_hash.init();
 
-                this_hash.process_bytes(MDi.data(), MDi.size());
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic push
+                #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+                #endif
+                const auto current_data {std::span(MDi.data(), MDi.size())};
+
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic pop
+                #endif
+
+                this_hash.process_bytes(current_data);
+                this_hash.finalize();
 
                 MDi = this_hash.get_digest();
             }
