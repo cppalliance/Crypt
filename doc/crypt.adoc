@@ -40,9 +40,9 @@ include::crypt/sha3_224.adoc[]
 include::crypt/sha3_256.adoc[]
 
 include::crypt/sha3_384.adoc[]
-
+////
 include::crypt/sha3_512.adoc[]
-
+////
 include::crypt/hmac.adoc[]
 
 include::crypt/hash_drbg.adoc[]
