@@ -125,6 +125,7 @@ void test_class()
 
     for (const auto& test_value : test_values)
     {
+        hasher.init();
         const auto msg {std::get<0>(test_value)};
         hasher.process_bytes(msg);
         hasher.finalize();
@@ -141,9 +142,12 @@ void test_class()
                 // LCOV_EXCL_STOP
             }
         }
-
-        hasher.init();
     }
+
+    const std::string bad_update_msg {"bad"};
+    BOOST_TEST(hasher.process_bytes(bad_update_msg) == boost::crypt::state::state_error);
+    BOOST_TEST(hasher.finalize() == boost::crypt::state::state_error);
+    BOOST_TEST(hasher.get_digest().error() == boost::crypt::state::state_error);
 }
 
 template <typename T>
