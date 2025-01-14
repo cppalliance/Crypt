@@ -67,8 +67,9 @@ public:
     [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
     auto get_digest() noexcept -> compat::expected<return_type, state>;
 
+    template <compat::size_t Extent>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-    auto get_digest(compat::span<compat::byte> data) noexcept -> state;
+    auto get_digest(compat::span<compat::byte, Extent> data) noexcept -> state;
 
     template <concepts::writable_output_range Range>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) noexcept -> state;
@@ -357,8 +358,9 @@ auto sha3_base<digest_size, is_xof>::get_digest() noexcept -> compat::expected<r
 }
 
 template <compat::size_t digest_size, bool is_xof>
+template <compat::size_t Extent>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
-sha3_base<digest_size, is_xof>::get_digest(compat::span<compat::byte> data) noexcept -> state
+sha3_base<digest_size, is_xof>::get_digest(compat::span<compat::byte, Extent> data) noexcept -> state
 {
     if (!computed_ || corrupted_)
     {
@@ -397,6 +399,11 @@ template <concepts::writable_output_range Range>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto sha3_base<digest_size, is_xof>::get_digest(Range&& data) noexcept -> state
 {
     using value_type = compat::range_value_t<Range>;
+
+    if (!computed_ || corrupted_)
+    {
+        return state::state_error;
+    }
 
     auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
 
