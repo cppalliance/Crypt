@@ -435,11 +435,6 @@ template <concepts::writable_output_range Range>
     }
     else
     {
-        if (data_span.size() * sizeof(value_type) < digest_size)
-        {
-            return state::insufficient_output_length;
-        }
-
         sha_digest_impl(
             compat::span<compat::byte, digest_size>(
                 compat::as_writable_bytes(data_span).data(),
