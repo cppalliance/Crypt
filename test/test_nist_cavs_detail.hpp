@@ -2008,10 +2008,9 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
 
         std::vector<std::byte> MDi { };
 
-        const std::size_t copy_len
-        {
-            (std::min)(MDi.size(), seed_init.size())
-        };
+        const std::size_t copy_len = seed_init.size();
+
+        MDi.resize(copy_len);
 
         for (std::size_t i {}; i < copy_len; ++i)
         {
@@ -2041,12 +2040,6 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
                 #endif
 
                 this_hash.process_bytes(current_data);
-
-                for (auto& val : MDi)
-                {
-                    val = static_cast<std::byte>(0);
-                }
-
                 this_hash.finalize();
                 const auto output_status = this_hash.get_digest(MDi);
                 BOOST_TEST(output_status == boost::crypt::state::success);
@@ -2074,10 +2067,13 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
             {
                 result_this_monte_step_is_ok &= (MDi[k] == static_cast<std::byte>(test_vectors_monte[j].my_result[k]));
             }
-
+            
             result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
 
-            BOOST_TEST(result_this_monte_step_is_ok);
+            if (!BOOST_TEST(result_this_monte_step_is_ok))
+            {
+                std::cerr << "Current iter: " << j << std::endl;
+            }
         }
     }
 
