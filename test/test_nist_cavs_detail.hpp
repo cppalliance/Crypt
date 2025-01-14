@@ -1155,9 +1155,9 @@ auto parse_file_monte_xof(const std::string& test_monte_filename, test_vector_co
 
                 if (line_is_representation_is_output_len)
                 {
-                    const std::string str_cnt = line.substr(1U, line.length() - 1U);
+                    const std::string str_cnt = line.substr(12U, line.length() - 12U);
 
-                    const auto len_from_file = std::strtoul(str_cnt.c_str(), nullptr, 10U);
+                    const auto len_from_file = std::strtoul(str_cnt.c_str(), nullptr, 10U) / 8;
 
                     lengths.emplace_back(len_from_file);
                 }
@@ -1776,18 +1776,20 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
         std::vector<std::byte> bits {};
         bits.resize(lengths[i]);
         this_hash.finalize();
-        const auto result_01 { this_hash.get_digest(bits).value() };
+        const auto result_01 { this_hash.get_digest(bits) };
+        BOOST_TEST(result_01 == boost::crypt::state::success);
+        bits.shrink_to_fit();
+        BOOST_CRYPT_ASSERT(test_vector.my_result.size() == bits.size());
 
-        BOOST_CRYPT_ASSERT(test_vector.my_result.size() == result_01);
         for (std::size_t j {}; j < test_vector.my_result.size(); ++j)
         {
-            if (!BOOST_TEST_EQ(test_vector.my_result[j], bits[j]))
+            if (!BOOST_TEST(static_cast<std::byte>(test_vector.my_result[j]) == bits[j]))
             {
                 false_counter++; 
             }
         }
 
-        BOOST_TEST_EQ(lengths[i], result_01);
+        BOOST_TEST_EQ(lengths[i], bits.size());
 
         // Make pass 2 through the messages.
         // Use the triple-combination of init/process/get-result functions.
@@ -1805,13 +1807,14 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
         }
 
         this_hash.finalize();
-        const auto result_02 { this_hash.get_digest(bits).value() };
-
-        BOOST_TEST_EQ(lengths[i], result_02);
+        const auto result_02 { this_hash.get_digest(bits) };
+        BOOST_TEST(result_02 == boost::crypt::state::success);
+        bits.shrink_to_fit();
+        BOOST_TEST_EQ(lengths[i], bits.size());
 
         for (std::size_t j {}; j < test_vector.my_result.size(); ++j)
         {
-            if (!BOOST_TEST_EQ(test_vector.my_result[j], bits[j]))
+            if (!BOOST_TEST(static_cast<std::byte>(test_vector.my_result[j]) == bits[j]))
             {
                 false_counter++; 
             }
@@ -2003,59 +2006,74 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
 
         // Obtain the test-specific initial seed.
 
-        std::vector<std::uint8_t> MDi { };
+        std::vector<std::byte> MDi { };
 
-        const std::size_t copy_len
+        const std::size_t copy_len = seed_init.size();
+
+        MDi.resize(copy_len);
+
+        for (std::size_t i {}; i < copy_len; ++i)
         {
-            (std::min)(MDi.size(), seed_init.size())
-        };
+            MDi[i] = static_cast<std::byte>(seed_init[i]);
+        }
 
-        static_cast<void>
-        (
-            std::copy
-            (
-                seed_init.cbegin(),
-                seed_init.cbegin() + static_cast<typename std::vector<std::uint8_t>::difference_type>(copy_len),
-                MDi.begin()
-            )
-        );
-
-        for (size_t j = 0; j < 100; j++)
+        for (std::size_t j = 0; j < 100; j++)
         {
             MDi.resize(lengths[j]);
 
-            for (size_t i = 1; i < 1001; i++)
+            for (std::size_t i = 1; i < 1001; i++)
             {
                 local_hasher_type this_hash { };
 
                 this_hash.init();
 
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic push
+                #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+                #endif
+
                 // Only process the leftmost 128 bit of output
-                this_hash.process_bytes(MDi.data(), 16);
+                const std::span<std::byte, 16U> current_data {std::span(MDi.data(), 16U)};
 
-                for (auto& val : MDi)
+                #if defined(__clang__) && __clang_major__ >= 19
+                #pragma clang diagnostic pop
+                #endif
+
+                this_hash.process_bytes(current_data);
+                this_hash.finalize();
+                const auto output_status = this_hash.get_digest(MDi);
+                BOOST_TEST(output_status == boost::crypt::state::success);
+
+                // An alias for finding the output length
+                // We assume the hash will never be all 0s except for failure
+                std::size_t zeros_counter {};
+                for (const auto val : MDi)
                 {
-                    // LCOV skips the following line even though MDi is not empty
-                    val = static_cast<std::uint8_t>(0); 
+                    if (val == std::byte{})
+                    {
+                        zeros_counter++;
+                    }
                 }
-
-                const auto output_length = this_hash.get_digest(MDi);
-                BOOST_TEST_EQ(output_length, lengths[j]);
+                if (lengths[j] != 0UL)
+                {
+                    BOOST_TEST(zeros_counter < lengths[j]);
+                }
             }
 
             // The output at this point is MDi.
 
-            const bool result_this_monte_step_is_ok =
-            std::equal
-            (
-                MDi.cbegin(),
-                MDi.cend(),
-                test_vectors_monte[j].my_result.cbegin()
-            );
-
+            bool result_this_monte_step_is_ok {true};
+            for (std::size_t k {}; k < test_vectors_monte[j].my_result.size(); ++k)
+            {
+                result_this_monte_step_is_ok &= (MDi[k] == static_cast<std::byte>(test_vectors_monte[j].my_result[k]));
+            }
+            
             result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
 
-            BOOST_TEST(result_this_monte_step_is_ok);
+            if (!BOOST_TEST(result_this_monte_step_is_ok))
+            {
+                std::cerr << "Current iter: " << j << std::endl;
+            }
         }
     }
 
