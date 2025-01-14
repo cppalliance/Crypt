@@ -407,7 +407,7 @@ template <concepts::writable_output_range Range>
 
     if constexpr (is_xof)
     {
-        return get_digest(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data()));
+        xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data()));
     }
     else
     {
@@ -416,7 +416,7 @@ template <concepts::writable_output_range Range>
             return state::insufficient_output_length;
         }
 
-        return get_digest(
+        sha_digest_impl(
             compat::span<compat::byte, digest_size>(
                 compat::as_writable_bytes(data_span).data(),
                 digest_size
@@ -427,6 +427,8 @@ template <concepts::writable_output_range Range>
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic pop
     #endif
+
+    return state::success;
 }
 
 } // namespace boost::crypt::hash_detail
