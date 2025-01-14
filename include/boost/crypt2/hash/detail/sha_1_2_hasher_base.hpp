@@ -153,12 +153,8 @@ sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept 
     }
 
     return_type digest {};
-    const auto return_state {get_digest_impl(digest)};
-    if (return_state != state::success)
-    {
-        return compat::unexpected<state>(return_state);
-    }
-
+    get_digest_impl(digest);
+    
     return digest;
 }
 
