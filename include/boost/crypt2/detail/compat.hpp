@@ -79,8 +79,8 @@ using byte = cuda::std::byte;
 using byte = std::byte;
 #endif
 
-template <typename T>
-BOOST_CRYPT_GPU_ENABLED constexpr auto as_bytes(span<T> s) noexcept
+template <typename T, compat::size_t N = dynamic_extent>
+BOOST_CRYPT_GPU_ENABLED constexpr auto as_bytes(span<T, N> s) noexcept
 {
     #if BOOST_CRYPT_HAS_CUDA
     return cuda::std::as_bytes(s);
@@ -89,8 +89,8 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto as_bytes(span<T> s) noexcept
     #endif
 }
 
-template <typename T>
-BOOST_CRYPT_GPU_ENABLED constexpr auto as_writable_bytes(span<T> s) noexcept
+template <typename T, compat::size_t N = dynamic_extent>
+BOOST_CRYPT_GPU_ENABLED constexpr auto as_writable_bytes(span<T, N> s) noexcept
 {
     #if BOOST_CRYPT_HAS_CUDA
     return cuda::std::as_writable_bytes(s);
