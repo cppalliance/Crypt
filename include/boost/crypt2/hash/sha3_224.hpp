@@ -12,7 +12,7 @@
 
 namespace boost::crypt {
 
-BOOST_CRYPT_EXPORT using sha3_224_hasher = hash_detail::sha3_base<32U>;
+BOOST_CRYPT_EXPORT using sha3_224_hasher = hash_detail::sha3_base<28U>;
 
 // One shot functions
 [[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
