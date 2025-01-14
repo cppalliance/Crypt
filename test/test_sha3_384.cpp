@@ -189,6 +189,23 @@ void test_class()
     BOOST_TEST(hasher.process_bytes(bad_update_msg) == boost::crypt::state::state_error);
     BOOST_TEST(hasher.finalize() == boost::crypt::state::state_error);
     BOOST_TEST(hasher.get_digest().error() == boost::crypt::state::state_error);
+
+    // Bad return value size
+    std::array<std::byte, 5U> bad_container {};
+    hasher.init();
+    hasher.process_bytes(bad_update_msg);
+    hasher.finalize();
+    const auto array_return {hasher.get_digest(bad_container)};
+    BOOST_TEST(array_return == boost::crypt::state::insufficient_output_length);
+
+    std::span<std::byte, 5U> bad_container_span {bad_container};
+    hasher.init();
+    hasher.process_bytes(bad_update_msg);
+    const auto array_return2 {hasher.get_digest(bad_container_span)};
+    BOOST_TEST(array_return2 == boost::crypt::state::state_error);
+    hasher.finalize();
+    const auto array_return3 {hasher.get_digest(bad_container_span)};
+    BOOST_TEST(array_return3 == boost::crypt::state::insufficient_output_length);
 }
 
 template <typename T>
