@@ -70,6 +70,11 @@ template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 template <concepts::writable_output_range Range>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(Range&& data) const noexcept -> state
 {
+    if (corrupted_ || !computed_)
+    {
+        return state::state_error;
+    }
+
     using value_type = compat::range_value_t<Range>;
 
     auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
@@ -84,7 +89,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
     #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
     #endif
 
-    get_digest_impl(compat::span<compat::byte, digest_size>(
+    return get_digest_impl(compat::span<compat::byte, digest_size>(
             compat::as_writable_bytes(data_span).data(),
             digest_size
     ));
@@ -92,18 +97,11 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic pop
     #endif
-
-    return state::success;
 }
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest_impl(compat::span<compat::byte, digest_size> data) const noexcept -> state
 {
-    if (corrupted_ || !computed_)
-    {
-        return state::state_error;
-    }
-
     for (compat::size_t i {}; i < data.size(); ++i)
     {
         data[i] = static_cast<compat::byte>(intermediate_hash_[i >> 2U] >> 8U * (3U - (i & 0x03U)));
@@ -117,6 +115,11 @@ template <compat::size_t Extent>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
 sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state
 {
+    if (corrupted_ || !computed_)
+    {
+        return state::state_error;
+    }
+
     if constexpr (Extent == digest_size)
     {
         return get_digest_impl(data);
@@ -144,6 +147,11 @@ template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
 sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept -> compat::expected<return_type, state>
 {
+    if (corrupted_ || !computed_)
+    {
+        return compat::unexpected<state>(state::state_error);
+    }
+
     return_type digest {};
     const auto return_state {get_digest_impl(digest)};
     if (return_state != state::success)
