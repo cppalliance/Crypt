@@ -79,6 +79,11 @@ template <concepts::writable_output_range Range>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED
 auto sha512_base<digest_size>::get_digest(Range&& data) const noexcept -> state
 {
+    if (corrupted_ || !computed_)
+    {
+        return state::state_error;
+    }
+
     using value_type = compat::range_value_t<Range>;
 
     auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
@@ -108,6 +113,11 @@ template <compat::size_t Extent>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
 auto sha512_base<digest_size>::get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state
 {
+    if (corrupted_ || !computed_)
+    {
+        return state::state_error;
+    }
+
     if constexpr (Extent == digest_size)
     {
         return get_digest_impl(data);
@@ -135,6 +145,11 @@ template <compat::size_t digest_size>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
 auto sha512_base<digest_size>::get_digest() const noexcept -> compat::expected<return_type, state>
 {
+    if (corrupted_ || !computed_)
+    {
+        return compat::unexpected<state>(state::state_error);
+    }
+
     return_type digest {};
     const auto return_status {get_digest_impl(digest)};
 
@@ -151,11 +166,6 @@ auto sha512_base<digest_size>::get_digest() const noexcept -> compat::expected<r
 template <compat::size_t digest_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::get_digest_impl(compat::span<compat::byte, digest_size> data) const -> state
 {
-    if (corrupted_ || !computed_)
-    {
-        return state::state_error;
-    }
-
     BOOST_CRYPT_ASSERT(data.size() == digest_size);
     BOOST_CRYPT_ASSERT(intermediate_hash_.size() >= (digest_size - 1U) >> 3U);
     for (compat::size_t i {}; i < digest_size; ++i)
