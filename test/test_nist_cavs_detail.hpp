@@ -1155,7 +1155,7 @@ auto parse_file_monte_xof(const std::string& test_monte_filename, test_vector_co
 
                 if (line_is_representation_is_output_len)
                 {
-                    const std::string str_cnt = line.substr(1U, line.length() - 1U);
+                    const std::string str_cnt = line.substr(12U, line.length() - 12U);
 
                     const auto len_from_file = std::strtoul(str_cnt.c_str(), nullptr, 10U);
 
@@ -2047,8 +2047,24 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
                     val = static_cast<std::byte>(0);
                 }
 
-                const auto output_length = this_hash.get_digest(MDi);
-                BOOST_TEST_EQ(output_length, lengths[j]);
+                this_hash.finalize();
+                const auto output_status = this_hash.get_digest(MDi);
+                BOOST_TEST(output_status == boost::crypt::state::success);
+
+                // An alias for finding the output length
+                // We assume the hash will never be all 0s except for failure
+                std::size_t zeros_counter {};
+                for (const auto val : MDi)
+                {
+                    if (val == std::byte{})
+                    {
+                        zeros_counter++;
+                    }
+                }
+                if (lengths[j] != 0UL)
+                {
+                    BOOST_TEST(zeros_counter < lengths[j]);
+                }
             }
 
             // The output at this point is MDi.
