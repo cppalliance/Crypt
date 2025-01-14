@@ -34,13 +34,13 @@ include::crypt/sha512.adoc[]
 include::crypt/sha512_224.adoc[]
 
 include::crypt/sha512_256.adoc[]
-////
+
 include::crypt/sha3_224.adoc[]
 
 include::crypt/sha3_256.adoc[]
 
 include::crypt/sha3_384.adoc[]
-////
+
 include::crypt/sha3_512.adoc[]
 ////
 include::crypt/hmac.adoc[]
