@@ -173,6 +173,29 @@ void test_class()
         }
     }
 
+    for (const auto& test_value : test_values)
+    {
+        std::array<std::byte, 64U> message_result {};
+        hasher.init();
+        const auto msg {std::get<0>(test_value)};
+        hasher.process_bytes(msg);
+        hasher.finalize();
+        const auto return_state {hasher.get_digest(message_result)};
+        BOOST_TEST(return_state == boost::crypt::state::success);
+
+        const auto valid_result {std::get<1>(test_value)};
+        for (std::size_t i {}; i < valid_result.size(); ++i)
+        {
+            if (!BOOST_TEST(message_result[i] == static_cast<std::byte>(valid_result[i])))
+            {
+                // LCOV_EXCL_START
+                std::cerr << "Failure with: " << std::get<0>(test_value) << '\n';
+                break;
+                // LCOV_EXCL_STOP
+            }
+        }
+    }
+
     const std::string bad_update_msg {"bad"};
     BOOST_TEST(hasher.process_bytes(bad_update_msg) == boost::crypt::state::state_error);
     BOOST_TEST(hasher.finalize() == boost::crypt::state::state_error);

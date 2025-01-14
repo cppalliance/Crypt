@@ -154,7 +154,7 @@ sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept 
 
     return_type digest {};
     get_digest_impl(digest);
-    
+
     return digest;
 }
 
