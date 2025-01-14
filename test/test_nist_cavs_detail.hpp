@@ -2040,9 +2040,8 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
                 #endif
 
                 this_hash.process_bytes(current_data);
-                this_hash.finalize();
-                const auto output_status = this_hash.get_digest(MDi);
-                BOOST_TEST(output_status == boost::crypt::state::success);
+                BOOST_TEST(this_hash.finalize() == boost::crypt::state::success);
+                BOOST_TEST(this_hash.get_digest(MDi) == boost::crypt::state::success);
 
                 // An alias for finding the output length
                 // We assume the hash will never be all 0s except for failure
