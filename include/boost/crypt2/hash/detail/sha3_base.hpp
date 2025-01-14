@@ -366,9 +366,12 @@ sha3_base<digest_size, is_xof>::get_digest(compat::span<compat::byte, Extent> da
     {
         return state::state_error;
     }
-    if (data.size() < digest_size)
+    if constexpr (!is_xof)
     {
-        return state::insufficient_output_length;
+        if (data.size() < digest_size)
+        {
+            return state::insufficient_output_length;
+        }
     }
 
     // XOF will fill the entire provided span whereas SHA will only fill the digest size
@@ -411,6 +414,13 @@ template <concepts::writable_output_range Range>
     {
         return state::state_error;
     }
+    if constexpr (!is_xof)
+    {
+        if (std::size(data) < digest_size)
+        {
+            return state::insufficient_output_length;
+        }
+    }
 
     auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
 
@@ -421,7 +431,7 @@ template <concepts::writable_output_range Range>
 
     if constexpr (is_xof)
     {
-        xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data()));
+        xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data(), std::size(data)));
     }
     else
     {
