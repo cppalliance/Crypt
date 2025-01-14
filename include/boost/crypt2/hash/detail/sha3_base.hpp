@@ -67,7 +67,7 @@ public:
     [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
     auto get_digest() noexcept -> compat::expected<return_type, state>;
 
-    template <compat::size_t Extent>
+    template <compat::size_t Extent = compat::dynamic_extent>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
     auto get_digest(compat::span<compat::byte, Extent> data) noexcept -> state;
 
@@ -378,17 +378,24 @@ sha3_base<digest_size, is_xof>::get_digest(compat::span<compat::byte, Extent> da
     }
     else
     {
-        // We have verified the length of the span is correct so using a fixed length section of it is safe
-        #if defined(__clang__) && __clang_major__ >= 19
-        #pragma clang diagnostic push
-        #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
-        #endif
+        if constexpr (Extent == digest_size)
+        {
+            sha_digest_impl(data);
+        }
+        else
+        {
+            // We have verified the length of the span is correct so using a fixed length section of it is safe
+            #if defined(__clang__) && __clang_major__ >= 19
+            #pragma clang diagnostic push
+            #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+            #endif
 
-        sha_digest_impl(compat::span<compat::byte, digest_size>(data.data(), digest_size));
+            sha_digest_impl(compat::span<compat::byte, digest_size>(data.data(), digest_size));
 
-        #if defined(__clang__) && __clang_major__ >= 19
-        #pragma clang diagnostic pop
-        #endif
+            #if defined(__clang__) && __clang_major__ >= 19
+            #pragma clang diagnostic pop
+            #endif
+        }
     }
 
     return state::success;

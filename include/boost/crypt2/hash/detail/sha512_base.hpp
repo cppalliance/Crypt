@@ -66,8 +66,9 @@ public:
     [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
     auto get_digest() const noexcept -> compat::expected<return_type, state>;
 
+    template <compat::size_t Extent = compat::dynamic_extent>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-    auto get_digest(compat::span<compat::byte> data) const noexcept -> state;
+    auto get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state;
 
     template <concepts::writable_output_range Range>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) const noexcept -> state;
@@ -103,9 +104,15 @@ auto sha512_base<digest_size>::get_digest(Range&& data) const noexcept -> state
 }
 
 template <compat::size_t digest_size>
+template <compat::size_t Extent>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-auto sha512_base<digest_size>::get_digest(compat::span<compat::byte> data) const noexcept -> state
+auto sha512_base<digest_size>::get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state
 {
+    if constexpr (Extent == digest_size)
+    {
+        return get_digest_impl(data);
+    }
+
     if (data.size() >= digest_size)
     {
         // We have verified the length of the span is correct so using a fixed length section of it is safe

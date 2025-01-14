@@ -56,7 +56,9 @@ public:
 
     // TODO(mborland): Allow this to take dynamic extent, check the length and then use a fixed amount. See sha512_base
     [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() noexcept -> compat::expected<return_type, state>;
-    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte> data) const noexcept -> state;
+
+    template <compat::size_t Extent = compat::dynamic_extent>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state;
 
     template <concepts::writable_output_range Range>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(Range&& data) const noexcept -> state;
@@ -111,9 +113,15 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
 }
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
+template <compat::size_t Extent>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
-sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(compat::span<compat::byte> data) const noexcept -> state
+sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state
 {
+    if constexpr (Extent == digest_size)
+    {
+        return get_digest_impl(data);
+    }
+
     if (data.size() >= digest_size)
     {
         // We have verified the length of the span is correct so using a fixed length section of it is safe
