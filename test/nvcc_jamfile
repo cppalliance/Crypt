@@ -19,6 +19,6 @@ run test_sha512_256_nvcc.cu ;
 run test_sha3_512_nvcc.cu ;
 run test_sha3_384_nvcc.cu ;
 run test_sha3_256_nvcc.cu ;
-#run test_sha3_224_nvcc.cu ;
+run test_sha3_224_nvcc.cu ;
 #run test_shake128_nvcc.cu ;
 #run test_shake256_nvcc.cu ;

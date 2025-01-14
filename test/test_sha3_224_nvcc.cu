@@ -3,7 +3,8 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/crypt/hash/sha3_224.hpp>
+#include <cuda_runtime.h>
+#include <boost/crypt2/hash/sha3_224.hpp>
 #include "cuda_managed_ptr.hpp"
 #include "stopwatch.hpp"
 #include "generate_random_strings.hpp"
@@ -11,10 +12,9 @@
 #include <iomanip>
 #include <exception>
 #include <memory>
+#include <span>
 
-#include <cuda_runtime.h>
-
-using digest_type = boost::crypt::sha3_224_hasher::return_type;
+using digest_type = typename boost::crypt::sha3_224_hasher::return_type;
 
 // The kernel function
 __global__ void cuda_test(char** in, digest_type* out, int numElements)
@@ -23,7 +23,8 @@ __global__ void cuda_test(char** in, digest_type* out, int numElements)
 
     if (i < numElements)
     {
-        out[i] = boost::crypt::sha3_224(in[i]);
+        auto in_span {cuda::std::span(in[i], 64)};
+        out[i] = boost::crypt::sha3_224(in_span).value();
     }
 }
 
@@ -58,8 +59,8 @@ int main()
         }
 
         // Launch the Vector Add CUDA Kernel
-        int threadsPerBlock = 256;
-        int blocksPerGrid =(numElements + threadsPerBlock - 1) / threadsPerBlock;
+        int threadsPerBlock = 224;
+        int blocksPerGrid = (numElements + threadsPerBlock - 1) / threadsPerBlock;
         std::cout << "CUDA kernel launch with " << blocksPerGrid << " blocks of " << threadsPerBlock << " threads" << std::endl;
 
         watch w;
@@ -80,7 +81,8 @@ int main()
         w.reset();
         for(int i = 0; i < numElements; ++i)
         {
-           results.emplace_back(boost::crypt::sha3_224(input_vector1[i]));
+            std::span<char> in(input_vector1[i], elementSize);
+            results.emplace_back(boost::crypt::sha3_224(in).value());
         }
         double t = w.elapsed();
 
