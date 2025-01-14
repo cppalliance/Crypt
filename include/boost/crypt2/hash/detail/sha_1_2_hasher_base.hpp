@@ -153,7 +153,8 @@ sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept 
     }
 
     return_type digest {};
-    get_digest_impl(digest);
+    [[maybe_unused]] const auto return_status {get_digest_impl(digest)};
+    BOOST_CRYPT_ASSERT(return_status == state::success);
 
     return digest;
 }

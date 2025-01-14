@@ -151,16 +151,10 @@ auto sha512_base<digest_size>::get_digest() const noexcept -> compat::expected<r
     }
 
     return_type digest {};
-    const auto return_status {get_digest_impl(digest)};
+    [[maybe_unused]] const auto return_status {get_digest_impl(digest)};
+    BOOST_CRYPT_ASSERT(return_status == state::success);
 
-    if (return_status == state::success)
-    {
-        return digest;
-    }
-    else
-    {
-        return compat::unexpected<state>(return_status);
-    }
+    return digest;
 }
 
 template <compat::size_t digest_size>
