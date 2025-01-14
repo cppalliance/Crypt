@@ -71,7 +71,7 @@ run test_sha3_384.cpp ;
 run test_sha3_256.cpp ;
 run test_sha3_224.cpp ;
 run test_shake128.cpp ;
-#run test_shake256.cpp ;
+run test_shake256.cpp ;
 
 #run test_hmac.cpp ;
 
@@ -144,9 +144,9 @@ run test_nist_cavs_shake128_short_long.cpp ;
 run test_nist_cavs_shake128_monte.cpp ;
 run test_nist_cavs_shake128_variable_output.cpp ;
 
-#run test_nist_cavs_shake256_short_long.cpp ;
-#run test_nist_cavs_shake256_monte.cpp ;
-#run test_nist_cavs_shake256_variable_output.cpp ;
+run test_nist_cavs_shake256_short_long.cpp ;
+run test_nist_cavs_shake256_monte.cpp ;
+run test_nist_cavs_shake256_variable_output.cpp ;
 
 #run test_nist_cavs_aes128_kat_ecb.cpp ;
 #run test_nist_cavs_aes128_mmt_ecb.cpp ;

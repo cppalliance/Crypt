@@ -3,13 +3,13 @@
 // Distributed under the Boost Software License, Version 1.0.
 // https://www.boost.org/LICENSE_1_0.txt
 
-#include <boost/crypt/hash/shake256.hpp>
+#include <boost/crypt2/hash/shake256.hpp>
 
 #include "test_nist_cavs_detail.hpp"
 
 auto main() -> int
 {
-  bool result_is_ok { true };
+    bool result_is_ok { true };
 
     {
         nist::cavs::test_vector_container_type my_test_vectors_monte { };
@@ -29,5 +29,5 @@ auto main() -> int
         BOOST_TEST(result_is_ok);
     }
 
-  return boost::report_errors();
+    return boost::report_errors();
 }
