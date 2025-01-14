@@ -65,9 +65,11 @@ using array = std::array<T, N>;
 #if BOOST_CRYPT_HAS_CUDA
 template<typename T, cuda::std::size_t Extent = cuda::std::dynamic_extent>
 using span = cuda::std::span<T, Extent>;
+inline constexpr auto dynamic_extent = cuda::std::dynamic_extent;
 #else
 template<typename T, std::size_t Extent = std::dynamic_extent>
 using span = std::span<T, Extent>;
+inline constexpr auto dynamic_extent = std::dynamic_extent;
 #endif
 
 // Byte and friends
