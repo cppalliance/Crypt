@@ -21,7 +21,7 @@ auto main() -> int
         };
 
         std::vector<std::size_t> lengths {};
-        lengths.resize(100U);
+        lengths.reserve(200U);
         static_cast<void>(nist::cavs::detail::parse_file_monte_xof("SHAKE128Monte.rsp", my_test_vectors_monte, lengths));
 
         result_is_ok = (nist::cavs::test_vectors_monte_xof<boost::crypt::shake128_hasher>(my_test_vectors_monte, lengths, seed_init) && result_is_ok);
