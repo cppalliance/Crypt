@@ -2065,7 +2065,12 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
             bool result_this_monte_step_is_ok {true};
             for (std::size_t k {}; k < test_vectors_monte[j].my_result.size(); ++k)
             {
-                result_this_monte_step_is_ok &= (MDi[k] == static_cast<std::byte>(test_vectors_monte[j].my_result[k]));
+                if (MDi[k] != static_cast<std::byte>(test_vectors_monte[j].my_result[k]))
+                {
+                    // Fail fast
+                    result_this_monte_step_is_ok = false;
+                    break;
+                }
             }
             
             result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
