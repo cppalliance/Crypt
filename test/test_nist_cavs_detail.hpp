@@ -1783,7 +1783,7 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
 
         for (std::size_t j {}; j < test_vector.my_result.size(); ++j)
         {
-            if (!BOOST_TEST_EQ(test_vector.my_result[j], bits[j]))
+            if (!BOOST_TEST(static_cast<std::byte>(test_vector.my_result[j]) == bits[j]))
             {
                 false_counter++; 
             }
@@ -1814,7 +1814,7 @@ auto test_vectors_variable(const test_vector_container_type& test_vectors, const
 
         for (std::size_t j {}; j < test_vector.my_result.size(); ++j)
         {
-            if (!BOOST_TEST_EQ(test_vector.my_result[j], bits[j]))
+            if (!BOOST_TEST(static_cast<std::byte>(test_vector.my_result[j]) == bits[j]))
             {
                 false_counter++; 
             }
@@ -2032,18 +2032,18 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
                 #pragma clang diagnostic push
                 #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
                 #endif
-                const auto current_data {std::span(MDi.data(), MDi.size())};
+
+                // Only process the leftmost 128 bit of output
+                const std::span<std::byte, 16U> current_data {std::span(MDi.data(), 16U)};
 
                 #if defined(__clang__) && __clang_major__ >= 19
                 #pragma clang diagnostic pop
                 #endif
 
-                // Only process the leftmost 128 bit of output
                 this_hash.process_bytes(current_data);
 
                 for (auto& val : MDi)
                 {
-                    // LCOV skips the following line even though MDi is not empty
                     val = static_cast<std::byte>(0);
                 }
 
@@ -2070,9 +2070,9 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
             // The output at this point is MDi.
 
             bool result_this_monte_step_is_ok {true};
-            for (std::size_t i {}; i < MDi.size(); ++i)
+            for (std::size_t k {}; k < test_vectors_monte[j].my_result.size(); ++k)
             {
-                result_this_monte_step_is_ok &= (MDi[i] == static_cast<std::byte>(test_vectors_monte[j].my_result[i]));
+                result_this_monte_step_is_ok &= (MDi[k] == static_cast<std::byte>(test_vectors_monte[j].my_result[k]));
             }
 
             result_is_ok = (result_this_monte_step_is_ok && result_is_ok);
