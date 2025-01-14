@@ -166,10 +166,76 @@ void test_class()
         }
     }
 
+    for (const auto& test_value : test_values)
+    {
+        std::array<std::byte, 128U> message_result {};
+        std::span<std::byte, 128U> message_result_span {message_result};
+        hasher.init();
+        const auto msg {std::get<0>(test_value)};
+        hasher.process_bytes(msg);
+        hasher.finalize();
+        const auto return_state {hasher.get_digest(message_result_span)};
+        BOOST_TEST(return_state == boost::crypt::state::success);
+
+        const auto valid_result {std::get<1>(test_value)};
+        for (std::size_t i {}; i < valid_result.size(); ++i)
+        {
+            if (!BOOST_TEST(message_result[i] == static_cast<std::byte>(valid_result[i])))
+            {
+                // LCOV_EXCL_START
+                std::cerr << "Failure with: " << std::get<0>(test_value) << '\n';
+                break;
+                // LCOV_EXCL_STOP
+            }
+        }
+    }
+
+    for (const auto& test_value : test_values)
+    {
+        std::array<std::byte, 128U> message_result {};
+        hasher.init();
+        const auto msg {std::get<0>(test_value)};
+        hasher.process_bytes(msg);
+        hasher.finalize();
+        const auto return_state {hasher.get_digest(message_result)};
+        BOOST_TEST(return_state == boost::crypt::state::success);
+
+        const auto valid_result {std::get<1>(test_value)};
+        for (std::size_t i {}; i < valid_result.size(); ++i)
+        {
+            if (!BOOST_TEST(message_result[i] == static_cast<std::byte>(valid_result[i])))
+            {
+                // LCOV_EXCL_START
+                std::cerr << "Failure with: " << std::get<0>(test_value) << '\n';
+                break;
+                // LCOV_EXCL_STOP
+            }
+        }
+    }
+
     const std::string bad_update_msg {"bad"};
     BOOST_TEST(hasher.process_bytes(bad_update_msg) == boost::crypt::state::state_error);
     BOOST_TEST(hasher.finalize() == boost::crypt::state::state_error);
     BOOST_TEST(hasher.get_digest().error() == boost::crypt::state::state_error);
+
+    // Bad return value size
+    std::array<std::byte, 5U> bad_container {};
+    hasher.init();
+    hasher.process_bytes(bad_update_msg);
+    const auto array_return1 {hasher.get_digest(bad_container)};
+    BOOST_TEST(array_return1 == boost::crypt::state::state_error);
+    hasher.finalize();
+    const auto array_return2 {hasher.get_digest(bad_container)};
+    BOOST_TEST(array_return2 == boost::crypt::state::insufficient_output_length);
+
+    std::span<std::byte, 5U> bad_container_span {bad_container};
+    hasher.init();
+    hasher.process_bytes(bad_update_msg);
+    const auto array_return3 {hasher.get_digest(bad_container_span)};
+    BOOST_TEST(array_return3 == boost::crypt::state::state_error);
+    hasher.finalize();
+    const auto array_return4 {hasher.get_digest(bad_container_span)};
+    BOOST_TEST(array_return4 == boost::crypt::state::insufficient_output_length);
 }
 
 template <typename T>
