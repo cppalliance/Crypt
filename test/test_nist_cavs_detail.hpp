@@ -1157,7 +1157,7 @@ auto parse_file_monte_xof(const std::string& test_monte_filename, test_vector_co
                 {
                     const std::string str_cnt = line.substr(12U, line.length() - 12U);
 
-                    const auto len_from_file = std::strtoul(str_cnt.c_str(), nullptr, 10U);
+                    const auto len_from_file = std::strtoul(str_cnt.c_str(), nullptr, 10U) / 8;
 
                     lengths.emplace_back(len_from_file);
                 }
