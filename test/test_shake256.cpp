@@ -200,6 +200,21 @@ void test_class()
     hasher.finalize();
     const auto array_return4 {hasher.get_digest(small_container_span)};
     BOOST_TEST(array_return4 == boost::crypt::state::success);
+
+    // And the range interfaces
+    hasher.init();
+    hasher.process_bytes(bad_update_msg);
+    BOOST_TEST(hasher.get_digest(small_container, 10U) == boost::crypt::state::state_error);
+    hasher.finalize();
+    BOOST_TEST(hasher.get_digest(small_container, 10U) == boost::crypt::state::insufficient_output_length);
+    BOOST_TEST(hasher.get_digest(small_container, 5U) == boost::crypt::state::success);
+
+    hasher.init();
+    hasher.process_bytes(bad_update_msg);
+    BOOST_TEST(hasher.get_digest(small_container_span, 10U) == boost::crypt::state::state_error);
+    hasher.finalize();
+    BOOST_TEST(hasher.get_digest(small_container_span, 10U) == boost::crypt::state::insufficient_output_length);
+    BOOST_TEST(hasher.get_digest(small_container_span, 5U) == boost::crypt::state::success);
 }
 
 void test_user_container()
