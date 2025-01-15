@@ -64,6 +64,35 @@ auto shake128(SizedRange&& data, OutputRange&& out) noexcept -> state
     return hasher.get_digest(out);
 }
 
+[[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+auto shake128(compat::span<const compat::byte> data, compat::span<compat::byte> out, compat::size_t amount) noexcept -> state
+{
+    shake128_hasher hasher;
+    hasher.process_bytes(data);
+    hasher.finalize();
+    return hasher.get_digest(out, amount);
+}
+
+template <concepts::writable_output_range OutputRange>
+[[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED
+auto shake128(compat::span<const compat::byte> data, OutputRange&& out, compat::size_t amount) noexcept -> state
+{
+    shake128_hasher hasher;
+    hasher.process_bytes(data);
+    hasher.finalize();
+    return hasher.get_digest(out, amount);
+}
+
+template <compat::sized_range SizedRange, concepts::writable_output_range OutputRange>
+[[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED
+auto shake128(SizedRange&& data, OutputRange&& out, compat::size_t amount) noexcept -> state
+{
+    shake128_hasher hasher;
+    hasher.process_bytes(data);
+    hasher.finalize();
+    return hasher.get_digest(out, amount);
+}
+
 #if !BOOST_CRYPT_HAS_CUDA
 
 template <concepts::file_system_path T>
