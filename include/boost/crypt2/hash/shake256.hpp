@@ -24,7 +24,7 @@ auto shake256(compat::span<const compat::byte> data) noexcept -> compat::expecte
     return hasher.get_digest();
 }
 
-template <compat::sized_range SizedRange>
+template <concepts::sized_range SizedRange>
 [[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED
 auto shake256(SizedRange&& data) noexcept -> compat::expected<shake256_hasher::return_type, state>
 {
@@ -54,7 +54,7 @@ auto shake256(compat::span<const compat::byte> data, OutputRange&& out) noexcept
     return hasher.get_digest(out);
 }
 
-template <compat::sized_range SizedRange, concepts::writable_output_range OutputRange>
+template <concepts::sized_range SizedRange, concepts::writable_output_range OutputRange>
 [[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED
 auto shake256(SizedRange&& data, OutputRange&& out) noexcept -> state
 {
@@ -83,7 +83,7 @@ auto shake256(compat::span<const compat::byte> data, OutputRange&& out, std::siz
     return hasher.get_digest(out, amount);
 }
 
-template <compat::sized_range SizedRange, concepts::writable_output_range OutputRange>
+template <concepts::sized_range SizedRange, concepts::writable_output_range OutputRange>
 [[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED
 auto shake256(SizedRange&& data, OutputRange&& out, std::size_t amount) noexcept -> state
 {

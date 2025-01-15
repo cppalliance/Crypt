@@ -59,7 +59,7 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
 
-    template <compat::sized_range SizedRange>
+    template <concepts::sized_range SizedRange>
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
@@ -282,7 +282,7 @@ sha3_base<digest_size, is_xof>::process_bytes(compat::span<const compat::byte> d
 }
 
 template <compat::size_t digest_size, bool is_xof>
-template <compat::sized_range SizedRange>
+template <concepts::sized_range SizedRange>
 BOOST_CRYPT_GPU_ENABLED auto sha3_base<digest_size, is_xof>::process_bytes(SizedRange&& data) noexcept -> state
 {
     auto data_span {compat::make_span(compat::forward<SizedRange>(data))};

@@ -24,7 +24,7 @@ auto sha3_512(compat::span<const compat::byte> data) noexcept -> compat::expecte
     return hasher.get_digest();
 }
 
-template <compat::sized_range SizedRange>
+template <concepts::sized_range SizedRange>
 [[nodiscard]] BOOST_CRYPT_EXPORT BOOST_CRYPT_GPU_ENABLED
 auto sha3_512(SizedRange&& data) noexcept -> compat::expected<sha3_512_hasher::return_type, state>
 {
