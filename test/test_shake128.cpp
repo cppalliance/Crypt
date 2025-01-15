@@ -340,8 +340,6 @@ void files_test()
     BOOST_TEST_THROWS([[maybe_unused]] const auto trash5 = boost::crypt::shake128_file(bad_path), std::runtime_error);
 }
 
-// This ends up being completely calculated in a constexpr fashion so Codecov complains
-// LCOV_EXCL_START
 consteval bool immediate_test()
 {
 
@@ -368,7 +366,6 @@ consteval bool immediate_test()
 
     return correct;
 }
-// LCOV_EXCL_STOP
 
 int main()
 {
