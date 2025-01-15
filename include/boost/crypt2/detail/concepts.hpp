@@ -26,9 +26,15 @@ concept file_system_path =
 
 #endif
 
+template <typename R>
+concept sized_range = compat::sized_range<R>;
+
+template <typename R, typename T>
+concept output_range = compat::output_range<R, T>;
+
 template <typename Range>
 concept writable_output_range =  compat::output_range<Range, compat::range_value_t<Range>> &&
-                                 compat::sized_range<Range> &&
+                                 concepts::sized_range<Range> &&
                                  compat::is_trivially_copyable_v<compat::range_value_t<Range>>;
 
 } // namespace boost::crypt::concepts
