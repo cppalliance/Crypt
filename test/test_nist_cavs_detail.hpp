@@ -1996,12 +1996,34 @@ auto test_vectors_monte_sha3(const nist::cavs::test_vector_container_type& test_
 }
 
 template<typename HasherType>
-auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_vectors_monte, const std::vector<std::size_t>& lengths, const std::vector<std::uint8_t>& seed_init) -> bool
+auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_vectors_monte, [[maybe_unused]] const std::vector<std::size_t>& lengths, const std::vector<std::uint8_t>& seed_init) -> bool
 {
     bool result_is_ok { (!test_vectors_monte.empty()) };
 
     if (result_is_ok)
     {
+        std::size_t minoutlen;
+        std::size_t maxoutlen;
+
+        if constexpr (HasherType::block_size == 168U)
+        {
+            // SHAKE128
+            minoutlen = 128U;
+            maxoutlen = 1120U;
+        }
+        else
+        {
+            // SHAKE256
+            minoutlen = 16U;
+            maxoutlen = 2000U;
+        }
+
+        const auto maxoutbytes = maxoutlen / 8U;
+        const auto minoutbytes = minoutlen / 8U;
+
+        auto outputlen = maxoutbytes;
+        const auto range = maxoutbytes - minoutbytes + 1;
+
         using local_hasher_type = HasherType;
 
         // Obtain the test-specific initial seed.
@@ -2010,7 +2032,7 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
 
         const std::size_t copy_len = seed_init.size();
 
-        MDi.resize(copy_len);
+        MDi.resize(maxoutlen / 8U + 1);
 
         for (std::size_t i {}; i < copy_len; ++i)
         {
@@ -2019,8 +2041,6 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
 
         for (std::size_t j = 0; j < 100; j++)
         {
-            MDi.resize(lengths[j]);
-
             for (std::size_t i = 1; i < 1001; i++)
             {
                 local_hasher_type this_hash { };
@@ -2041,22 +2061,26 @@ auto test_vectors_monte_xof(const nist::cavs::test_vector_container_type& test_v
 
                 this_hash.process_bytes(current_data);
                 BOOST_TEST(this_hash.finalize() == boost::crypt::state::success);
-                BOOST_TEST(this_hash.get_digest(MDi) == boost::crypt::state::success);
+                BOOST_TEST(this_hash.get_digest(MDi, outputlen) == boost::crypt::state::success);
 
-                // An alias for finding the output length
-                // We assume the hash will never be all 0s except for failure
-                std::size_t zeros_counter {};
-                for (const auto val : MDi)
+                // If the previous output has less than 128 bits, then zeros are concactenated
+                // to the end of the bits of output
+                if (outputlen < 16U)
                 {
-                    if (val == std::byte{})
+                    for (std::size_t k {outputlen}; k < 16U; ++k)
                     {
-                        zeros_counter++;
+                        MDi[k] = std::byte{};
                     }
                 }
-                if (lengths[j] != 0UL)
-                {
-                    BOOST_TEST(zeros_counter < lengths[j]);
-                }
+
+                const std::uint16_t rightmost_output_bits {
+                        static_cast<std::uint16_t>(
+                            (static_cast<std::uint16_t>(MDi[outputlen - 2]) << 8U) |
+                            static_cast<std::uint16_t>(MDi[outputlen - 1])
+                        )
+                };
+
+                outputlen = minoutbytes + (rightmost_output_bits % range);
             }
 
             // The output at this point is MDi.
