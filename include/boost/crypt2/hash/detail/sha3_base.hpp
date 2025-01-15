@@ -41,7 +41,7 @@ private:
     auto update(compat::span<const compat::byte> data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-    auto xof_digest_impl(compat::span<compat::byte> data) noexcept -> void;
+    auto xof_digest_impl(compat::span<compat::byte> data, compat::size_t amount) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
     auto sha_digest_impl(compat::span<compat::byte, digest_size> data) const noexcept -> void;
@@ -73,6 +73,13 @@ public:
 
     template <concepts::writable_output_range Range>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) noexcept -> state;
+
+    template <compat::size_t Extent = compat::dynamic_extent>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+    auto get_digest(compat::span<compat::byte, Extent> data, std::size_t amount) noexcept -> state;
+
+    template <concepts::writable_output_range Range>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data, std::size_t amount) noexcept -> state;
 };
 
 namespace sha3_detail {
@@ -310,9 +317,12 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::finalize(
 
 template <compat::size_t digest_size, bool is_xof>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-auto sha3_base<digest_size, is_xof>::xof_digest_impl(compat::span<compat::byte> data) noexcept -> void
+auto sha3_base<digest_size, is_xof>::xof_digest_impl(compat::span<compat::byte> data, std::size_t amount) noexcept -> void
 {
-    for (compat::size_t i {}; i < data.size(); ++i)
+    static_assert(is_xof, "Calling for variable amounts of data is not allowed with non-XOF hashers");
+
+    BOOST_CRYPT_ASSERT(data.size() >= amount);
+    for (compat::size_t i {}; i < amount; ++i)
     {
         if (buffer_index_ == buffer_.size())
         {
@@ -347,7 +357,7 @@ auto sha3_base<digest_size, is_xof>::get_digest() noexcept -> compat::expected<r
 
     if constexpr (is_xof)
     {
-        xof_digest_impl(digest);
+        xof_digest_impl(digest, digest_size);
     }
     else
     {
@@ -377,7 +387,7 @@ sha3_base<digest_size, is_xof>::get_digest(compat::span<compat::byte, Extent> da
     // XOF will fill the entire provided span whereas SHA will only fill the digest size
     if constexpr (is_xof)
     {
-        xof_digest_impl(data);
+        xof_digest_impl(data, data.size());
     }
     else
     {
@@ -414,9 +424,12 @@ template <concepts::writable_output_range Range>
     {
         return state::state_error;
     }
+
+    const auto data_size {std::size(data)};
+
     if constexpr (!is_xof)
     {
-        if (std::size(data) < digest_size)
+        if (data_size < digest_size)
         {
             return state::insufficient_output_length;
         }
@@ -431,7 +444,7 @@ template <concepts::writable_output_range Range>
 
     if constexpr (is_xof)
     {
-        xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data(), std::size(data)));
+        xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data(), data_size), data_size);
     }
     else
     {
@@ -443,6 +456,59 @@ template <concepts::writable_output_range Range>
         );
     }
     
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic pop
+    #endif
+
+    return state::success;
+}
+
+template <compat::size_t digest_size, bool is_xof>
+template <compat::size_t Extent>
+[[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
+sha3_base<digest_size, is_xof>::get_digest(compat::span<compat::byte, Extent> data, std::size_t amount) noexcept -> state
+{
+    if (!computed_ || corrupted_)
+    {
+        return state::state_error;
+    }
+
+    if (data.size() < amount)
+    {
+        return state::insufficient_output_length;
+    }
+
+    // XOF will fill the entire provided span whereas SHA will only fill the digest size
+    xof_digest_impl(data, amount);
+
+    return state::success;
+}
+
+template <compat::size_t digest_size, bool is_xof>
+template <concepts::writable_output_range Range>
+[[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto sha3_base<digest_size, is_xof>::get_digest(Range&& data, std::size_t amount) noexcept -> state
+{
+    using value_type = compat::range_value_t<Range>;
+
+    if (!computed_ || corrupted_)
+    {
+        return state::state_error;
+    }
+
+    if (std::size(data) < amount)
+    {
+        return state::insufficient_output_length;
+    }
+
+    auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
+
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+    #endif
+
+    xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data(), amount), amount);
+
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic pop
     #endif
