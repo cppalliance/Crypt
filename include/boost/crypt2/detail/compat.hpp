@@ -312,6 +312,14 @@ enum class endian : int
     #endif
 };
 
+template <bool B, class T = void>
+using enable_if_t =
+    #if BOOST_CRYPT_HAS_CUDA
+    cuda::std::enable_if<B, T>::type;
+    #else
+    std::enable_if<B, T>::type;
+    #endif
+
 } // namespace boost::crypt::compat
 
 #endif // BOOST_CRYPT2_DETAIL_COMPAT_HPP

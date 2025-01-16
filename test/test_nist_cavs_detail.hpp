@@ -22,7 +22,7 @@
 #undef BOOST_CRYPT_HAS_CUDA
 #endif
 
-#include "boost/crypt/mac/hmac.hpp"
+#include <boost/crypt2/mac/hmac.hpp>
 #include "boost/crypt/aes/detail/cipher_mode.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -2131,11 +2131,11 @@ auto test_vectors_hmac(const nist::cavs::test_vector_container_type& test_vector
 
         this_hash.init(test_vector.my_key);
 
-        this_hash.process_bytes(test_vector.my_msg.data(), test_vector.my_msg.size());
+        this_hash.process_bytes(test_vector.my_msg);
 
         this_hash.finalize();
 
-        const local_result_type result_01 { this_hash.get_digest() };
+        const local_result_type result_01 { this_hash.get_digest().value() };
 
         bool result_hash_01_is_ok {true};
         for (std::size_t i {}; i < test_vector.my_result.size(); ++i)
@@ -2161,7 +2161,9 @@ auto test_vectors_hmac(const nist::cavs::test_vector_container_type& test_vector
 
         this_hash.finalize();
 
-        const local_result_type result_02 { this_hash.get_digest() };
+        local_result_type result_02 {};
+        const auto res2_status = this_hash.get_digest(result_02);
+        BOOST_TEST(res2_status == boost::crypt::state::success);
 
         bool result_hash_02_is_ok {true};
         for (std::size_t i {}; i < test_vector.my_result.size(); ++i)
@@ -2208,7 +2210,7 @@ auto test_vectors_drbg_no_reseed(const nist::cavs::test_vector_container_drbg_no
         rng.generate(return_bits.begin(), return_bits.size() * 8U,
                      test_vector.additional_input_2.begin(), test_vector.additional_input_2.size());
 
-        for (boost::crypt::size_t i {}; i < return_bits.size(); ++i)
+        for (std::size_t i {}; i < return_bits.size(); ++i)
         {
             if (return_bits[i] != test_vector.result[i])
             {
@@ -2255,7 +2257,7 @@ auto test_vectors_drbg_pr_false(const nist::cavs::test_vector_container_drbg_pr_
         rng.generate(return_bits.begin(), return_bits.size() * 8U,
                      test_vector.additional_input_2.begin(), test_vector.additional_input_2.size());
 
-        for (boost::crypt::size_t i {}; i < return_bits.size(); ++i)
+        for (std::size_t i {}; i < return_bits.size(); ++i)
         {
             if (return_bits[i] != test_vector.result[i])
             {
@@ -2301,7 +2303,7 @@ auto test_vectors_drbg_pr_true(const nist::cavs::test_vector_container_drbg_pr_t
                      test_vector.additional_entropy_2.begin(), test_vector.additional_entropy_2.size(),
                      test_vector.additional_input_2.begin(), test_vector.additional_input_2.size());
 
-        for (boost::crypt::size_t i {}; i < return_bits.size(); ++i)
+        for (std::size_t i {}; i < return_bits.size(); ++i)
         {
             if (return_bits[i] != test_vector.result[i])
             {
@@ -2549,7 +2551,7 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
                 PT[0] = plaintext;
                 std::array<std::vector<uint8_t>, 1000> CT {};
                 CT[0] = ciphertext;
-                for (size_t i {0}; i < 1000; ++i)
+                for (std::size_t i {0}; i < 1000; ++i)
                 {
                     if (i == 0)
                     {
@@ -2588,7 +2590,7 @@ auto test_vectors_aes_mct(const nist::cavs::test_vector_container_aes& test_vect
                 PT[0] = plaintext;
                 std::array<std::vector<uint8_t>, 1000> CT {};
                 CT[0] = ciphertext;
-                for (size_t i {0}; i < 1000; ++i)
+                for (std::size_t i {0}; i < 1000; ++i)
                 {
                     if (i == 0)
                     {
