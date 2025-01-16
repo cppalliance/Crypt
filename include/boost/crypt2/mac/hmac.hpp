@@ -26,8 +26,6 @@ public:
 
 private:
 
-    static constexpr compat::size_t return_type_size {block_size};
-
     key_type inner_key_ {};
     key_type outer_key_ {};
     HasherType inner_hash_;
