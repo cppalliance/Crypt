@@ -10,6 +10,7 @@
 #include <boost/crypt2/detail/compat.hpp>
 #include <boost/crypt2/detail/clear_mem.hpp>
 #include <boost/crypt2/detail/expected.hpp>
+#include <boost/crypt2/detail/unreachable.hpp>
 #include <boost/crypt2/state.hpp>
 
 namespace boost::crypt {
@@ -57,6 +58,12 @@ public:
 
     template <concepts::sized_range SizedRange>
     BOOST_CRYPT_GPU_ENABLED auto init(SizedRange&& data) noexcept -> state;
+
+    template <compat::size_t Extent = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte, Extent> data) noexcept -> state;
+
+    template <concepts::sized_range SizedRange>
+    BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
 };
 
 template <typename HasherType>
@@ -221,6 +228,48 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR hmac<HasherType>::~hmac() noexcept
     initialized_ = false;
     computed_ = false;
     corrupted_ = false;
+}
+
+template <typename HasherType>
+template <compat::size_t Extent>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
+hmac<HasherType>::process_bytes(const compat::span<const compat::byte, Extent> data) noexcept -> state
+{
+    if (!initialized_ || corrupted_)
+    {
+        return state::state_error;
+    }
+
+    const auto return_code {inner_hash_.process_bytes(data)};
+    if (return_code == state::success)
+    {
+        return state::success;
+    }
+    else
+    {
+        // Cannot test 64 and 128 bit OOM
+        // LCOV_EXCL_START
+        switch (return_code)
+        {
+            case state::state_error:
+                corrupted_ = true;
+                return state::state_error;
+            case state::input_too_long:
+                corrupted_ = true;
+                return state::input_too_long;
+            default:
+                detail::unreachable();
+        }
+        // LCOV_EXCL_STOP
+    }
+}
+
+template <typename HasherType>
+template <concepts::sized_range SizedRange>
+BOOST_CRYPT_GPU_ENABLED auto hmac<HasherType>::process_bytes(SizedRange&& data) noexcept -> state
+{
+    const auto data_span {compat::make_span(compat::forward<SizedRange>(data))};
+    return process_bytes(compat::as_bytes(data_span));
 }
 
 } // namespace boost::crypt
