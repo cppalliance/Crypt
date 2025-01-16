@@ -21,12 +21,12 @@ class hmac
 public:
 
     static constexpr compat::size_t block_size {HasherType::block_size};
-    using return_type = HasherType::return_type;
+    using return_type = typename HasherType::return_type;
     using key_type = compat::array<compat::byte, block_size>;
 
 private:
 
-    static constexpr compat::size_t return_type_size {return_type::size()};
+    static constexpr compat::size_t return_type_size {block_size};
 
     key_type inner_key_ {};
     key_type outer_key_ {};
@@ -37,7 +37,7 @@ private:
     bool corrupted_ {false};
 
     template <compat::size_t Extent = compat::dynamic_extent>
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init_impl(const compat::span<const compat::byte, Extent> data) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init_impl(compat::span<const compat::byte, Extent> data) noexcept -> state;
 
 public:
 
@@ -74,9 +74,9 @@ public:
     template <concepts::writable_output_range Range>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) const noexcept -> state;
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_outer_key() const noexcept -> key_type;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_outer_key() const noexcept -> key_type;
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_inner_key() const noexcept -> key_type;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_inner_key() const noexcept -> key_type;
 };
 
 template <typename HasherType>
