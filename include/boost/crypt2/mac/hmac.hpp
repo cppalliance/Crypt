@@ -64,6 +64,8 @@ public:
 
     template <concepts::sized_range SizedRange>
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 };
 
 template <typename HasherType>
@@ -270,6 +272,30 @@ BOOST_CRYPT_GPU_ENABLED auto hmac<HasherType>::process_bytes(SizedRange&& data) 
 {
     const auto data_span {compat::make_span(compat::forward<SizedRange>(data))};
     return process_bytes(compat::as_bytes(data_span));
+}
+
+template <typename HasherType>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hmac<HasherType>::finalize() noexcept -> state
+{
+    if (computed_)
+    {
+        corrupted_ = true;
+    }
+    if (corrupted_)
+    {
+        return state::state_error;
+    }
+
+    computed_ = true;
+    inner_hash_.finalize();
+    const auto r_inner {inner_hash_.get_digest()};
+    BOOST_CRYPT_ASSERT(r_inner.has_value());
+
+    const auto value_span {compat::span{r_inner.value()}};
+    outer_hash_.process_bytes(value_span);
+    outer_hash_.finalize();
+
+    return state::success;
 }
 
 } // namespace boost::crypt
