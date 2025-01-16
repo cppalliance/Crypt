@@ -10,6 +10,7 @@
 
 namespace boost::crypt::detail {
 
+// LCOV_EXCL_START
 [[noreturn]] inline void unreachable()
 {
     // Uses compiler specific extensions if possible.
@@ -21,6 +22,7 @@ namespace boost::crypt::detail {
     __builtin_unreachable();
 #endif
 }
+// LCOV_EXCL_STOP
 
 } // namespace boost::crypt::detail
 
