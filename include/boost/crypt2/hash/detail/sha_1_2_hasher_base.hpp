@@ -55,7 +55,7 @@ public:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 
     // TODO(mborland): Allow this to take dynamic extent, check the length and then use a fixed amount. See sha512_base
-    [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() noexcept -> compat::expected<return_type, state>;
+    [[nodiscard("Digest is the function return value")]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() const noexcept -> compat::expected<return_type, state>;
 
     template <compat::size_t Extent = compat::dynamic_extent>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state;
@@ -145,7 +145,7 @@ sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest(compat::spa
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
-sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() noexcept -> compat::expected<return_type, state>
+sha_1_2_hasher_base<digest_size, intermediate_hash_size>::get_digest() const noexcept -> compat::expected<return_type, state>
 {
     if (corrupted_ || !computed_)
     {
