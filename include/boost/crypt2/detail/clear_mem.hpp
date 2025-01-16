@@ -93,9 +93,9 @@ constexpr void clear_mem(std::span<std::byte> data)
 }
 */
 
-using generic_meset_t = void(*)(void*, size_t);
+using generic_meset_t = void(*)(void*, compat::size_t);
 
-inline void generic_runtime_memset_func_impl(void* ptr, size_t size)
+inline void generic_runtime_memset_func_impl(void* ptr, compat::size_t size)
 {
     #if defined(__clang__) && __clang_major__ >= 20
     #pragma clang diagnostic push
@@ -120,7 +120,7 @@ constexpr void clear_mem(T& data)
     }
     else
     {
-        generic_runtime_memset_func_impl(data.data(), data.size());
+        generic_runtime_memset_func(data.data(), data.size());
     }
 }
 

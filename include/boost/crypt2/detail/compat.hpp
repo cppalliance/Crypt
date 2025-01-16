@@ -214,9 +214,9 @@ BOOST_CRYPT_GPU_ENABLED constexpr auto make_span(R&& r)
     else
     {
         #if BOOST_CRYPT_HAS_CUDA
-        return cuda::std::span(cuda::std::forward<R>(r));
+        return cuda::std::span{cuda::std::forward<R>(r).data(), cuda::std::forward<R>(r).size()};
         #else
-        return std::span(std::forward<R>(r));
+        return std::span{std::forward<R>(r).data(), std::forward<R>(r).size()};
         #endif
     }
 }

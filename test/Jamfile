@@ -73,7 +73,7 @@ run test_sha3_224.cpp ;
 run test_shake128.cpp ;
 run test_shake256.cpp ;
 
-#run test_hmac.cpp ;
+run test_hmac.cpp ;
 
 #run test_hmac_drbg.cpp ;
 

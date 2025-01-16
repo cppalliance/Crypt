@@ -2133,9 +2133,19 @@ auto test_vectors_hmac(const nist::cavs::test_vector_container_type& test_vector
 
         this_hash.process_bytes(test_vector.my_msg.data(), test_vector.my_msg.size());
 
+        this_hash.finalize();
+
         const local_result_type result_01 { this_hash.get_digest() };
 
-        const bool result_hash_01_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_01.cbegin()) };
+        bool result_hash_01_is_ok {true};
+        for (std::size_t i {}; i < test_vector.my_result.size(); ++i)
+        {
+            if (static_cast<std::byte>(test_vector.my_result[i]) != result_01[i])
+            {
+                result_hash_01_is_ok = false;
+                break;
+            }
+        }
 
         BOOST_TEST(result_hash_01_is_ok);
 
@@ -2149,9 +2159,19 @@ auto test_vectors_hmac(const nist::cavs::test_vector_container_type& test_vector
 
         this_hash.process_bytes(test_vector.my_msg);
 
+        this_hash.finalize();
+
         const local_result_type result_02 { this_hash.get_digest() };
 
-        const bool result_hash_02_is_ok { std::equal(test_vector.my_result.cbegin(), test_vector.my_result.cend(), result_02.cbegin()) };
+        bool result_hash_02_is_ok {true};
+        for (std::size_t i {}; i < test_vector.my_result.size(); ++i)
+        {
+            if (static_cast<std::byte>(test_vector.my_result[i]) != result_02[i])
+            {
+                result_hash_02_is_ok = false;
+                break;
+            }
+        }
 
         BOOST_TEST(result_hash_02_is_ok);
 
