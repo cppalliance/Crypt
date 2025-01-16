@@ -300,7 +300,7 @@ hmac<HasherType>::get_digest(Range&& data) const noexcept -> state
 template <typename HasherType>
 template <compat::size_t Extent>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
-hmac<HasherType>::get_digest(compat::span<boost::crypt::compat::byte, Extent> data) const noexcept -> state
+hmac<HasherType>::get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state
 {
     return outer_hash_.get_digest(data);
 }
