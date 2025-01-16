@@ -36,8 +36,6 @@ private:
     bool computed_ {false};
     bool corrupted_ {false};
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest_impl(const compat::span<const compat::byte, return_type_size> data) noexcept -> state;
-
     template <compat::size_t Extent = compat::dynamic_extent>
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init_impl(const compat::span<const compat::byte, Extent> data) noexcept -> state;
 
@@ -66,6 +64,15 @@ public:
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
+
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() const noexcept -> compat::expected<return_type, state>;
+
+    template <compat::size_t Extent = compat::dynamic_extent>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+    auto get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state;
+
+    template <concepts::writable_output_range Range>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) const noexcept -> state;
 };
 
 template <typename HasherType>
@@ -296,6 +303,29 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hmac<HasherType>::finalize() noexcept -> 
     outer_hash_.finalize();
 
     return state::success;
+}
+
+template <typename HasherType>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
+hmac<HasherType>::get_digest() const noexcept -> compat::expected<return_type, state>
+{
+    return outer_hash_.get_digest();
+}
+
+template <typename HasherType>
+template <concepts::writable_output_range Range>
+BOOST_CRYPT_GPU_ENABLED auto
+hmac<HasherType>::get_digest(Range&& data) const noexcept -> state
+{
+    return outer_hash_.get_digest(data);
+}
+
+template <typename HasherType>
+template <compat::size_t Extent>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
+hmac<HasherType>::get_digest(compat::span<boost::crypt::compat::byte, Extent> data) const noexcept -> state
+{
+    return outer_hash_.get_digest(data);
 }
 
 } // namespace boost::crypt
