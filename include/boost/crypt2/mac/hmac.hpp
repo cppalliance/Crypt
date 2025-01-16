@@ -269,6 +269,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hmac<HasherType>::finalize() noexcept -> 
         return state::state_error;
     }
 
+    computed_ = true;
     [[maybe_unused]] const auto inner_final_state {inner_hash_.finalize()};
     BOOST_CRYPT_ASSERT(inner_final_state == state::success);
     const auto r_inner {inner_hash_.get_digest()};

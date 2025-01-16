@@ -124,6 +124,8 @@ void test_edges()
     {
         BOOST_TEST(res2[i] == res3[i]);
     }
+
+    BOOST_TEST(hmac_tester.finalize() == boost::crypt::state::state_error);
 }
 
 int main()
