@@ -111,11 +111,11 @@ hmac<HasherType>::init_impl(const compat::span<const compat::byte, Extent> data)
         BOOST_CRYPT_ASSERT(res.has_value());
 
         const auto data_hash {res.value()};
-        BOOST_CRYPT_ASSERT(data_hash.size() == k0.size());
+        BOOST_CRYPT_ASSERT(data_hash.size() <= k0.size());
 
         for (compat::size_t i {}; i < data_hash.size(); ++i)
         {
-            k0[i] = res[i];
+            k0[i] = data_hash[i];
         }
     }
 
@@ -133,6 +133,7 @@ hmac<HasherType>::init_impl(const compat::span<const compat::byte, Extent> data)
     if (inner_result == state::success && outer_result == state::success) [[likely]]
     {
         initialized_ = true;
+        return state::success;
     }
     else
     {
@@ -164,33 +165,6 @@ BOOST_CRYPT_GPU_ENABLED auto hmac<HasherType>::init(SizedRange&& data) noexcept 
 {
     const auto data_span {compat::make_span(compat::forward<SizedRange>(data))};
     return init_impl(compat::as_bytes(data_span));
-}
-
-template <typename HasherType>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
-hmac<HasherType>::get_digest_impl(const compat::span<const compat::byte, return_type_size> data) noexcept -> state
-{
-    if (computed_)
-    {
-        corrupted_ = true;
-    }
-    if (corrupted_)
-    {
-        return state::state_error;
-    }
-
-    computed_ = true;
-
-    [[maybe_unused]] const auto inner_final_state {inner_hash_.finalize()};
-    BOOST_CRYPT_ASSERT(inner_final_state == state::success);
-    const auto r_inner {inner_hash_.get_digest()};
-    BOOST_CRYPT_ASSERT(r_inner.has_value());
-
-    outer_hash_.process_bytes(r_inner.value());
-    [[maybe_unused]] const auto outer_final_state {outer_hash_.finalize()};
-    BOOST_CRYPT_ASSERT(outer_final_state == state::success);
-
-    return outer_hash_.get_digest(data);
 }
 
 template <typename HasherType>
@@ -297,14 +271,14 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hmac<HasherType>::finalize() noexcept -> 
         return state::state_error;
     }
 
-    computed_ = true;
-    inner_hash_.finalize();
+    [[maybe_unused]] const auto inner_final_state {inner_hash_.finalize()};
+    BOOST_CRYPT_ASSERT(inner_final_state == state::success);
     const auto r_inner {inner_hash_.get_digest()};
     BOOST_CRYPT_ASSERT(r_inner.has_value());
 
-    const auto value_span {compat::span{r_inner.value()}};
-    outer_hash_.process_bytes(value_span);
-    outer_hash_.finalize();
+    outer_hash_.process_bytes(r_inner.value());
+    [[maybe_unused]] const auto outer_final_state {outer_hash_.finalize()};
+    BOOST_CRYPT_ASSERT(outer_final_state == state::success);
 
     return state::success;
 }
