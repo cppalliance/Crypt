@@ -73,6 +73,10 @@ public:
 
     template <concepts::writable_output_range Range>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) const noexcept -> state;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_outer_key() const noexcept -> key_type;
+
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_inner_key() const noexcept -> key_type;
 };
 
 template <typename HasherType>
@@ -326,6 +330,18 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
 hmac<HasherType>::get_digest(compat::span<boost::crypt::compat::byte, Extent> data) const noexcept -> state
 {
     return outer_hash_.get_digest(data);
+}
+
+template <typename HasherType>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hmac<HasherType>::get_outer_key() const noexcept -> hmac::key_type
+{
+    return outer_key_;
+}
+
+template <typename HasherType>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hmac<HasherType>::get_inner_key() const noexcept -> hmac::key_type
+{
+    return inner_key_;
 }
 
 } // namespace boost::crypt
