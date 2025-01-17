@@ -338,6 +338,37 @@ void files_test()
 
     std::filesystem::path bad_path = "path.txt";
     BOOST_TEST_THROWS([[maybe_unused]] const auto trash5 = boost::crypt::shake128_file(bad_path), std::runtime_error);
+
+    // Now test XOF file capabilities
+    std::array<std::byte, 200> byte_array {};
+    std::span<std::byte, 200> byte_span {byte_array};
+
+    BOOST_TEST(boost::crypt::shake128_file(filename, byte_array) == boost::crypt::state::success);
+
+    std::size_t zero_counter {};
+    for (const auto val : byte_array)
+    {
+        if (val == std::byte{})
+        {
+            ++zero_counter;
+        }
+    }
+    BOOST_TEST(zero_counter < byte_array.size());
+
+    byte_array.fill(std::byte{});
+
+    BOOST_TEST(boost::crypt::shake128_file(filename, byte_span, 100U) == boost::crypt::state::success);
+
+    // Does not matter that we know 100 are zeros
+    // If the other 100 are zeros there is a deep problem
+    for (const auto val : byte_array)
+    {
+        if (val == std::byte{})
+        {
+            ++zero_counter;
+        }
+    }
+    BOOST_TEST(zero_counter < byte_array.size());
 }
 
 consteval bool immediate_test()
