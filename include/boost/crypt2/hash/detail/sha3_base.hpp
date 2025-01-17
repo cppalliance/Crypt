@@ -37,11 +37,13 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_message_block() noexcept -> void;
 
+    template <compat::size_t Extent = compat::dynamic_extent>
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-    auto update(compat::span<const compat::byte> data) noexcept -> state;
+    auto update(compat::span<const compat::byte, Extent> data) noexcept -> state;
 
+    template <compat::size_t Extent = compat::dynamic_extent>
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-    auto xof_digest_impl(compat::span<compat::byte> data, compat::size_t amount) noexcept -> void;
+    auto xof_digest_impl(compat::span<compat::byte, Extent> data, compat::size_t amount) noexcept -> void;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
     auto sha_digest_impl(compat::span<compat::byte, digest_size> data) const noexcept -> void;
@@ -57,7 +59,8 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
+    template <compat::size_t Extent = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte, Extent> data) noexcept -> state;
 
     template <concepts::sized_range SizedRange>
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
@@ -242,13 +245,22 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
 }
 
 template <compat::size_t digest_size, bool is_xof>
+template <compat::size_t Extent>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-auto sha3_base<digest_size, is_xof>::update(compat::span<const compat::byte> data) noexcept -> state
+auto sha3_base<digest_size, is_xof>::update(compat::span<const compat::byte, Extent> data) noexcept -> state
 {
-    if (data.empty())
+    if constexpr (Extent == compat::dynamic_extent)
+    {
+        if (data.empty())
+        {
+            return state::success;
+        }
+    }
+    else if constexpr (Extent == 0U)
     {
         return state::success;
     }
+
     if (computed_)
     {
         corrupted_ = true;
@@ -292,8 +304,9 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::init() no
 }
 
 template <compat::size_t digest_size, bool is_xof>
+template <compat::size_t Extent>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
-sha3_base<digest_size, is_xof>::process_bytes(compat::span<const compat::byte> data) noexcept -> state
+sha3_base<digest_size, is_xof>::process_bytes(compat::span<const compat::byte, Extent> data) noexcept -> state
 {
     return update(data);
 }
@@ -333,8 +346,9 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::finalize(
 }
 
 template <compat::size_t digest_size, bool is_xof>
+template <compat::size_t Extent>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-auto sha3_base<digest_size, is_xof>::xof_digest_impl(compat::span<compat::byte> data, std::size_t amount) noexcept -> void
+auto sha3_base<digest_size, is_xof>::xof_digest_impl(compat::span<compat::byte, Extent> data, std::size_t amount) noexcept -> void
 {
     static_assert(is_xof, "Calling for variable amounts of data is not allowed with non-XOF hashers");
 
@@ -404,7 +418,14 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(com
     {
         return state::state_error;
     }
-    if (data.size() < digest_size)
+    if constexpr (Extent == compat::dynamic_extent)
+    {
+        if (data.size() < digest_size)
+        {
+            return state::insufficient_output_length;
+        }
+    }
+    else if constexpr (Extent < digest_size)
     {
         return state::insufficient_output_length;
     }
@@ -459,14 +480,12 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(Ran
         return state::state_error;
     }
 
-    const auto data_size {std::size(data)};
+    auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
 
-    if (data_size < digest_size)
+    if (data_span.size_bytes() < digest_size)
     {
         return state::insufficient_output_length;
     }
-
-    auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
 
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic push
@@ -525,7 +544,7 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(com
         return state::state_error;
     }
 
-    if (data.size() < amount)
+    if (data.size_bytes() < amount)
     {
         return state::insufficient_output_length;
     }
@@ -548,12 +567,12 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(Ran
         return state::state_error;
     }
 
-    if (std::size(data) < amount)
+    auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
+
+    if (data.size_bytes() < amount)
     {
         return state::insufficient_output_length;
     }
-
-    auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
 
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic push
