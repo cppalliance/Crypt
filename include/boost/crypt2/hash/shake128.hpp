@@ -102,23 +102,23 @@ auto shake128_file(const T& filepath) -> compat::expected<shake128_hasher::retur
     return hash_detail::hash_file_impl<shake128_hasher>(filepath);
 }
 
-template <concepts::file_system_path T>
+template <concepts::file_system_path T, std::size_t Extent = std::dynamic_extent>
 [[nodiscard]] BOOST_CRYPT_EXPORT
-auto shake128_file(const T& filepath, compat::span<compat::byte> out) -> compat::expected<shake128_hasher::return_type, state>
+auto shake128_file(const T& filepath, compat::span<compat::byte> out) -> state
 {
     return hash_detail::hash_file_impl<shake128_hasher>(filepath, out);
 }
 
-template <concepts::file_system_path T>
+template <concepts::file_system_path T, std::size_t Extent = std::dynamic_extent>
 [[nodiscard]] BOOST_CRYPT_EXPORT
-auto shake128_file(const T& filepath, compat::span<compat::byte> out, compat::size_t amount) -> compat::expected<shake128_hasher::return_type, state>
+auto shake128_file(const T& filepath, compat::span<compat::byte, Extent> out, compat::size_t amount) -> state
 {
     return hash_detail::hash_file_impl<shake128_hasher>(filepath, out, amount);
 }
 
 template <concepts::file_system_path T, concepts::writable_output_range OutputRange>
 [[nodiscard]] BOOST_CRYPT_EXPORT
-auto shake128_file(const T& filepath, OutputRange&& out) -> compat::expected<shake128_hasher::return_type, state>
+auto shake128_file(const T& filepath, OutputRange&& out) -> state
 {
     using value_type = compat::range_value_t<OutputRange>;
     auto data_span {compat::span<value_type>(compat::forward<OutputRange>(out))};
@@ -128,7 +128,7 @@ auto shake128_file(const T& filepath, OutputRange&& out) -> compat::expected<sha
 
 template <concepts::file_system_path T, concepts::writable_output_range OutputRange>
 [[nodiscard]] BOOST_CRYPT_EXPORT
-auto shake128_file(const T& filepath, OutputRange&& out, compat::size_t amount) -> compat::expected<shake128_hasher::return_type, state>
+auto shake128_file(const T& filepath, OutputRange&& out, compat::size_t amount) -> state
 {
     using value_type = compat::range_value_t<OutputRange>;
     auto data_span {compat::span<value_type>(compat::forward<OutputRange>(out))};

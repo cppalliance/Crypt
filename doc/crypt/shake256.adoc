@@ -95,11 +95,11 @@ namespace boost::crypt {
 template <concepts::file_system_path T>
 [[nodiscard]] inline auto shake256_file(const T& filepath) -> expected<shake256_hasher::return_type, state>;
 
-template <concepts::file_system_path T>
-[[nodiscard]] inline auto shake256_file(const T& filepath, std::span<std::byte> out) -> state;
+template <concepts::file_system_path T, std::size_t Extent = std::dynamic_extent>
+[[nodiscard]] inline auto shake256_file(const T& filepath, std::span<std::byte, Extent> out) -> state;
 
-template <concepts::file_system_path T>
-[[nodiscard]] inline auto shake256_file(const T& filepath, std::span<std::byte> out, std::size_t amount) -> state;
+template <concepts::file_system_path T, std::size_t Extent = std::dynamic_extent>
+[[nodiscard]] inline auto shake256_file(const T& filepath, std::span<std::byte, Extent> out, std::size_t amount) -> state;
 
 template <concepts::file_system_path T, concepts::writeable_output_range OutputRange>
 [[nodiscard]] inline auto shake256_file(const T& filepath, OutputRange&& out) -> state;
