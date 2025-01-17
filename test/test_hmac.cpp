@@ -4,8 +4,16 @@
 
 #include <boost/crypt2/mac/hmac.hpp>
 #include <boost/crypt2/hash/sha1.hpp>
+#include <boost/crypt2/hash/sha224.hpp>
 #include <boost/crypt2/hash/sha256.hpp>
+#include <boost/crypt2/hash/sha384.hpp>
 #include <boost/crypt2/hash/sha512.hpp>
+#include <boost/crypt2/hash/sha512_224.hpp>
+#include <boost/crypt2/hash/sha512_256.hpp>
+#include <boost/crypt2/hash/sha3_224.hpp>
+#include <boost/crypt2/hash/sha3_256.hpp>
+#include <boost/crypt2/hash/sha3_384.hpp>
+#include <boost/crypt2/hash/sha3_512.hpp>
 #include <boost/core/lightweight_test.hpp>
 
 template <typename HasherType>
@@ -65,6 +73,19 @@ void basic_tests()
         {
             BOOST_TEST(res[i] == static_cast<std::byte>(soln[i]));
         }
+    }
+    else
+    {
+        std::size_t zero_counter {};
+        for (const auto val : res)
+        {
+            if (val == std::byte{})
+            {
+                ++zero_counter;
+            }
+        }
+
+        BOOST_TEST(zero_counter < res.size());
     }
 }
 
@@ -128,15 +149,84 @@ void test_edges()
     BOOST_TEST(hmac_tester.finalize() == boost::crypt::state::state_error);
 }
 
+template <typename T>
+consteval bool immediate_test()
+{
+    const std::byte vals[] = {std::byte{0x61}, std::byte{0x62}, std::byte{0x63}};
+    std::span<const std::byte> byte_span {vals};
+    constexpr std::array<std::byte, 64> message {
+            std::byte{0xdd}, std::byte{0xaf}, std::byte{0x35}, std::byte{0xa1}, std::byte{0x93}, std::byte{0x61},
+            std::byte{0x7a}, std::byte{0xba}, std::byte{0xcc}, std::byte{0x41}, std::byte{0x73}, std::byte{0x49},
+            std::byte{0xae}, std::byte{0x20}, std::byte{0x41}, std::byte{0x31}, std::byte{0x12}, std::byte{0xe6},
+            std::byte{0xfa}, std::byte{0x4e}, std::byte{0x89}, std::byte{0xa9}, std::byte{0x7e}, std::byte{0xa2},
+            std::byte{0x0a}, std::byte{0x9e}, std::byte{0xee}, std::byte{0xe6}, std::byte{0x4b}, std::byte{0x55},
+            std::byte{0xd3}, std::byte{0x9a}, std::byte{0x21}, std::byte{0x92}, std::byte{0x99}, std::byte{0x2a},
+            std::byte{0x27}, std::byte{0x4f}, std::byte{0xc1}, std::byte{0xa8}, std::byte{0x36}, std::byte{0xba},
+            std::byte{0x3c}, std::byte{0x23}, std::byte{0xa3}, std::byte{0xfe}, std::byte{0xeb}, std::byte{0xbd},
+            std::byte{0x45}, std::byte{0x4d}, std::byte{0x44}, std::byte{0x23}, std::byte{0x64}, std::byte{0x3c},
+            std::byte{0xe8}, std::byte{0x0e}, std::byte{0x2a}, std::byte{0x9a}, std::byte{0xc9}, std::byte{0x4f},
+            std::byte{0xa5}, std::byte{0x4c}, std::byte{0xa4}, std::byte{0x9f}
+    };
+    std::span<const std::byte, 64> message_span {message};
+
+    boost::crypt::hmac<T> hmac_tester;
+    hmac_tester.init(byte_span);
+    hmac_tester.process_bytes(message_span);
+    hmac_tester.finalize();
+    const auto res = hmac_tester.get_digest().value();
+
+    std::size_t zero_counter {};
+    for (const auto val : res)
+    {
+        if (val == std::byte{})
+        {
+            ++zero_counter;
+        }
+    }
+
+    return zero_counter != res.size();
+}
+
 int main()
 {
     basic_tests<boost::crypt::sha1_hasher>();
+    basic_tests<boost::crypt::sha224_hasher>();
     basic_tests<boost::crypt::sha256_hasher>();
+    basic_tests<boost::crypt::sha384_hasher>();
     basic_tests<boost::crypt::sha512_hasher>();
+    basic_tests<boost::crypt::sha512_224_hasher>();
+    basic_tests<boost::crypt::sha512_256_hasher>();
+    basic_tests<boost::crypt::sha3_224_hasher>();
+    basic_tests<boost::crypt::sha3_256_hasher>();
+    basic_tests<boost::crypt::sha3_384_hasher>();
+    basic_tests<boost::crypt::sha3_512_hasher>();
 
     test_edges<boost::crypt::sha1_hasher>();
+    test_edges<boost::crypt::sha224_hasher>();
     test_edges<boost::crypt::sha256_hasher>();
+    test_edges<boost::crypt::sha384_hasher>();
     test_edges<boost::crypt::sha512_hasher>();
+    test_edges<boost::crypt::sha512_224_hasher>();
+    test_edges<boost::crypt::sha512_256_hasher>();
+    test_edges<boost::crypt::sha3_224_hasher>();
+    test_edges<boost::crypt::sha3_256_hasher>();
+    test_edges<boost::crypt::sha3_384_hasher>();
+    test_edges<boost::crypt::sha3_512_hasher>();
+
+    // GCC-14 has an internal compiler error here
+    #if defined(__GNUC__) && __GNUC__ != 14
+    static_assert(immediate_test<boost::crypt::sha1_hasher>());
+    static_assert(immediate_test<boost::crypt::sha224_hasher>());
+    static_assert(immediate_test<boost::crypt::sha256_hasher>());
+    static_assert(immediate_test<boost::crypt::sha384_hasher>());
+    static_assert(immediate_test<boost::crypt::sha512_hasher>());
+    static_assert(immediate_test<boost::crypt::sha512_224_hasher>());
+    static_assert(immediate_test<boost::crypt::sha512_256_hasher>());
+    static_assert(immediate_test<boost::crypt::sha3_224_hasher>());
+    static_assert(immediate_test<boost::crypt::sha3_256_hasher>());
+    static_assert(immediate_test<boost::crypt::sha3_384_hasher>());
+    static_assert(immediate_test<boost::crypt::sha3_512_hasher>());
+    #endif
 
     return boost::report_errors();
 }

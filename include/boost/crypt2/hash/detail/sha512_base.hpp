@@ -42,7 +42,8 @@ private:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_message_block() noexcept -> void;
 
-    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
+    template <compat::size_t Extent = compat::dynamic_extent>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte, Extent> data) noexcept -> state;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto pad_message() noexcept -> void;
 
@@ -56,7 +57,8 @@ public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init() noexcept -> void;
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
+    template <compat::size_t Extent = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte, Extent> data) noexcept -> state;
 
     template <concepts::sized_range SizedRange>
     BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
@@ -193,13 +195,22 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::finalize() noex
 }
 
 template <compat::size_t digest_size>
+template <compat::size_t Extent>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-auto sha512_base<digest_size>::update(compat::span<const compat::byte> data) noexcept -> state
+auto sha512_base<digest_size>::update(compat::span<const compat::byte, Extent> data) noexcept -> state
 {
-    if (data.empty())
+    if constexpr (Extent == compat::dynamic_extent)
+    {
+        if (data.empty())
+        {
+            return state::success;
+        }
+    }
+    else if constexpr (Extent == 0U)
     {
         return state::success;
     }
+
     if (computed_)
     {
         corrupted_ = true;
@@ -485,7 +496,8 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_message
 }
 
 template <compat::size_t digest_size>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_bytes(compat::span<const compat::byte> data) noexcept -> state
+template <compat::size_t Extent>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha512_base<digest_size>::process_bytes(compat::span<const compat::byte, Extent> data) noexcept -> state
 {
     return update(data);
 }
