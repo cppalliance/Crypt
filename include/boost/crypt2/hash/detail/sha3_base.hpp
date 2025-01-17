@@ -499,7 +499,6 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(Ran
         return state::state_error;
     }
 
-    const auto data_size {std::size(data)};
     auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
 
     #if defined(__clang__) && __clang_major__ >= 19
@@ -507,7 +506,7 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(Ran
     #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
     #endif
 
-    xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data(), data_size), data_size);
+    xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data(), data.size_bytes()), data.size_bytes());
 
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic pop
