@@ -86,9 +86,8 @@ int main()
         w.reset();
         for(int i = 0; i < numElements; ++i)
         {
-            std::span<char> in(input_vector1[i], elementSize);
+            std::span<char> in_span(input_vector1[i], static_cast<std::size_t>(64));
             boost::crypt::hmac<boost::crypt::sha3_512_hasher> hmac_class;
-            auto in_span {cuda::std::span(in, 64)};
             hmac_class.init(in_span);
             hmac_class.process_bytes(in_span);
             hmac_class.finalize();
