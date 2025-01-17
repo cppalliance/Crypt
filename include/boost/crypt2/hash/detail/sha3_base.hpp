@@ -244,6 +244,13 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha3_base<digest_size, is_xof>::process_m
     buffer_index_ = 0U;
 }
 
+// In the fixed extent case where we check Extent == 0 this can make the rest of the code unreachable
+// We consider this a good thing since this means our compile time checks are working
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
+
 template <compat::size_t digest_size, bool is_xof>
 template <compat::size_t Extent>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
@@ -282,6 +289,10 @@ auto sha3_base<digest_size, is_xof>::update(compat::span<const compat::byte, Ext
 
     return state::success;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 template <compat::size_t digest_size, bool is_xof>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha3_base<digest_size, is_xof>::~sha3_base() noexcept
@@ -410,6 +421,13 @@ sha3_base<digest_size, is_xof>::get_digest() noexcept
     return digest;
 }
 
+// In the fixed extent case where we check Extent < digest_size this can make the rest of the code unreachable
+// We consider this a good thing since this means our compile time checks are working
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
+
 template <compat::size_t digest_size, bool is_xof>
 template <bool Const, compat::size_t Extent>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
@@ -419,6 +437,7 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(com
     {
         return state::state_error;
     }
+
     if constexpr (Extent == compat::dynamic_extent)
     {
         if (data.size() < digest_size)
@@ -452,6 +471,10 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(com
 
     return state::success;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 template <compat::size_t digest_size, bool is_xof>
 template <bool Const, compat::size_t Extent>
