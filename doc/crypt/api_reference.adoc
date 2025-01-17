@@ -42,10 +42,10 @@ https://www.boost.org/LICENSE_1_0.txt
 - <<shake128_hasher, `shake128_hasher`>>
 - <<shake256_hasher, `shake256_hasher`>>
 
-////
 === Hash-Based Message Authentication Codes (HMAC)
 - <<hmac, `hmac`>>
 
+////
 === Deterministic Random Bit Generators (DRBG)
 ==== Hash-Based
 ===== Non-Prediction Resistant
