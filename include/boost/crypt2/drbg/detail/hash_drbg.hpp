@@ -48,12 +48,20 @@ private:
     compat::uint64_t reseed_counter_ {};
     bool initialized_ {};
 
+    template <compat::size_t ExtentReturn = compat::dynamic_extent,
+              compat::size_t Extent1 = compat::dynamic_extent,
+              compat::size_t Extent2 = compat::dynamic_extent,
+              compat::size_t Extent3 = compat::dynamic_extent,
+              compat::size_t Extent4 = compat::dynamic_extent>
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_df(compat::uint32_t no_of_bits_to_return,
-                                                   compat::span<compat::byte> return_container,
-                                                   compat::span<const compat::byte> provided_data_1,
-                                                   compat::span<const compat::byte> provided_data_2,
-                                                   compat::span<const compat::byte> provided_data_3,
-                                                   compat::span<const compat::byte> provided_data_4) noexcept -> state;
+                                                   compat::span<compat::byte, ExtentReturn> return_container,
+                                                   compat::span<const compat::byte, Extent1> provided_data_1,
+                                                   compat::span<const compat::byte, Extent2> provided_data_2,
+                                                   compat::span<const compat::byte, Extent3> provided_data_3,
+                                                   compat::span<const compat::byte, Extent4> provided_data_4) noexcept -> state;
+
+    template <compat::size_t Extent = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hashgen(compat::span<compat::byte, Extent> returned_bits, compat::size_t requested_number_of_bytes) noexcept -> state
 
 public:
 
@@ -63,13 +71,18 @@ public:
 };
 
 template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
+template <compat::size_t ExtentReturn,
+          compat::size_t Extent1,
+          compat::size_t Extent2,
+          compat::size_t Extent3,
+          compat::size_t Extent4>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::hash_df(
         compat::uint32_t no_of_bits_to_return,
-        compat::span<compat::byte> return_container,
-        compat::span<const compat::byte> provided_data_1,
-        compat::span<const compat::byte> provided_data_2,
-        compat::span<const compat::byte> provided_data_3,
-        compat::span<const compat::byte> provided_data_4) noexcept -> state
+        compat::span<compat::byte, ExtentReturn> return_container,
+        compat::span<const compat::byte, Extent1> provided_data_1,
+        compat::span<const compat::byte, Extent2> provided_data_2,
+        compat::span<const compat::byte, Extent3> provided_data_3,
+        compat::span<const compat::byte, Extent4> provided_data_4) noexcept -> state
 {
     const auto no_of_bytes_to_return {(no_of_bits_to_return + 7U) / 8U};
     const auto len {(no_of_bytes_to_return + outlen_bytes - 1U) / outlen_bytes};
@@ -100,10 +113,27 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security
         HasherType hasher;
         hasher.process_byte(static_cast<compat::byte>(counter));
         hasher.process_bytes(bits_to_return_span);
-        hasher.process_bytes(provided_data_1);
-        hasher.process_bytes(provided_data_2);
-        hasher.process_bytes(provided_data_3);
-        hasher.process_bytes(provided_data_4);
+
+        if constexpr (Extent1 != 0U)
+        {
+            hasher.process_bytes(provided_data_1);
+        }
+
+        if constexpr (Extent2 != 0U)
+        {
+            hasher.process_bytes(provided_data_2);
+        }
+
+        if constexpr (Extent3 != 0U)
+        {
+            hasher.process_bytes(provided_data_3);
+        }
+
+        if constexpr (Extent4 != 0U)
+        {
+            hasher.process_bytes(provided_data_4);
+        }
+
         hasher.finalize();
         const auto return_val {hasher.get_digest()};
 
