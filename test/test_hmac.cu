@@ -25,7 +25,7 @@ __global__ void cuda_test(char** in, digest_type* out, int numElements)
     if (i < numElements)
     {
         boost::crypt::hmac<boost::crypt::sha3_512_hasher> hmac_class;
-        auto in_span {cuda::std::span(in[i], 64)};
+        cuda::std::span<char> in_span {in[i], static_cast<cuda::std::size_t>(64)};
         hmac_class.init(in_span);
         hmac_class.process_bytes(in_span);
         hmac_class.finalize();
