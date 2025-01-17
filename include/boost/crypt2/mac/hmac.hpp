@@ -26,6 +26,8 @@ public:
 
 private:
 
+    using key_span = compat::span<const compat::byte, block_size>;
+
     key_type inner_key_ {};
     key_type outer_key_ {};
     HasherType inner_hash_;
@@ -125,8 +127,8 @@ hmac<HasherType>::init_impl(const compat::span<const compat::byte, Extent> data)
         outer_key_[i] = k0[i] ^ compat::byte{0x5C};
     }
 
-    const auto inner_result {inner_hash_.process_bytes(inner_key_)};
-    const auto outer_result {outer_hash_.process_bytes(outer_key_)};
+    const auto inner_result {inner_hash_.process_bytes(key_span{inner_key_})};
+    const auto outer_result {outer_hash_.process_bytes(key_span{outer_key_})};
     
     if (inner_result == state::success && outer_result == state::success) [[likely]]
     {
@@ -177,8 +179,8 @@ hmac<HasherType>::init_from_keys(const hmac::key_type& inner_key, const hmac::ke
     inner_key_ = inner_key;
     outer_key_ = outer_key;
 
-    const auto inner_result {inner_hash_.process_bytes(inner_key)};
-    const auto outer_result {outer_hash_.process_bytes(outer_key)};
+    const auto inner_result {inner_hash_.process_bytes(key_span{inner_key})};
+    const auto outer_result {outer_hash_.process_bytes(key_span{outer_key})};
 
     if (inner_result == state::success && outer_result == state::success) [[likely]]
     {
@@ -275,7 +277,8 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hmac<HasherType>::finalize() noexcept -> 
     const auto r_inner {inner_hash_.get_digest()};
     BOOST_CRYPT_ASSERT(r_inner.has_value());
 
-    outer_hash_.process_bytes(r_inner.value());
+    compat::span<const compat::byte> r_inner_span {r_inner.value()};
+    outer_hash_.process_bytes(r_inner_span);
     [[maybe_unused]] const auto outer_final_state {outer_hash_.finalize()};
     BOOST_CRYPT_ASSERT(outer_final_state == state::success);
 
