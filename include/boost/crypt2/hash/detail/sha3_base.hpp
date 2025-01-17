@@ -404,7 +404,8 @@ sha3_base<digest_size, is_xof>::get_digest() noexcept
     }
 
     return_type digest {};
-    xof_digest_impl(digest, digest_size);
+    compat::span<compat::byte, digest_size> digest_span {digest};
+    xof_digest_impl(digest_span, digest_size);
 
     return digest;
 }
@@ -525,7 +526,7 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(Ran
     #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
     #endif
 
-    xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data(), data.size_bytes()), data.size_bytes());
+    xof_digest_impl(compat::span<compat::byte>(compat::as_writable_bytes(data_span).data(), data_span.size_bytes()), data_span.size_bytes());
 
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic pop
@@ -569,7 +570,7 @@ compat::enable_if_t<Const, state> sha3_base<digest_size, is_xof>::get_digest(Ran
 
     auto data_span {compat::span<value_type>(compat::forward<Range>(data))};
 
-    if (data.size_bytes() < amount)
+    if (data_span.size_bytes() < amount)
     {
         return state::insufficient_output_length;
     }
