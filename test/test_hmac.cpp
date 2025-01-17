@@ -4,8 +4,16 @@
 
 #include <boost/crypt2/mac/hmac.hpp>
 #include <boost/crypt2/hash/sha1.hpp>
+#include <boost/crypt2/hash/sha224.hpp>
 #include <boost/crypt2/hash/sha256.hpp>
+#include <boost/crypt2/hash/sha384.hpp>
 #include <boost/crypt2/hash/sha512.hpp>
+#include <boost/crypt2/hash/sha512_224.hpp>
+#include <boost/crypt2/hash/sha512_256.hpp>
+#include <boost/crypt2/hash/sha3_224.hpp>
+#include <boost/crypt2/hash/sha3_256.hpp>
+#include <boost/crypt2/hash/sha3_384.hpp>
+#include <boost/crypt2/hash/sha3_512.hpp>
 #include <boost/core/lightweight_test.hpp>
 
 template <typename HasherType>
@@ -65,6 +73,19 @@ void basic_tests()
         {
             BOOST_TEST(res[i] == static_cast<std::byte>(soln[i]));
         }
+    }
+    else
+    {
+        std::size_t zero_counter {};
+        for (const auto val : res)
+        {
+            if (val == std::byte{})
+            {
+                ++zero_counter;
+            }
+        }
+
+        BOOST_TEST(zero_counter < res.size());
     }
 }
 
@@ -169,12 +190,28 @@ consteval bool immediate_test()
 int main()
 {
     basic_tests<boost::crypt::sha1_hasher>();
+    basic_tests<boost::crypt::sha224_hasher>();
     basic_tests<boost::crypt::sha256_hasher>();
+    basic_tests<boost::crypt::sha384_hasher>();
     basic_tests<boost::crypt::sha512_hasher>();
+    basic_tests<boost::crypt::sha512_224_hasher>();
+    basic_tests<boost::crypt::sha512_256_hasher>();
+    basic_tests<boost::crypt::sha3_224_hasher>();
+    basic_tests<boost::crypt::sha3_256_hasher>();
+    basic_tests<boost::crypt::sha3_384_hasher>();
+    basic_tests<boost::crypt::sha3_512_hasher>();
 
     test_edges<boost::crypt::sha1_hasher>();
+    test_edges<boost::crypt::sha224_hasher>();
     test_edges<boost::crypt::sha256_hasher>();
+    test_edges<boost::crypt::sha384_hasher>();
     test_edges<boost::crypt::sha512_hasher>();
+    test_edges<boost::crypt::sha512_224_hasher>();
+    test_edges<boost::crypt::sha512_256_hasher>();
+    test_edges<boost::crypt::sha3_224_hasher>();
+    test_edges<boost::crypt::sha3_256_hasher>();
+    test_edges<boost::crypt::sha3_384_hasher>();
+    test_edges<boost::crypt::sha3_512_hasher>();
 
     // GCC-14 has an internal compiler error here
     #if defined(__GNUC__) && __GNUC__ != 14
