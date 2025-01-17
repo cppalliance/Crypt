@@ -116,25 +116,30 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security
 
         if constexpr (Extent1 != 0U)
         {
-            hasher.process_bytes(provided_data_1);
+            [[maybe_unused]] const auto status = hasher.process_bytes(provided_data_1);
+            BOOST_CRYPT_ASSERT(status == state::success);
         }
 
         if constexpr (Extent2 != 0U)
         {
-            hasher.process_bytes(provided_data_2);
+            [[maybe_unused]] const auto status = hasher.process_bytes(provided_data_2);
+            BOOST_CRYPT_ASSERT(status == state::success);
         }
 
         if constexpr (Extent3 != 0U)
         {
-            hasher.process_bytes(provided_data_3);
+            [[maybe_unused]] const auto status = hasher.process_bytes(provided_data_3);
+            BOOST_CRYPT_ASSERT(status == state::success);
         }
 
         if constexpr (Extent4 != 0U)
         {
-            hasher.process_bytes(provided_data_4);
+            [[maybe_unused]] const auto status = hasher.process_bytes(provided_data_4);
+            BOOST_CRYPT_ASSERT(status == state::success);
         }
 
-        hasher.finalize();
+        [[maybe_unused]] const auto finalize_status = hasher.finalize();
+        BOOST_CRYPT_ASSERT(finalize_status == state::success);
         const auto return_val {hasher.get_digest()};
 
         BOOST_CRYPT_ASSERT(return_val.has_value());
@@ -146,6 +151,52 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security
             return_container[offset++] = return_val[i];
         }
     }
+}
+
+template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
+template <compat::size_t Extent>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto
+hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::hashgen(compat::span<compat::byte, Extent> returned_bits, compat::size_t requested_number_of_bytes) noexcept -> state
+{
+    if (returned_bits.size() < requested_number_of_bytes)
+    {
+        return state::out_of_memory;
+    }
+
+    const compat::span<const compat::byte, seedlen_bytes> value_span {value_};
+    compat::size_t offset {};
+    HasherType hasher;
+    while (offset < requested_number_of_bytes)
+    {
+        // Step 1: hash the current state of the value array
+        hasher.init();
+        [[maybe_unused]] const auto process_bytes_status {hasher.process_bytes(value_span)};
+        BOOST_CRYPT_ASSERT(process_bytes_status == state::success);
+        [[maybe_unused]] const auto finalize_status {hasher.finalize()};
+        BOOST_CRYPT_ASSERT(finalize_status == state::success);
+        const auto w_expected {hasher.get_digest()};
+        BOOST_CRYPT_ASSERT(w_expected.has_value());
+
+        // Step 2: Write the output of the hash(value_) for return
+        const auto w {w_expected.value()};
+        for (compat::size_t i {}; offset < requested_number_of_bytes && i < w.size(); ++i)
+        {
+            returned_bits[offset++] = w[i];
+        }
+
+        // Step 3: Increment value_ by 1 modulo 2^seedlen
+        compat::uint16_t carry {1};
+        auto value_position {value_.rbegin()};
+
+        while (value_position != value_.rend() && carry)
+        {
+            const auto sum {static_cast<compat::uint16_t>(static_cast<compat::uint16_t>(*value_position) + carry)};
+            carry = static_cast<compat::uint16_t>(sum >> 8U);
+            *value_position-- = static_cast<compat::byte>(sum & 0xFFU);
+        }
+    }
+
+    return state::success;
 }
 
 template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
