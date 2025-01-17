@@ -13,10 +13,6 @@
 #include <boost/crypt2/detail/concepts.hpp>
 #include <boost/crypt2/detail/compat.hpp>
 
-#if !defined(BOOST_CRYPT_BUILD_MODULE)
-#include <limits>
-#endif
-
 namespace boost::crypt::hash_detail {
 
 // Error: the two-parameter std::span construction is unsafe as it can introduce mismatch between buffer size and the bound information [-Werror,-Wunsafe-buffer-usage-in-container]
@@ -54,7 +50,7 @@ template <typename HasherType, concepts::file_system_path T>
 }
 
 template <typename HasherType, concepts::file_system_path T>
-[[nodiscard]] auto hash_file_impl(const T& filepath, std::span<std::byte> out, std::size_t amount = std::numeric_limits<std::size_t>::max()) -> state
+[[nodiscard]] auto hash_file_impl(const T& filepath, std::span<std::byte> out, std::size_t amount) -> state
 {
     if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
     {
@@ -76,15 +72,7 @@ template <typename HasherType, concepts::file_system_path T>
     }
 
     hasher.finalize();
-
-    if (amount == std::numeric_limits<std::size_t>::max())
-    {
-        return hasher.get_digest(out);
-    }
-    else
-    {
-        return hasher.get_digest(out, amount);
-    }
+    return hasher.get_digest(out, amount);
 }
 
 #if defined(__clang__) && __clang_major__ >= 19
