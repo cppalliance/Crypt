@@ -216,6 +216,8 @@ int main()
     // GCC-14 has an internal compiler error here
     #if defined(__GNUC__) && __GNUC__ != 14
     static_assert(immediate_test<boost::crypt::sha1_hasher>());
+    static_assert(immediate_test<boost::crypt::sha224_hasher>());
+    static_assert(immediate_test<boost::crypt::sha256_hasher>());
     #endif
 
     return boost::report_errors();
