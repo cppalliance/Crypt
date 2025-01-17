@@ -24,10 +24,11 @@ boost::crypt::hmac<boost::crypt::sha512_hasher> hmac;
 const auto state_1 {hmac.init("key", 3)};
 BOOST_TEST(state_1 == boost::crypt::state::success);
 
-const char* msg {"The quick brown fox jumps over the lazy dog"};
-const auto state_2 {hmac.process_bytes(msg, std::strlen(msg))};
+std::string msg {"The quick brown fox jumps over the lazy dog"};
+const auto state_2 {hmac.process_bytes(msg)};
 BOOST_TEST(state_2 == boost::crypt::state::success);
 
+hmac.finalize();
 const auto res {hmac.get_digest()};
 ----
 
@@ -40,12 +41,14 @@ Continuing from our above example:
 [source, c++]
 ----
 boost::crypt::hmac<boost::crypt::sha512_hasher> hmac;
-const auto state_1 {hmac.init("key", 3)};
+const auto state_1 {hmac.init(std::string{"key"})};
 BOOST_TEST(state_1 == boost::crypt::state::success);
 
-const char* msg {"The quick brown fox jumps over the lazy dog"};
-const auto state_2 {hmac.process_bytes(msg, std::strlen(msg))};
+std::string msg {"The quick brown fox jumps over the lazy dog"};
+const auto state_2 {hmac.process_bytes(msg)};
 BOOST_TEST(state_2 == boost::crypt::state::success);
+
+BOOST_TEST(hmac.finalize() == boost::crypt::state::success);
 
 const auto res {hmac.get_digest()};
 
@@ -54,12 +57,15 @@ const auto inner_key {hmac.get_inner_key()};
 
 // Do some stuff
 
-boost::crypt::hmac<boost::crypt::sha512_hasher> hmac2(inner_key, outer_key);
+boost::crypt::hmac<boost::crypt::sha512_hasher> hmac2;
 
-const char* msg2 {"The quick brown fox jumps over the lazy dog"};
-const auto state_3 {hmac2.process_bytes(msg, std::strlen(msg))};
+hmac2.init_from_keys(inner_key, outer_key);
+
+std::string msg2 {"The quick brown fox jumps over the lazy dog"};
+const auto state_3 {hmac2.process_bytes(msg)};
 BOOST_TEST(state_3 == boost::crypt::state::success);
 
+hmac2.finalize();
 const auto res2 {hmac2.get_digest()};
 ----
 
@@ -80,40 +86,46 @@ class hmac
 {
 public:
 
-    static constexpr boost::crypt::size_t block_size_ {HasherType::block_size};
+    static constexpr boost::crypt::size_t block_size {HasherType::block_size};
     using return_type = typename HasherType::return_type;
-    using key_type = boost::crypt::array<boost::crypt::uint8_t, block_size_>;
+    using key_type = compat::array<compat::byte, block_size>;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr hmac() noexcept = default;
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR hmac() noexcept = default;
 
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr hmac(ForwardIter key, boost::crypt::size_t size) noexcept;
+    template <compat::size_t Extent = compat::dynamic_extent>
+    explicit BOOST_CRYPT_GPU_ENABLED_CONSTEXPR hmac(const compat::span<const compat::byte, Extent> key) noexcept;
 
-    template <typename Container>
-    BOOST_CRYPT_GPU_ENABLED constexpr hmac(const Container& c) noexcept;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~hmac() noexcept;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr hmac(const key_type& inner_key, const key_type& outer_key) noexcept;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init_from_keys(const key_type& inner_key,
+                                                          const key_type& outer_key) noexcept -> state;
 
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init(ForwardIter key, boost::crypt::size_t size) noexcept -> state;
+    template <compat::size_t Extent = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(compat::span<const compat::byte, Extent> data) noexcept -> state;
 
-    template <typename Container>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init(const Container& c) noexcept -> state;
+    template <concepts::sized_range SizedRange>
+    BOOST_CRYPT_GPU_ENABLED auto init(SizedRange&& data) noexcept -> state;
 
-    template <typename Container>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto init_from_keys(const Container& inner_key, const Container& outer_key) noexcept -> state;
+    template <compat::size_t Extent = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte, Extent> data) noexcept -> state;
 
-    template <typename ForwardIter>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(ForwardIter data, boost::crypt::size_t size) noexcept -> state;
+    template <concepts::sized_range SizedRange>
+    BOOST_CRYPT_GPU_ENABLED auto process_bytes(SizedRange&& data) noexcept -> state;
 
-    template <typename Container>
-    BOOST_CRYPT_GPU_ENABLED constexpr auto process_bytes(const Container& c) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto finalize() noexcept -> state;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_digest() noexcept -> return_type;
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest() const noexcept -> compat::expected<return_type, state>;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_outer_key() noexcept -> key_type;
+    template <compat::size_t Extent = compat::dynamic_extent>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
+    auto get_digest(compat::span<compat::byte, Extent> data) const noexcept -> state;
 
-    BOOST_CRYPT_GPU_ENABLED constexpr auto get_inner_key() noexcept -> key_type;
+    template <concepts::writable_output_range Range>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto get_digest(Range&& data) const noexcept -> state;
+
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_outer_key() const noexcept -> key_type;
+
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_inner_key() const noexcept -> key_type;
 
 } //namespace crypt
 } //namespace boost

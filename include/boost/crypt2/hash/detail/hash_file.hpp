@@ -49,6 +49,31 @@ template <typename HasherType, concepts::file_system_path T>
     return hasher.get_digest();
 }
 
+template <typename HasherType, concepts::file_system_path T>
+[[nodiscard]] auto hash_file_impl(const T& filepath, std::span<std::byte> out, std::size_t amount) -> state
+{
+    if constexpr (std::is_pointer_v<std::remove_cvref_t<T>>)
+    {
+        if (filepath == nullptr)
+        {
+            throw std::runtime_error("Invalid file path");
+        }
+    }
+
+    detail::file_reader<HasherType::block_size> reader(filepath);
+    HasherType hasher;
+
+    while (!reader.eof())
+    {
+        const auto buffer_iter {reader.read_next_block()};
+        const auto len {reader.get_bytes_read()};
+        const auto buffer_span {std::span(buffer_iter, len)};
+        hasher.process_bytes(buffer_span);
+    }
+
+    hasher.finalize();
+    return hasher.get_digest(out, amount);
+}
 
 #if defined(__clang__) && __clang_major__ >= 19
 #pragma clang diagnostic pop

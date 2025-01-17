@@ -26,7 +26,6 @@ https://www.boost.org/LICENSE_1_0.txt
 ==== SHA2 Family of Hashers
 - <<sha224_hasher, `sha224_hasher`>>
 
-////
 - <<sha256_hasher, `sha256_hasher`>>
 - <<sha384_hasher, `sha384_hasher`>>
 - <<sha512_hasher, `sha512_hasher`>>
@@ -39,9 +38,14 @@ https://www.boost.org/LICENSE_1_0.txt
 - <<sha3_384_hasher, `sha3_384_hasher`>>
 - <<sha3_512_hasher, `sha3_512_hasher`>>
 
+==== Extendable-Output Functions
+- <<shake128_hasher, `shake128_hasher`>>
+- <<shake256_hasher, `shake256_hasher`>>
+
 === Hash-Based Message Authentication Codes (HMAC)
 - <<hmac, `hmac`>>
 
+////
 === Deterministic Random Bit Generators (DRBG)
 ==== Hash-Based
 ===== Non-Prediction Resistant

@@ -8,7 +8,7 @@ https://www.boost.org/LICENSE_1_0.txt
 = Concepts
 :idprefix: concepts_
 
-The following are the defintions of the concepts used throughout the library to ensure consistency.
+The following are the definitions of the concepts used throughout the library to ensure consistency.
 
 [#file_system_path]
 == File System Path
@@ -36,7 +36,7 @@ concept file_system_path =
 } // namespace boost::crypt::concepts
 ----
 
-[#writable_output_range]
+[#writeable_output_range]
 == Writeable Output Range
 
 This concept is used to define the ranges that we can write to such as the `get_digest(Range&& data)` function of the hashers.
