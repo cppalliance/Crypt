@@ -36,7 +36,8 @@ protected:
     bool computed_ {};
     bool corrupted_ {};
 
-    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte> data) noexcept -> state;
+    template <compat::size_t Extent = compat::dynamic_extent>
+    [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto update(compat::span<const compat::byte, Extent> data) noexcept -> state;
 
     [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto get_digest_impl(compat::span<compat::byte, digest_size> data) const noexcept -> state;
 
@@ -47,7 +48,8 @@ public:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR sha_1_2_hasher_base() noexcept { base_init(); }
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~sha_1_2_hasher_base() noexcept;
 
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte> data) noexcept -> state;
+    template <compat::size_t Extent = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(compat::span<const compat::byte, Extent> data) noexcept -> state;
 
     template <concepts::sized_range SizedRange>
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto process_bytes(SizedRange&& data) noexcept -> state;
@@ -236,19 +238,29 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermed
 }
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
-BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(compat::span<const compat::byte> data) noexcept -> state
+template <compat::size_t Extent>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::process_bytes(compat::span<const compat::byte, Extent> data) noexcept -> state
 {
     return update(data);
 }
 
 template <compat::size_t digest_size, compat::size_t intermediate_hash_size>
+template <compat::size_t Extent>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED_CONSTEXPR
-auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(compat::span<const compat::byte> data) noexcept -> state
+auto sha_1_2_hasher_base<digest_size, intermediate_hash_size>::update(compat::span<const compat::byte, Extent> data) noexcept -> state
 {
-    if (data.empty())
+    if constexpr (Extent == compat::dynamic_extent)
+    {
+        if (data.empty())
+        {
+            return state::success;
+        }
+    }
+    else if constexpr (Extent == 0U)
     {
         return state::success;
     }
+
     if (computed_)
     {
         corrupted_ = true;
