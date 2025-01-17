@@ -222,6 +222,10 @@ int main()
     static_assert(immediate_test<boost::crypt::sha512_hasher>());
     static_assert(immediate_test<boost::crypt::sha512_224_hasher>());
     static_assert(immediate_test<boost::crypt::sha512_256_hasher>());
+    static_assert(immediate_test<boost::crypt::sha3_224_hasher>());
+    static_assert(immediate_test<boost::crypt::sha3_256_hasher>());
+    static_assert(immediate_test<boost::crypt::sha3_384_hasher>());
+    static_assert(immediate_test<boost::crypt::sha3_512_hasher>());
     #endif
 
     return boost::report_errors();
