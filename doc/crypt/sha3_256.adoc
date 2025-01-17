@@ -33,7 +33,7 @@ public:
     // Process bytes piecewise
     BOOST_CRYPT_GPU_ENABLED constexpr state process_bytes(compat::span<const compat::byte> data) noexcept;
 
-    template <compat::ranges::sized_range Range>
+    template <concepts::sized_range Range>
     BOOST_CRYPT_GPU_ENABLED constexpr state process_bytes(Range&& data) noexcept;
 
     // Finalize the calculation of the hash
@@ -59,7 +59,7 @@ namespace boost::crypt {
 
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED constexpr auto sha3_256(compat::span<const compat::byte> data) noexcept -> expected<sha3_256_hasher::return_type, state>;
 
-template <compat::ranges::sized_range SizedRange>
+template <concepts::sized_range SizedRange>
 [[nodiscard]] BOOST_CRYPT_GPU_ENABLED auto sha3_256(SizedRange&& data) noexcept -> expected<sha3_256_hasher::return_type, state>;
 
 } // namespace boost::crypt
