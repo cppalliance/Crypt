@@ -374,7 +374,7 @@ void files_test()
     {
         if (val == std::byte{})
         {
-            ++zero_counter;
+            ++zero_counter; // LCOV_EXCL_LINE
         }
     }
     BOOST_TEST(zero_counter < byte_array.size());
