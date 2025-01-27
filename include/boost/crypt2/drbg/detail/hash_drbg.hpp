@@ -43,7 +43,9 @@ private:
     static constexpr compat::uint64_t reseed_interval {281474976710656ULL}; // 2^48
 
     compat::array<compat::byte, seedlen_bytes> constant_ {};
+    compat::span<const std::byte, seedlen_bytes> constant_span_ {constant_};
     compat::array<compat::byte, seedlen_bytes> value_ {};
+    compat::span<const compat::byte, seedlen_bytes> value_span_ {value_};
 
     compat::uint64_t reseed_counter_ {};
     bool initialized_ {};
@@ -61,13 +63,27 @@ private:
                                                    compat::span<const compat::byte, Extent4> provided_data_4) noexcept -> state;
 
     template <compat::size_t Extent = compat::dynamic_extent>
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hashgen(compat::span<compat::byte, Extent> returned_bits, compat::size_t requested_number_of_bytes) noexcept -> state
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hashgen(compat::span<compat::byte, Extent> returned_bits, compat::size_t requested_number_of_bytes) noexcept -> state;
 
 public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR hash_drbg() noexcept = default;
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR ~hash_drbg() noexcept;
+
+    template <compat::size_t Extent1 = compat::dynamic_extent,
+              compat::size_t Extent2 = compat::dynamic_extent,
+              compat::size_t Extent3 = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(compat::span<compat::byte, Extent1> entropy,
+                                                compat::span<compat::byte, Extent2> nonce = compat::span<compat::byte, 0>{},
+                                                compat::span<compat::byte, Extent3> personalization = compat::span<compat::byte, 0>{}) noexcept -> state;
+
+    template <concepts::sized_range SizedRange1,
+              concepts::sized_range SizedRange2,
+              concepts::sized_range SizedRange3>
+    BOOST_CRYPT_GPU_ENABLED auto init(SizedRange1&& entropy,
+                                      SizedRange2&& nonce = compat::array<compat::byte, 0U> {},
+                                      SizedRange3&& personalization = compat::array<compat::byte, 0U> {}) noexcept -> state;
 };
 
 template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
@@ -206,6 +222,78 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR hash_drbg<HasherType, max_hasher_security, out
     detail::clear_mem(value_);
     reseed_counter_ = 0U;
     initialized_ = false;
+}
+
+template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
+template <compat::size_t Extent1,
+          compat::size_t Extent2,
+          compat::size_t Extent3>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::init(
+    compat::span<compat::byte, Extent1> entropy,
+    compat::span<compat::byte, Extent2> nonce,
+    compat::span<compat::byte, Extent3> personalization) noexcept -> state
+{
+    if (entropy.size() + nonce.size() < min_entropy)
+    {
+        return state::insufficient_entropy;
+    }
+
+    auto seed_status {hash_df(seedlen, entropy, nonce, personalization)};
+
+    if (seed_status != state::success) [[unlikely]]
+    {
+        return seed_status;
+    }
+
+    constexpr compat::array<compat::byte, 1U> offset_array {compat::byte {0x00}};
+    const compat::span<const compat::byte, 1U> offset_span {offset_array};
+    seed_status = hash_df(seedlen, constant_span_, offset_span, value_span_);
+
+    if (seed_status != state::success)
+    {
+        return seed_status;
+    }
+
+    initialized_ = true;
+    reseed_counter_ = 1U;
+
+    return state::success;
+}
+
+template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
+template <concepts::sized_range SizedRange1,
+          concepts::sized_range SizedRange2,
+          concepts::sized_range SizedRange3>
+BOOST_CRYPT_GPU_ENABLED auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::init(
+    SizedRange1&& entropy,
+    SizedRange2&& nonce,
+    SizedRange3&& personalization) noexcept -> state
+{
+    // First check to see if conversion to spans is even worthwhile
+    if (entropy.size() + nonce.size() < min_entropy)
+    {
+        return state::insufficient_entropy;
+    }
+    else
+    {
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+        #endif
+
+        // Since these are sized ranges we can safely convert them into spans
+        auto entropy_span {compat::make_span(compat::forward<SizedRange1>(entropy))};
+        auto nonce_span {compat::make_span(compat::forward<SizedRange2>(nonce))};
+        auto personalization_span {compat::make_span(compat::forward<SizedRange3>(personalization))};
+
+        return init(compat::as_bytes(entropy_span),
+                    compat::as_bytes(nonce_span),
+                    compat::as_bytes(personalization_span));
+
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic pop
+        #endif
+    }
 }
 
 } // namespace boost::crypt::drbg_detail
