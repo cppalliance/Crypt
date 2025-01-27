@@ -84,6 +84,16 @@ public:
     BOOST_CRYPT_GPU_ENABLED auto init(SizedRange1&& entropy,
                                       SizedRange2&& nonce = compat::array<compat::byte, 0U> {},
                                       SizedRange3&& personalization = compat::array<compat::byte, 0U> {}) noexcept -> state;
+
+    template <compat::size_t Extent1 = compat::dynamic_extent,
+              compat::size_t Extent2 = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto reseed(compat::span<compat::byte, Extent1> entropy,
+                                                  compat::span<compat::byte, Extent2> additional_input = compat::span<compat::byte, 0>{}) noexcept -> state;
+
+    template <concepts::sized_range SizedRange1,
+              concepts::sized_range SizedRange2>
+    BOOST_CRYPT_GPU_ENABLED auto reseed(SizedRange1&& entropy,
+                                        SizedRange2&& additional_input = compat::array<compat::byte, 0U> {}) noexcept -> state;
 };
 
 template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
@@ -294,6 +304,80 @@ BOOST_CRYPT_GPU_ENABLED auto hash_drbg<HasherType, max_hasher_security, outlen, 
         #pragma clang diagnostic pop
         #endif
     }
+}
+
+template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
+template <compat::size_t Extent1,
+          compat::size_t Extent2>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::reseed(
+    compat::span<compat::byte, Extent1> entropy,
+    compat::span<compat::byte, Extent2> additional_input) noexcept -> state
+{
+    constexpr auto min_reseed_entropy {max_hasher_security / 8U};
+
+    if (entropy.size() < min_reseed_entropy)
+    {
+        return state::insufficient_entropy;
+    }
+
+    compat::array<compat::byte, seedlen_bytes> seed {};
+    compat::span<compat::byte, seedlen_bytes> seed_span {seed};
+    constexpr compat::array<compat::byte, 1U> offset_array { compat::byte{0x01} };
+    compat::span<const compat::byte, 1U> offset_array_span {offset_array};
+
+    auto seed_status {hash_df(seedlen,
+                              seed_span,
+                              offset_array_span,
+                              value_span_,
+                              entropy,
+                              additional_input)};
+
+    if (seed_status != state::success)
+    {
+        return seed_status;
+    }
+
+    value_ = seed;
+
+    constexpr compat::array<compat::byte, 1U> c_offset_array { compat::byte{0x00} };
+    compat::span<const compat::byte, 1U> c_offset_span {c_offset_array};
+
+    seed_status = hash_df(seedlen,
+                          constant_span_,
+                          c_offset_span,
+                          value_span_);
+
+    if (seed_status != state::success)
+    {
+        return seed_status;
+    }
+
+    reseed_counter_ = 1U;
+    return state::success;
+}
+
+template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
+template <concepts::sized_range SizedRange1,
+          concepts::sized_range SizedRange2>
+BOOST_CRYPT_GPU_ENABLED auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::reseed(
+    SizedRange1&& entropy,
+    SizedRange2&& additional_input) noexcept -> state
+{
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+    #endif
+
+    // Since these are sized ranges we can safely convert them into spans
+    auto entropy_span {compat::make_span(compat::forward<SizedRange1>(entropy))};
+    auto additional_input_span {compat::make_span(compat::forward<SizedRange2>(additional_input))};
+
+    return reseed(compat::as_bytes(entropy_span),
+                  compat::as_bytes(additional_input));
+
+    #if defined(__clang__) && __clang_major__ >= 19
+    #pragma clang diagnostic pop
+    #endif
 }
 
 } // namespace boost::crypt::drbg_detail
