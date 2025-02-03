@@ -65,6 +65,11 @@ private:
     template <compat::size_t Extent = compat::dynamic_extent>
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hashgen(compat::span<compat::byte, Extent> returned_bits, compat::size_t requested_number_of_bytes) noexcept -> state;
 
+    template <compat::size_t Extent1 = compat::dynamic_extent,
+              compat::size_t Extent2 = compat::dynamic_extent>
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto no_pr_generate_impl(compat::span<compat::byte, Extent1> return_data, compat::size_t requested_bits,
+                                                               compat::span<const compat::byte, Extent2> additional_data = compat::span<compat::byte, 0U> {}) noexcept -> state;
+
 public:
 
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR hash_drbg() noexcept = default;
@@ -378,6 +383,157 @@ BOOST_CRYPT_GPU_ENABLED auto hash_drbg<HasherType, max_hasher_security, outlen, 
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic pop
     #endif
+}
+
+template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
+template <compat::size_t Extent1,
+          compat::size_t Extent2>
+BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::no_pr_generate_impl(
+    compat::span<compat::byte, Extent1> return_data, compat::size_t requested_bits,
+    compat::span<const compat::byte, Extent2> additional_data) noexcept -> state
+{
+    if (reseed_counter_ > reseed_interval)
+    {
+        return state::requires_reseed;
+    }
+    if (!initialized_)
+    {
+        return state::uninitialized;
+    }
+
+    const compat::size_t requested_bytes {(requested_bits + 7U) / 8U};
+    if (requested_bytes > max_bytes_per_request)
+    {
+        return state::requested_too_many_bits;
+    }
+
+    if constexpr (Extent2 != 0U)
+    {
+        // Step 2.1 and 2.2
+        // If we are on a different 32 bit or smaller platform and using clang ignore the warning
+        #ifdef __clang__
+        #  pragma clang diagnostic push
+        #  pragma clang diagnostic ignored "-Wtautological-constant-out-of-range-compare"
+        #endif
+
+        #if !defined(__i386__) && !defined(_M_IX86)
+        if (additional_data.size() > max_length)
+        {
+            return state::input_too_long; // LCOV_EXCL_LINE
+        }
+        #endif // 32-bit platforms
+
+        #ifdef __clang__
+        #  pragma clang diagnostic pop
+        #endif
+
+        HasherType hasher {};
+        hasher.process_byte(compat::byte{0x02});
+        hasher.process_bytes(value_span_);
+        hasher.process_bytes(additional_data);
+        const auto w {hasher.get()};
+
+        // V = (v + w) mode 2^seedlen
+        auto w_iter {w.crbegin()};
+        const auto w_end {w.crend()};
+
+        auto v_iter {value_.rbegin()};
+        const auto v_end {value_.rend()};
+
+        // Since the size of V depends on the size of w we will never have an overflow situation
+        compat::uint16_t carry {};
+        while (w_iter != w_end)
+        {
+            const auto sum {static_cast<compat::uint16_t>(static_cast<compat::uint16_t>(*w_iter) + static_cast<compat::uint16_t>(*v_iter) + carry)};
+            carry = static_cast<compat::uint16_t>(sum >> 8U);
+            *v_iter++ = static_cast<compat::byte>(sum & 0xFFU);
+            ++w_iter;
+        }
+    }
+
+    // Step 3: Fill the buffer with the bytes to return to the user
+    const auto hashgen_return {hashgen(return_data, requested_bytes)};
+    if (hashgen_return != state::success) [[unlikely]]
+    {
+        return hashgen_return;
+    }
+
+    // Step 4: H = Hash(0x03 || V)
+    HasherType hasher {};
+    hasher.process_byte(compat::byte{0x03});
+    hasher.process_bytes(value_span_);
+    const auto h {hasher.get_digest()};
+    if (!h.has_value()) [[unlikely]]
+    {
+        return h.err();
+    }
+
+    // Step 5: v = (v + h + c + reseed counter) mod 2^seedlen
+    // Rather than converting V, H, C and reseed to bignums and applying big num modular arithmetic
+    // we add all bytes of the same offset at once and have an integer rather than boolean carry
+    // we also terminate the calculation at mod 2^seedlen since anything past that is irrelevant
+    // It just so happens that value_ is 2^seedlen long
+    //
+    // The rub is that everything is to be in big endian order so we use reverse iterators
+    const compat::array<compat::byte, 64U / 8U> reseed_counter_bytes = {
+        static_cast<compat::byte>((reseed_counter_ >> 56U) & 0xFFU),
+        static_cast<compat::byte>((reseed_counter_ >> 48U) & 0xFFU),
+        static_cast<compat::byte>((reseed_counter_ >> 40U) & 0xFFU),
+        static_cast<compat::byte>((reseed_counter_ >> 32U) & 0xFFU),
+        static_cast<compat::byte>((reseed_counter_ >> 24U) & 0xFFU),
+        static_cast<compat::byte>((reseed_counter_ >> 16U) & 0xFFU),
+        static_cast<compat::byte>((reseed_counter_ >> 8U) & 0xFFU),
+        static_cast<compat::byte>(reseed_counter_ & 0xFFU),
+    };
+
+    // Initialize iterators for V
+    auto value_iter {value_.rbegin()};
+    const auto value_end {value_.rend()};
+
+    // Initialize iterators for H, C, and reseed_counter_bytes
+    auto h_iter {h.crbegin()};
+    const auto h_end {h.crend()};
+
+    auto c_iter {constant_.crbegin()};
+
+    auto reseed_counter_iter {reseed_counter_bytes.crbegin()};
+    const auto reseed_counter_end {reseed_counter_bytes.crend()};
+
+    // Older GCC warns the += is int instead of uint16_t
+    #if defined(__GNUC__) && __GNUC__ >= 5 && __GNUC__ < 10
+    #  pragma GCC diagnostic push
+    #  pragma GCC diagnostic ignored "-Wconversion"
+    #endif
+
+    compat::uint16_t carry {};
+    // Since the length of constant and value are known to be the same we only boundary check one of the two
+    while (value_iter != value_end)
+    {
+        compat::uint16_t sum {static_cast<compat::uint16_t>(
+                                        static_cast<compat::uint16_t>(*value_iter) +
+                                        static_cast<compat::uint16_t>(*c_iter++) + carry
+                                        )};
+
+        if (h_iter != h_end)
+        {
+            sum += static_cast<compat::uint16_t>(*h_iter++);
+        }
+
+        if (reseed_counter_iter != reseed_counter_end)
+        {
+            sum += static_cast<compat::uint16_t>(*reseed_counter_iter++);
+        }
+
+        carry = static_cast<compat::uint16_t>(sum >> 8U);
+        *value_iter++ = static_cast<compat::byte>(sum & 0xFFU);
+    }
+
+    #if defined(__GNUC__) && __GNUC__ >= 5 && __GNUC__ < 10
+    #  pragma GCC diagnostic pop
+    #endif
+
+    ++reseed_counter_;
+    return state::success;
 }
 
 } // namespace boost::crypt::drbg_detail
