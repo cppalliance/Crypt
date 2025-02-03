@@ -58,9 +58,9 @@ private:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_df(compat::uint32_t no_of_bits_to_return,
                                                    compat::span<compat::byte, ExtentReturn> return_container,
                                                    compat::span<const compat::byte, Extent1> provided_data_1,
-                                                   compat::span<const compat::byte, Extent2> provided_data_2,
-                                                   compat::span<const compat::byte, Extent3> provided_data_3,
-                                                   compat::span<const compat::byte, Extent4> provided_data_4) noexcept -> state;
+                                                   compat::span<const compat::byte, Extent2> provided_data_2 = compat::span<const compat::byte, 0U> {},
+                                                   compat::span<const compat::byte, Extent3> provided_data_3 = compat::span<const compat::byte, 0U> {},
+                                                   compat::span<const compat::byte, Extent4> provided_data_4 = compat::span<const compat::byte, 0U> {}) noexcept -> state;
 
     template <compat::size_t Extent = compat::dynamic_extent>
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hashgen(compat::span<compat::byte, Extent> returned_bits, compat::size_t requested_number_of_bytes) noexcept -> state;
@@ -85,9 +85,9 @@ public:
     template <compat::size_t Extent1 = compat::dynamic_extent,
               compat::size_t Extent2 = compat::dynamic_extent,
               compat::size_t Extent3 = compat::dynamic_extent>
-    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(compat::span<compat::byte, Extent1> entropy,
-                                                compat::span<compat::byte, Extent2> nonce = compat::span<compat::byte, 0>{},
-                                                compat::span<compat::byte, Extent3> personalization = compat::span<compat::byte, 0>{}) noexcept -> state;
+    BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto init(compat::span<const compat::byte, Extent1> entropy,
+                                                compat::span<const compat::byte, Extent2> nonce = compat::span<compat::byte, 0>{},
+                                                compat::span<const compat::byte, Extent3> personalization = compat::span<compat::byte, 0>{}) noexcept -> state;
 
     template <concepts::sized_range SizedRange1,
               concepts::sized_range SizedRange2,
@@ -199,9 +199,11 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security
 
         for (compat::size_t i {}; i < return_val_array.size() && offset < no_of_bytes_to_return; ++i)
         {
-            return_container[offset++] = return_val[i];
+            return_container[offset++] = return_val_array[i];
         }
     }
+
+    return state::success;
 }
 
 template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
@@ -264,16 +266,17 @@ template <compat::size_t Extent1,
           compat::size_t Extent2,
           compat::size_t Extent3>
 BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::init(
-    compat::span<compat::byte, Extent1> entropy,
-    compat::span<compat::byte, Extent2> nonce,
-    compat::span<compat::byte, Extent3> personalization) noexcept -> state
+    compat::span<const compat::byte, Extent1> entropy,
+    compat::span<const compat::byte, Extent2> nonce,
+    compat::span<const compat::byte, Extent3> personalization) noexcept -> state
 {
     if (entropy.size() + nonce.size() < min_entropy)
     {
         return state::insufficient_entropy;
     }
 
-    auto seed_status {hash_df(seedlen, entropy, nonce, personalization)};
+    auto writeable_value_span {compat::span<compat::byte, seedlen_bytes>(value_)};
+    auto seed_status {hash_df(seedlen, writeable_value_span, entropy, nonce, personalization)};
 
     if (seed_status != state::success) [[unlikely]]
     {
@@ -282,7 +285,8 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security
 
     constexpr compat::array<compat::byte, 1U> offset_array {compat::byte {0x00}};
     const compat::span<const compat::byte, 1U> offset_span {offset_array};
-    seed_status = hash_df(seedlen, constant_span_, offset_span, value_span_);
+    auto writeable_constant_span {compat::span<compat::byte, seedlen_bytes>(constant_)};
+    seed_status = hash_df(seedlen, writeable_constant_span, offset_span, value_span_);
 
     if (seed_status != state::success)
     {
