@@ -91,7 +91,7 @@ public:
 
     template <concepts::sized_range SizedRange1,
               concepts::sized_range SizedRange2,
-              concepts::sized_range SizedRange3>
+              concepts::sized_range SizedRange3 = compat::array<compat::byte, 0U>>
     BOOST_CRYPT_GPU_ENABLED auto init(SizedRange1&& entropy,
                                       SizedRange2&& nonce = compat::array<compat::byte, 0U> {},
                                       SizedRange3&& personalization = compat::array<compat::byte, 0U> {}) noexcept -> state;
@@ -102,7 +102,7 @@ public:
                                                   compat::span<compat::byte, Extent2> additional_input = compat::span<compat::byte, 0>{}) noexcept -> state;
 
     template <concepts::sized_range SizedRange1,
-              concepts::sized_range SizedRange2>
+              concepts::sized_range SizedRange2 = compat::array<compat::byte, 0U>>
     BOOST_CRYPT_GPU_ENABLED auto reseed(SizedRange1&& entropy,
                                         SizedRange2&& additional_input = compat::array<compat::byte, 0U> {}) noexcept -> state;
 
@@ -114,8 +114,8 @@ public:
                                                     [[maybe_unused]] compat::span<const compat::byte, Extent3> additional_data2 = compat::span<const compat::byte, 0U> {}) noexcept -> state;
 
     template <concepts::sized_range SizedRange1,
-              concepts::sized_range SizedRange2,
-              concepts::sized_range SizedRange3>
+              concepts::sized_range SizedRange2 = compat::array<compat::byte, 0U>,
+              concepts::sized_range SizedRange3 = compat::array<compat::byte, 0U>>
     BOOST_CRYPT_GPU_ENABLED auto generate(SizedRange1&& return_data, compat::size_t requested_bits,
                                           SizedRange2&& additional_data1 = compat::array<compat::byte, 0U>{},
                                           [[maybe_unused]] SizedRange3&& additional_data2 = compat::array<compat::byte, 0U>{}) noexcept -> state;
@@ -398,7 +398,7 @@ BOOST_CRYPT_GPU_ENABLED auto hash_drbg<HasherType, max_hasher_security, outlen, 
     auto additional_input_span {compat::make_span(compat::forward<SizedRange2>(additional_input))};
 
     return reseed(compat::as_bytes(entropy_span),
-                  compat::as_bytes(additional_input));
+                  compat::as_bytes(additional_input_span));
 
     #if defined(__clang__) && __clang_major__ >= 19
     #pragma clang diagnostic pop
@@ -451,7 +451,13 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security
         hasher.process_byte(compat::byte{0x02});
         hasher.process_bytes(value_span_);
         hasher.process_bytes(additional_data);
-        const auto w {hasher.get()};
+        const auto w_exp {hasher.get_digest()};
+
+        if (!w_exp.has_value()) [[unlikely]]
+        {
+            return w_exp.error();
+        }
+        const auto w {w_exp.value()};
 
         // V = (v + w) mode 2^seedlen
         auto w_iter {w.crbegin()};
@@ -462,7 +468,7 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security
 
         // Since the size of V depends on the size of w we will never have an overflow situation
         compat::uint16_t carry {};
-        while (w_iter != w_end)
+        while (w_iter != w_end && v_iter != v_end)
         {
             const auto sum {static_cast<compat::uint16_t>(static_cast<compat::uint16_t>(*w_iter) + static_cast<compat::uint16_t>(*v_iter) + carry)};
             carry = static_cast<compat::uint16_t>(sum >> 8U);
@@ -482,11 +488,12 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security
     HasherType hasher {};
     hasher.process_byte(compat::byte{0x03});
     hasher.process_bytes(value_span_);
-    const auto h {hasher.get_digest()};
-    if (!h.has_value()) [[unlikely]]
+    const auto h_exp {hasher.get_digest()};
+    if (!h_exp.has_value()) [[unlikely]]
     {
-        return h.err();
+        return h_exp.error();
     }
+    const auto h {h_exp.value()};
 
     // Step 5: v = (v + h + c + reseed counter) mod 2^seedlen
     // Rather than converting V, H, C and reseed to bignums and applying big num modular arithmetic
@@ -623,9 +630,9 @@ BOOST_CRYPT_GPU_ENABLED auto hash_drbg<HasherType, max_hasher_security, outlen, 
         auto additional_data1_span {compat::make_span(compat::forward<SizedRange2>(additional_data1))};
         auto additional_data2_span {compat::make_span(compat::forward<SizedRange3>(additional_data2))};
 
-        return reseed(compat::as_writable_bytes(return_data_span), requested_bits,
-                      compat::as_bytes(additional_data1_span),
-                      compat::as_bytes(additional_data2_span));
+        return pr_generate_impl(compat::as_writable_bytes(return_data_span), requested_bits,
+                                compat::as_bytes(additional_data1_span),
+                                compat::as_bytes(additional_data2_span));
 
         #if defined(__clang__) && __clang_major__ >= 19
         #pragma clang diagnostic pop
@@ -642,8 +649,8 @@ BOOST_CRYPT_GPU_ENABLED auto hash_drbg<HasherType, max_hasher_security, outlen, 
         auto return_data_span {compat::make_span(compat::forward<SizedRange1>(return_data))};
         auto additional_data1_span {compat::make_span(compat::forward<SizedRange2>(additional_data1))};
 
-        return reseed(compat::as_writable_bytes(return_data_span), requested_bits,
-                      compat::as_bytes(additional_data1_span));
+        return no_pr_generate_impl(compat::as_writable_bytes(return_data_span), requested_bits,
+                                   compat::as_bytes(additional_data1_span));
 
         #if defined(__clang__) && __clang_major__ >= 19
         #pragma clang diagnostic pop
