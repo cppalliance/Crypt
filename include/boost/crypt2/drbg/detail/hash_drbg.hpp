@@ -112,6 +112,13 @@ public:
     BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto generate(compat::span<compat::byte, Extent1> return_data, compat::size_t requested_bits,
                                                     compat::span<const compat::byte, Extent2> additional_data1 = compat::span<const compat::byte, 0U> {},
                                                     [[maybe_unused]] compat::span<const compat::byte, Extent3> additional_data2 = compat::span<const compat::byte, 0U> {}) noexcept -> state;
+
+    template <concepts::sized_range SizedRange1,
+              concepts::sized_range SizedRange2,
+              concepts::sized_range SizedRange3>
+    BOOST_CRYPT_GPU_ENABLED auto generate(SizedRange1&& return_data, compat::size_t requested_bits,
+                                          SizedRange2&& additional_data1 = compat::array<compat::byte, 0U>{},
+                                          [[maybe_unused]] SizedRange3&& additional_data2 = compat::array<compat::byte, 0U>{}) noexcept -> state;
 };
 
 template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
@@ -593,6 +600,54 @@ BOOST_CRYPT_GPU_ENABLED_CONSTEXPR auto hash_drbg<HasherType, max_hasher_security
     else
     {
         return no_pr_generate_impl(return_data, requested_bits, additional_data1);
+    }
+}
+
+template <typename HasherType, compat::size_t max_hasher_security, compat::size_t outlen, bool prediction_resistance>
+template <concepts::sized_range SizedRange1,
+          concepts::sized_range SizedRange2,
+          concepts::sized_range SizedRange3>
+BOOST_CRYPT_GPU_ENABLED auto hash_drbg<HasherType, max_hasher_security, outlen, prediction_resistance>::generate(SizedRange1&& return_data, compat::size_t requested_bits,
+                                      SizedRange2&& additional_data1,
+                                      [[maybe_unused]] SizedRange3&& additional_data2) noexcept -> state
+{
+    if constexpr (prediction_resistance)
+    {
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+        #endif
+
+        // Since these are sized ranges we can safely convert them into spans
+        auto return_data_span {compat::make_span(compat::forward<SizedRange1>(return_data))};
+        auto additional_data1_span {compat::make_span(compat::forward<SizedRange2>(additional_data1))};
+        auto additional_data2_span {compat::make_span(compat::forward<SizedRange3>(additional_data2))};
+
+        return reseed(compat::as_writable_bytes(return_data_span), requested_bits,
+                      compat::as_bytes(additional_data1_span),
+                      compat::as_bytes(additional_data2_span));
+
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic pop
+        #endif
+    }
+    else
+    {
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wunsafe-buffer-usage-in-container"
+        #endif
+
+        // Since these are sized ranges we can safely convert them into spans
+        auto return_data_span {compat::make_span(compat::forward<SizedRange1>(return_data))};
+        auto additional_data1_span {compat::make_span(compat::forward<SizedRange2>(additional_data1))};
+
+        return reseed(compat::as_writable_bytes(return_data_span), requested_bits,
+                      compat::as_bytes(additional_data1_span));
+
+        #if defined(__clang__) && __clang_major__ >= 19
+        #pragma clang diagnostic pop
+        #endif
     }
 }
 
